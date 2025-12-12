@@ -50,25 +50,6 @@ import com.lanrhyme.shardlauncher.model.Account
 import com.lanrhyme.shardlauncher.model.AccountType
 import com.lanrhyme.shardlauncher.ui.components.selectableCard
 
-
-@Composable
-fun ShardAccountCard() {
-    Row(verticalAlignment = Alignment.CenterVertically) {
-        Image(
-            painter = painterResource(id = R.drawable.img_lanrhyme),
-            contentDescription = "User Avatar",
-            modifier = Modifier
-                .size(40.dp)
-                .clip(CircleShape)
-        )
-        Spacer(modifier = Modifier.width(8.dp))
-        Column {
-            Text("LanRhyme", style = MaterialTheme.typography.bodyLarge)
-            Text("ShardAccount", style = MaterialTheme.typography.bodySmall, color = Color.Gray)
-        }
-    }
-}
-
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun AccountCard(
@@ -107,7 +88,7 @@ fun AccountCard(
                     interactionSource = interactionSource,
                     indication = null
                 ),
-            shape = RoundedCornerShape(22.dp),
+            shape = RoundedCornerShape(16.dp),
             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f)),
             border = border
         ) {
@@ -118,8 +99,7 @@ fun AccountCard(
                 // Avatar
                 val imageRequest = ImageRequest.Builder(LocalContext.current)
                     .data(account.skinUrl)
-                    .placeholder(R.drawable.ic_launcher_background)
-                    .error(R.drawable.img_lanrhyme)
+                    .error(R.drawable.img_steve)
                     .crossfade(true)
                     .diskCachePolicy(CachePolicy.ENABLED)
                     .memoryCachePolicy(CachePolicy.ENABLED)

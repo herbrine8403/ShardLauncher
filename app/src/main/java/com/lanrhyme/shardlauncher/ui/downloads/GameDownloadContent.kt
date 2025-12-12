@@ -21,10 +21,8 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyItemScope
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Refresh
-import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -51,6 +49,7 @@ import com.lanrhyme.shardlauncher.R
 import com.lanrhyme.shardlauncher.model.BmclapiManifest
 import com.lanrhyme.shardlauncher.ui.LocalSettingsProvider
 import com.lanrhyme.shardlauncher.ui.components.CombinedCard
+import com.lanrhyme.shardlauncher.ui.components.SearchTextField
 import com.lanrhyme.shardlauncher.ui.components.StyledFilterChip
 import dev.chrisbanes.haze.HazeState
 
@@ -103,49 +102,13 @@ fun GameDownloadContent(navController: NavController, useBmclapi: Boolean, isCar
                                     modifier = Modifier.fillMaxHeight()
                                 )
                             }
-                            BasicTextField(
+                            SearchTextField(
                                 value = searchQuery,
                                 onValueChange = { viewModel.setSearchQuery(it) },
+                                hint = "搜索",
                                 modifier = Modifier
                                     .weight(1f)
-                                    .fillMaxHeight(),
-                                textStyle = MaterialTheme.typography.bodySmall.copy(
-                                    color = MaterialTheme.colorScheme.onSurface
-                                ),
-                                singleLine = true,
-                                decorationBox = { innerTextField ->
-                                    Row(
-                                        modifier = Modifier
-                                            .background(
-                                                MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f),
-                                                RoundedCornerShape(22.dp)
-                                            )
-                                            .padding(horizontal = 8.dp)
-                                            .fillMaxHeight(),
-                                        verticalAlignment = Alignment.CenterVertically
-                                    ) {
-                                        Icon(
-                                            Icons.Default.Search,
-                                            contentDescription = "Search",
-                                            tint = MaterialTheme.colorScheme.onSurfaceVariant
-                                        )
-                                        Box(
-                                            modifier = Modifier
-                                                .padding(start = 4.dp)
-                                                .weight(1f),
-                                            contentAlignment = Alignment.CenterStart
-                                        ) {
-                                            if (searchQuery.isEmpty()) {
-                                                Text(
-                                                    "搜索",
-                                                    style = MaterialTheme.typography.bodySmall,
-                                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                                )
-                                            }
-                                            innerTextField()
-                                        }
-                                    }
-                                }
+                                    .fillMaxHeight()
                             )
                             IconButton(
                                 onClick = { viewModel.loadVersions(useBmclapi, forceRefresh = true) },

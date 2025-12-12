@@ -6,6 +6,7 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
@@ -36,6 +37,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.lanrhyme.shardlauncher.R
+import com.lanrhyme.shardlauncher.ui.components.SearchTextField
 import com.lanrhyme.shardlauncher.ui.components.animatedAppearance
 import com.lanrhyme.shardlauncher.ui.components.selectableCard
 
@@ -65,7 +67,7 @@ fun VersionScreen(navController: NavController, animationSpeed: Float) {
                 .weight(0.25f)
                 .fillMaxHeight()
                 .padding(start = 16.dp, top = 16.dp, end = 8.dp, bottom = 16.dp),
-            shape = RoundedCornerShape(22.dp),
+            shape = RoundedCornerShape(16.dp),
             colors = CardDefaults.cardColors(
                 containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f)
             )
@@ -177,6 +179,7 @@ fun GameVersionListContent(selectedVersion: GameVersion?, onVersionClick: (GameV
             GameVersion("1.9.4forgeaaa", R.drawable.img_minecraft),
         )
     }
+    var searchText by remember { mutableStateOf("") }
 
     Column(
         modifier = Modifier
@@ -184,16 +187,14 @@ fun GameVersionListContent(selectedVersion: GameVersion?, onVersionClick: (GameV
             .padding(16.dp)
     ) {
         Row(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier.fillMaxWidth().height(36.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            var searchText by remember { mutableStateOf("") }
-            OutlinedTextField(
+            SearchTextField(
                 value = searchText,
                 onValueChange = { searchText = it },
-                placeholder = { Text("搜索版本") },
-                leadingIcon = { Icon(Icons.Default.Search, contentDescription = "Search") },
+                hint = "搜索版本",
                 modifier = Modifier.weight(1f)
             )
             IconButton(onClick = { /* TODO: Refresh */ }) {

@@ -16,10 +16,12 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -27,8 +29,10 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyItemScope
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -82,7 +86,7 @@ fun CollapsibleCard(
 ) {
     var isExpanded by remember { mutableStateOf(false) }
     val animationDuration = (300 / animationSpeed).toInt()
-    val cardShape = RoundedCornerShape(22.dp)
+    val cardShape = RoundedCornerShape(16.dp)
 
     val cardModifier = if (isCardBlurEnabled && hazeState != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
         modifier
@@ -134,7 +138,7 @@ fun CombinedCard(
     hazeState: HazeState? = null,
     content: @Composable () -> Unit
 ) {
-    val cardShape = RoundedCornerShape(22.dp)
+    val cardShape = RoundedCornerShape(16.dp)
     val cardModifier = if (isCardBlurEnabled && hazeState != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
         modifier
             .fillMaxWidth()
@@ -281,9 +285,9 @@ fun <T> SegmentedNavigationBar(
             modifier = Modifier
                 .glow(
                     color = MaterialTheme.colorScheme.primary,
-                    cornerRadius = 22.dp
+                    cornerRadius = 16.dp
                 )
-                .clip(RoundedCornerShape(22.dp))
+                .clip(RoundedCornerShape(16.dp))
                 .background(
                     Brush.horizontalGradient(
                         colors = listOf(
@@ -299,7 +303,7 @@ fun <T> SegmentedNavigationBar(
             selectedTabIndex = pages.indexOf(selectedPage),
             modifier = Modifier
                 .weight(1f)
-                .clip(RoundedCornerShape(22.dp)),
+                .clip(RoundedCornerShape(16.dp)),
             divider = { },
         ) {
             pages.forEach { page ->
@@ -349,7 +353,7 @@ fun StyledFilterChip(
         onClick = onClick,
         label = label,
         modifier = modifier,
-        shape = RoundedCornerShape(22.dp),
+        shape = RoundedCornerShape(16.dp),
         colors = FilterChipDefaults.filterChipColors(
             selectedContainerColor = MaterialTheme.colorScheme.primary,
             selectedLabelColor = MaterialTheme.colorScheme.onPrimary
@@ -465,4 +469,56 @@ fun Modifier.selectableCard(
         scaleX = scale
         scaleY = scale
     }
+}
+
+@Composable
+fun SearchTextField(
+    value: String,
+    onValueChange: (String) -> Unit,
+    hint: String,
+    modifier: Modifier = Modifier,
+) {
+    BasicTextField(
+        value = value,
+        onValueChange = onValueChange,
+        modifier = modifier
+            .fillMaxSize(),
+        textStyle = MaterialTheme.typography.bodySmall.copy(
+            color = MaterialTheme.colorScheme.onSurface
+        ),
+        singleLine = true,
+        decorationBox = { innerTextField ->
+            Row(
+                modifier = Modifier
+                    .background(
+                        MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f),
+                        RoundedCornerShape(22.dp)
+                    )
+                    .padding(horizontal = 8.dp)
+                    .fillMaxSize(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    Icons.Default.Search,
+                    contentDescription = "Search",
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Box(
+                    modifier = Modifier
+                        .padding(start = 4.dp)
+                        .weight(1f),
+                    contentAlignment = Alignment.CenterStart
+                ) {
+                    if (value.isEmpty()) {
+                        Text(
+                            hint,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                    innerTextField()
+                }
+            }
+        }
+    )
 }

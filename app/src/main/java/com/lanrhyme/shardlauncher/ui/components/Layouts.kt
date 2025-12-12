@@ -38,7 +38,7 @@ fun SwitchLayout(
     title: String,
     summary: String? = null,
     enabled: Boolean = true,
-    shape: Shape = RoundedCornerShape(22.0.dp),
+    shape: Shape = RoundedCornerShape(16.dp),
     isCardBlurEnabled: Boolean,
     hazeState: HazeState
 ) {
@@ -102,7 +102,7 @@ fun IconSwitchLayout(
     title: String,
     summary: String? = null,
     enabled: Boolean = true,
-    shape: Shape = RoundedCornerShape(22.0.dp),
+    shape: Shape = RoundedCornerShape(16.dp),
     isCardBlurEnabled: Boolean,
     hazeState: HazeState
 ) {
@@ -172,7 +172,7 @@ fun <E> SimpleListLayout(
     getItemSummary: (@Composable (E) -> Unit)? = null,
     enabled: Boolean = true,
     autoCollapse: Boolean = true,
-    shape: Shape = RoundedCornerShape(22.0.dp),
+    shape: Shape = RoundedCornerShape(16.dp),
     isCardBlurEnabled: Boolean,
     hazeState: HazeState
 ) {
@@ -264,7 +264,7 @@ fun SliderLayout(
     valueRange: ClosedFloatingPointRange<Float> = 0f..1f,
     steps: Int = 0,
     enabled: Boolean = true,
-    shape: Shape = RoundedCornerShape(28.0.dp),
+    shape: Shape = RoundedCornerShape(16.dp),
     displayValue: Float = value,
     isGlowEffectEnabled: Boolean,
     isCardBlurEnabled: Boolean,

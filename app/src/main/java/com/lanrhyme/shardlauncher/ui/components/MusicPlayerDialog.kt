@@ -28,7 +28,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.LibraryMusic
@@ -38,13 +37,11 @@ import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Repeat
 import androidx.compose.material.icons.filled.RepeatOne
 import androidx.compose.material.icons.filled.Save
-import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Shuffle
 import androidx.compose.material.icons.filled.SkipNext
 import androidx.compose.material.icons.filled.SkipPrevious
 import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
@@ -67,6 +64,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
@@ -189,49 +187,11 @@ fun MusicListPage(musicPlayerViewModel: MusicPlayerViewModel) {
             var showPlayModeMenu by remember { mutableStateOf(false) }
             val repeatMode by musicPlayerViewModel.repeatMode.collectAsState()
 
-            BasicTextField(
+            SearchTextField(
                 value = searchQuery,
                 onValueChange = { musicPlayerViewModel.searchMusic(it) },
-                modifier = Modifier
-                    .weight(1f)
-                    .fillMaxSize(),
-                textStyle = MaterialTheme.typography.bodySmall.copy(
-                    color = MaterialTheme.colorScheme.onSurface
-                ),
-                singleLine = true,
-                decorationBox = { innerTextField ->
-                    Row(
-                        modifier = Modifier
-                            .background(
-                                MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f),
-                                RoundedCornerShape(22.dp)
-                            )
-                            .padding(horizontal = 8.dp)
-                            .fillMaxSize(),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Icon(
-                            Icons.Default.Search,
-                            contentDescription = "Search",
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                        Box(
-                            modifier = Modifier
-                                .padding(start = 4.dp)
-                                .weight(1f),
-                            contentAlignment = Alignment.CenterStart
-                        ) {
-                            if (searchQuery.isEmpty()) {
-                                Text(
-                                    "搜索音乐",
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                            }
-                            innerTextField()
-                        }
-                    }
-                }
+                hint = "搜索音乐",
+                modifier = Modifier.weight(1f)
             )
             IconButton(onClick = { musicPlayerViewModel.loadMusicFiles() }) {
                 Icon(Icons.Default.Refresh, contentDescription = "Refresh")
@@ -543,7 +503,9 @@ fun CurrentlyPlayingCard(musicPlayerViewModel: MusicPlayerViewModel) {
                 AsyncImage(
                     model = currentMediaItem?.mediaMetadata?.artworkUri,
                     contentDescription = "Album Art",
-                    modifier = Modifier.fillMaxSize(),
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .clip(shape = RoundedCornerShape(16.dp)),
                     contentScale = ContentScale.Crop,
                     error = rememberVectorPainter(Icons.Default.LibraryMusic)
                 )

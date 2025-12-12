@@ -4,9 +4,11 @@ import android.os.Build
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.core.updateTransition
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -449,21 +451,49 @@ fun Modifier.animatedAppearance(index: Int, animationSpeed: Float): Modifier = c
  * 为可选择的卡片提供选择动画效果
  * 带有边框和弹动动画
  *
+ * 使用时请在卡片调用处传入以下参数
+ * ```
+ * border = if (isSelected) BorderStroke(1.5.dp, MaterialTheme.colorScheme.primary) else null
+ * ```
  * @param isSelected 卡片是否被选中
  * @param isPressed 卡片是否被按下
  */
+private enum class SelectableState { Pressed, Selected, Idle }
 fun Modifier.selectableCard(
     isSelected: Boolean,
     isPressed: Boolean,
 ) : Modifier = composed {
-    val scale by animateFloatAsState(
-        targetValue = if (isPressed) 0.95f else if (isSelected) 1.05f else 1f,
-        animationSpec = spring(
-            dampingRatio = Spring.DampingRatioMediumBouncy,
-            stiffness = Spring.StiffnessLow
-        ),
-        label = "selectableCard-scale"
+    val transition = updateTransition(
+        targetState = when {
+            isPressed -> SelectableState.Pressed
+            isSelected -> SelectableState.Selected
+            else -> SelectableState.Idle
+        },
+        label = "selectableCard-transition"
     )
+
+    val scale by transition.animateFloat(
+        transitionSpec = {
+            when {
+                // 按下
+                SelectableState.Idle isTransitioningTo SelectableState.Pressed || SelectableState.Selected isTransitioningTo SelectableState.Pressed ->
+                    tween(durationMillis = 100)
+                // 弹回
+                else ->
+                    spring(
+                        dampingRatio = Spring.DampingRatioMediumBouncy,
+                        stiffness = Spring.StiffnessLow
+                    )
+            }
+        },
+        label = "selectableCard-scale"
+    ) { state ->
+        when (state) {
+            SelectableState.Pressed -> 0.97f
+            SelectableState.Selected -> 1.03f
+            SelectableState.Idle -> 1f
+        }
+    }
 
     this.graphicsLayer {
         scaleX = scale

@@ -3,6 +3,10 @@ package com.lanrhyme.shardlauncher.ui.components
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
@@ -14,7 +18,6 @@ import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -24,6 +27,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
@@ -44,12 +48,14 @@ import androidx.compose.material.icons.filled.SkipPrevious
 import androidx.compose.material3.Card
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationRail
 import androidx.compose.material3.NavigationRailItem
 import androidx.compose.material3.Slider
+import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
@@ -57,6 +63,7 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -65,21 +72,25 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MediaMetadata
 import androidx.media3.common.Player
-import coil.compose.AsyncImage
+import coil.compose.AsyncImagePainter.State
+import coil.compose.SubcomposeAsyncImage
+import coil.compose.SubcomposeAsyncImageContent
 import com.lanrhyme.shardlauncher.data.SettingsRepository
 import com.lanrhyme.shardlauncher.model.MusicItem
 import com.lanrhyme.shardlauncher.ui.music.MusicPlayerViewModel
 import dev.chrisbanes.haze.HazeState
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import java.util.concurrent.TimeUnit
 
 @Composable
 fun MusicPlayerDialog(
@@ -119,13 +130,19 @@ fun MusicPlayerDialog(
                 }
                 VerticalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.5f))
                 Box(modifier = Modifier.weight(3f).padding(16.dp)) {
-                    when (selectedTab) {
-                        MusicPlayerTab.MusicList -> MusicListPage(musicPlayerViewModel = musicPlayerViewModel)
-                        MusicPlayerTab.Settings -> MusicPlayerSettingsPage(
-                            isCardBlurEnabled = isCardBlurEnabled,
-                            hazeState = hazeState,
-                            musicPlayerViewModel = musicPlayerViewModel
-                        )
+                    AnimatedContent(
+                        targetState = selectedTab,
+                        transitionSpec = { fadeIn() togetherWith fadeOut() },
+                        label = ""
+                    ) {
+                        when (it) {
+                            MusicPlayerTab.MusicList -> MusicListPage(musicPlayerViewModel = musicPlayerViewModel)
+                            MusicPlayerTab.Settings -> MusicPlayerSettingsPage(
+                                isCardBlurEnabled = isCardBlurEnabled,
+                                hazeState = hazeState,
+                                musicPlayerViewModel = musicPlayerViewModel
+                            )
+                        }
                     }
                 }
             }
@@ -176,7 +193,6 @@ fun MusicListPage(musicPlayerViewModel: MusicPlayerViewModel) {
     Column(modifier = Modifier.fillMaxSize()) {
         val searchQuery by musicPlayerViewModel.searchQuery.collectAsState()
 
-        // Top action bar
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -212,15 +228,15 @@ fun MusicListPage(musicPlayerViewModel: MusicPlayerViewModel) {
                     expanded = showPlayModeMenu,
                     onDismissRequest = { showPlayModeMenu = false }
                 ) {
-                    DropdownMenuItem(text = { Text("单曲循环") }, onClick = {
+                    DropdownMenuItem(text = { Text("单曲循环") }, onClick = { //TODO:i18n
                         musicPlayerViewModel.setRepeatMode(Player.REPEAT_MODE_ONE)
                         showPlayModeMenu = false
                     })
-                    DropdownMenuItem(text = { Text("顺序播放") }, onClick = {
+                    DropdownMenuItem(text = { Text("顺序播放") }, onClick = { //TODO:i18n
                         musicPlayerViewModel.setRepeatMode(Player.REPEAT_MODE_OFF)
                         showPlayModeMenu = false
                     })
-                    DropdownMenuItem(text = { Text("随机播放") }, onClick = {
+                    DropdownMenuItem(text = { Text("随机播放") }, onClick = { //TODO:i18n
                         musicPlayerViewModel.setRepeatMode(Player.REPEAT_MODE_ALL)
                         showPlayModeMenu = false
                     })
@@ -230,7 +246,7 @@ fun MusicListPage(musicPlayerViewModel: MusicPlayerViewModel) {
                 Icon(Icons.Default.Add, contentDescription = "Add Music")
             }
         }
-        // Music list
+        // 音乐列表
         LazyColumn(
             verticalArrangement = Arrangement.spacedBy(8.dp),
             contentPadding = PaddingValues(vertical = 8.dp)
@@ -283,10 +299,10 @@ fun MusicPlayerSettingsPage(
         autoPlay = settingsRepository.getAutoPlayMusic()
         volume = settingsRepository.getMusicVolume()
 
-        // Ensure the MusicPlayerService is started so its ExoPlayer instance exists
+        // 确保 MusicPlayerService 已启动，使其 ExoPlayer 实例存在
         try {
             val intent = android.content.Intent(context.applicationContext, com.lanrhyme.shardlauncher.service.MusicPlayerService::class.java)
-            // Start service (dialog runs in foreground; startService is fine here)
+            // 启动服务（对话在前景运行;startService 在这里没问题）
             context.applicationContext.startService(intent)
             android.util.Log.d("MusicPlayerDialog", "Started MusicPlayerService to ensure player exists")
          } catch (e: Exception) {
@@ -308,7 +324,7 @@ fun MusicPlayerSettingsPage(
                         settingsRepository.setAutoPlayMusic(newCheckedState)
                     }
                  },
-                title = "启动启动器时自动播放",
+                title = "启动启动器时自动播放", //TODO:i18n
                 isCardBlurEnabled = isCardBlurEnabled,
                 hazeState = hazeState
             )
@@ -323,7 +339,7 @@ fun MusicPlayerSettingsPage(
                         settingsRepository.setMusicVolume(newValue)
                     }
 
-                    // Send an intent to the MusicPlayerService to update the player volume reliably
+                    // 发送给MusicPlayerService，以可靠地更新播放器音量
                     try {
                         val ctx = context.applicationContext
                         val intent = android.content.Intent(ctx, com.lanrhyme.shardlauncher.service.MusicPlayerService::class.java).apply {
@@ -335,7 +351,7 @@ fun MusicPlayerSettingsPage(
                         android.util.Log.w("MusicPlayerDialog", "Failed to send volume intent: ${e.message}")
                     }
 
-                    // Also try updating the MediaController's underlying player directly (if available) as a fallback
+                    // 另外，试着直接更新MediaController的底层播放器（如果有的话），作为备选方案
                     try {
                         val controller = musicPlayerViewModel.mediaController.value
                         if (controller != null) {
@@ -361,8 +377,8 @@ fun MusicPlayerSettingsPage(
                         // ignore reflection failures
                     }
                 },
-                title = "音乐音量",
-                summary = "调整播放器音量",
+                title = "音乐音量", //TODO:i18n
+                summary = "调整播放器音量", //TODO:i18n
                 valueRange = 0f..1f,
                 steps = 0,
                 enabled = true,
@@ -389,7 +405,7 @@ fun MusicCard(
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .height(IntrinsicSize.Min)
+            .height(70.dp)
             .pointerInput(Unit) { detectTapGestures(onLongPress = { showDeleteMenu = true }) }
             .clickable(onClick = onCLick)
             .selectableCard(isSelected, isPressed)
@@ -399,25 +415,39 @@ fun MusicCard(
                 onClick = onCLick,
                 onLongClick = { showDeleteMenu = true }
             ),
-        border = if (isSelected) BorderStroke(2.dp, MaterialTheme.colorScheme.primary) else null
+        shape = RoundedCornerShape(16.dp),
+        border = if (isSelected) BorderStroke(1.5.dp, MaterialTheme.colorScheme.primary) else null
     ) {
         Row(
-            modifier = Modifier.fillMaxSize()
+            modifier = Modifier.fillMaxSize(),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            // Album Art
-            Box(
-                modifier = Modifier
-                    .aspectRatio(1f)
-                    .background(MaterialTheme.colorScheme.surfaceVariant),
-                contentAlignment = Alignment.Center
+            SubcomposeAsyncImage(
+                model = item.albumArtUri,
+                contentDescription = "Album Art",
+                modifier = Modifier.aspectRatio(1f),
+                contentScale = ContentScale.Crop
             ) {
-                AsyncImage(
-                    model = item.albumArtUri,
-                    contentDescription = "Album Art",
-                    modifier = Modifier.fillMaxSize(),
-                    contentScale = ContentScale.Crop,
-                    error = rememberVectorPainter(Icons.Default.LibraryMusic)
-                )
+                when (painter.state) {
+                    is State.Success -> {
+                        SubcomposeAsyncImageContent(modifier = Modifier.fillMaxSize())
+                    }
+                    else -> { // // 错误，加载中，空时使用默认封面
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .background(MaterialTheme.colorScheme.surfaceVariant),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.LibraryMusic,
+                                contentDescription = "Album Art Placeholder",
+                                modifier = Modifier.size(48.dp),
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+                }
             }
 
             // Title and Summary
@@ -425,12 +455,12 @@ fun MusicCard(
                 TitleAndSummary(title = item.title, summary = item.artist)
             }
 
-            // Delete Menu
+            // 删除菜单
             DropdownMenu(
                 expanded = showDeleteMenu,
                 onDismissRequest = { showDeleteMenu = false }
             ) {
-                DropdownMenuItem(text = { Text("删除") }, onClick = {
+                DropdownMenuItem(text = { Text("删除") }, onClick = { // TODO:i18n
                     onDelete()
                     showDeleteMenu = false
                 })
@@ -439,6 +469,7 @@ fun MusicCard(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CurrentlyPlayingCard(musicPlayerViewModel: MusicPlayerViewModel) {
     val mediaController by musicPlayerViewModel.mediaController.collectAsState()
@@ -446,6 +477,15 @@ fun CurrentlyPlayingCard(musicPlayerViewModel: MusicPlayerViewModel) {
     var duration by remember { mutableLongStateOf(0L) }
     var isPlaying by remember { mutableStateOf(false) }
     var currentMediaItem by remember { mutableStateOf<MediaItem?>(null) }
+
+    var isSeeking by remember { mutableStateOf(false) }
+    var sliderPosition by remember { mutableFloatStateOf(0f) }
+
+    LaunchedEffect(currentPosition, duration) {
+        if (!isSeeking && duration > 0) {
+            sliderPosition = currentPosition.toFloat() / duration.toFloat()
+        }
+    }
 
     LaunchedEffect(mediaController) {
         val listener = object : Player.Listener {
@@ -455,12 +495,13 @@ fun CurrentlyPlayingCard(musicPlayerViewModel: MusicPlayerViewModel) {
 
             override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {
                 currentMediaItem = mediaItem
-                duration = mediaController?.duration ?: 0L
+                duration = mediaController?.duration?.takeIf { it > 0 } ?: 0L
+                currentPosition = 0L
             }
 
             override fun onPlaybackStateChanged(playbackState: Int) {
                 if (playbackState == Player.STATE_READY) {
-                    duration = mediaController?.duration ?: 0L
+                    duration = mediaController?.duration?.takeIf { it > 0 } ?: 0L
                     currentMediaItem = mediaController?.currentMediaItem
                     isPlaying = mediaController?.isPlaying == true
                 }
@@ -468,15 +509,15 @@ fun CurrentlyPlayingCard(musicPlayerViewModel: MusicPlayerViewModel) {
         }
         mediaController?.addListener(listener)
 
-        // Initial state
-        duration = mediaController?.duration ?: 0L
+        duration = mediaController?.duration?.takeIf { it > 0 } ?: 0L
         currentMediaItem = mediaController?.currentMediaItem
         isPlaying = mediaController?.isPlaying == true
 
-        // Coroutine to update position
         while (true) {
-            currentPosition = mediaController?.currentPosition ?: 0L
-            delay(1000) // Update every second
+            if (isPlaying) {
+                currentPosition = mediaController?.currentPosition ?: 0L
+            }
+            delay(1000) // 每秒更新一次时间
         }
     }
 
@@ -493,40 +534,96 @@ fun CurrentlyPlayingCard(musicPlayerViewModel: MusicPlayerViewModel) {
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // Album Art
-            Box(
+            SubcomposeAsyncImage(
+                model = currentMediaItem?.mediaMetadata?.artworkUri,
+                contentDescription = "Album Art",
                 modifier = Modifier
                     .size(56.dp)
-                    .background(MaterialTheme.colorScheme.surfaceVariant, CircleShape),
-                contentAlignment = Alignment.Center
+                    .clip(RoundedCornerShape(16.dp)),
+                contentScale = ContentScale.Crop
             ) {
-                AsyncImage(
-                    model = currentMediaItem?.mediaMetadata?.artworkUri,
-                    contentDescription = "Album Art",
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .clip(shape = RoundedCornerShape(16.dp)),
-                    contentScale = ContentScale.Crop,
-                    error = rememberVectorPainter(Icons.Default.LibraryMusic)
-                )
+                when (painter.state) {
+                    is State.Success -> {
+                        SubcomposeAsyncImageContent(modifier = Modifier.fillMaxSize())
+                    }
+                    else -> { // 错误，加载中，空时使用默认封面
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .background(MaterialTheme.colorScheme.surfaceVariant),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                Icons.Default.LibraryMusic,
+                                contentDescription = "Album Art Placeholder",
+                                modifier = Modifier.size(32.dp),
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+                }
             }
 
-            // Song Info and Progress
+            // 歌曲信息与进度条
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    currentMediaItem?.mediaMetadata?.title?.toString() ?: "No song playing",
-                    style = MaterialTheme.typography.titleMedium
+                    currentMediaItem?.mediaMetadata?.title?.toString() ?: "暂无歌曲",
+                    style = MaterialTheme.typography.titleMedium,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
                 )
-                Slider(
-                    value = if (duration > 0) currentPosition.toFloat() / duration.toFloat() else 0f,
-                    onValueChange = {
-                        mediaController?.seekTo((it * duration).toLong())
-                    },
-                    enabled = mediaController != null && duration > 0
-                )
+                Row(
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    val interactionSource = remember { MutableInteractionSource() }
+                    val isPressed by interactionSource.collectIsPressedAsState()
+
+                    Slider(
+                        value = sliderPosition,
+                        onValueChange = {
+                            isSeeking = true
+                            sliderPosition = it
+                        },
+                        onValueChangeFinished = {
+                            mediaController?.seekTo((sliderPosition * duration).toLong())
+                            isSeeking = false
+                        },
+                        modifier = Modifier.weight(1f),
+                        enabled = mediaController != null && duration > 0,
+                        colors = SliderDefaults.colors(
+                            thumbColor = MaterialTheme.colorScheme.primary,
+                            activeTrackColor = MaterialTheme.colorScheme.primary,
+                            inactiveTrackColor = MaterialTheme.colorScheme.surfaceVariant
+                        ),
+                        interactionSource = interactionSource,
+                        thumb = {
+                            val thumbWidth = 8.dp
+                            val thumbHeight = 25.dp
+                            SliderDefaults.Thumb(
+                                interactionSource = interactionSource,
+                                modifier = Modifier.glow(
+                                    color = MaterialTheme.colorScheme.primary,
+                                    cornerRadius = thumbHeight / 2,
+                                    blurRadius = 12.dp,
+                                    enabled = isPressed
+                                ),
+                                thumbSize = DpSize(width = thumbWidth, height = thumbHeight)
+                            )
+                        }
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Box(modifier = Modifier.width(100.dp)) {
+                        if (duration > 0) {
+                            val positionText = if (isSeeking) (sliderPosition * duration).toLong() else currentPosition
+                            Text(
+                                text = "${formatMillis(positionText)} / ${formatMillis(duration)}",
+                                style = MaterialTheme.typography.bodySmall
+                            )
+                        }
+                    }
+                }
             }
 
-            // Controls
             Row(verticalAlignment = Alignment.CenterVertically) {
                 IconButton(
                     onClick = { mediaController?.seekToPreviousMediaItem() },
@@ -558,4 +655,10 @@ fun CurrentlyPlayingCard(musicPlayerViewModel: MusicPlayerViewModel) {
             }
         }
     }
+}
+
+private fun formatMillis(millis: Long): String {
+    val minutes = TimeUnit.MILLISECONDS.toMinutes(millis)
+    val seconds = TimeUnit.MILLISECONDS.toSeconds(millis) % 60
+    return String.format("%02d:%02d", minutes, seconds)
 }

@@ -17,7 +17,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.offset
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
@@ -104,7 +103,7 @@ fun FluidFab(
         targetValue = if (isExpanded) 1f else 0f,
         animationSpec = tween(
             durationMillis = 1500, // Slower animation
-            easing = LinearEasing 
+            easing = LinearEasing
         ),
         label = "Expansion"
     )
@@ -127,7 +126,7 @@ fun FluidFab(
             null
         }
     }
-    
+
     val fabSize = 56.dp
 
     Box(
@@ -139,11 +138,11 @@ fun FluidFab(
         // --------------------------------------------------------
         Box(
             modifier = Modifier
-                .size(radius * 5) 
+                .size(radius * 5)
                 .graphicsLayer {
                     if (renderEffect != null) {
                         this.renderEffect = renderEffect
-                        this.alpha = 0.99f 
+                        this.alpha = 0.99f
                     }
                 },
             contentAlignment = Alignment.Center
@@ -151,7 +150,7 @@ fun FluidFab(
             // Main Center Blob (The Solid Background)
             // Logic: Gradually shrink from start to near end
             val centerBlobScale = 1f - LinearEasing.transform(0.1f, 0.9f, expandedProgress)
-            
+
             Box(
                 modifier = Modifier
                     .size(55.dp)
@@ -164,14 +163,14 @@ fun FluidFab(
                 val staggerStart = (index.toFloat() / items.size) * 0.35f
                 val staggerEnd = staggerStart + 0.65f
                 val itemProgress = FastOutSlowInEasing.transform(staggerStart, staggerEnd, expandedProgress)
-                
+
                 // Position
                 val currentRadiusDp = radius * itemProgress
                 val density = LocalDensity.current
                 val currentRadiusPx = with(density) { currentRadiusDp.toPx() }
-                
-                val offset = calculateOffset(direction, index, items.size, currentRadiusPx,sectorSize)
-                
+
+                val offset = calculateOffset(direction, index, items.size, currentRadiusPx, sectorSize)
+
                 // Blob
                 Box(
                     modifier = Modifier
@@ -189,34 +188,30 @@ fun FluidFab(
             modifier = Modifier.size(radius * 5),
             contentAlignment = Alignment.Center
         ) {
-            // Animating Ring Circle (The "White Border Circle")
-            // Sits behind toggle button, but above blobs? 
-            // In reference it's top level in the stack (line 140), so above everything.
-            
             items.forEachIndexed { index, item ->
                 key(index) {
                     val staggerStart = (index.toFloat() / items.size) * 0.35f
                     val staggerEnd = staggerStart + 0.65f
                     val itemProgress = FastOutSlowInEasing.transform(staggerStart, staggerEnd, expandedProgress)
-                    
+
                     if (itemProgress > 0.05f) {
-                         val currentRadiusDp = radius * itemProgress
-                         val density = LocalDensity.current
-                         val currentRadiusPx = with(density) { currentRadiusDp.toPx() }
-                         
-                         val offset = calculateOffset(direction, index, items.size, currentRadiusPx,sectorSize)
-                         
-                         // Interactive Button (No Ripple)
-                         Box(
+                        val currentRadiusDp = radius * itemProgress
+                        val density = LocalDensity.current
+                        val currentRadiusPx = with(density) { currentRadiusDp.toPx() }
+
+                        val offset = calculateOffset(direction, index, items.size, currentRadiusPx, sectorSize)
+
+                        // Interactive Button (No Ripple)
+                        Box(
                             contentAlignment = Alignment.Center,
                             modifier = Modifier
                                 .offset { IntOffset(offset.first.roundToInt(), offset.second.roundToInt()) }
-                                .size(fabSize) 
+                                .size(fabSize)
                                 .scale(LinearEasing.transform(0.5f, 1f, itemProgress))
                                 .background(Color.Transparent, CircleShape)
                                 .clickable(
                                     interactionSource = remember { MutableInteractionSource() },
-                                    indication = null, 
+                                    indication = null,
                                     onClick = {
                                         item.onClick()
                                         isExpanded = false
@@ -227,18 +222,18 @@ fun FluidFab(
                                 imageVector = item.icon,
                                 contentDescription = item.label,
                                 tint = contentColor.copy(alpha = LinearEasing.transform(0.5f, 1f, itemProgress)),
-                                modifier = Modifier.scale(0.8f) 
+                                modifier = Modifier.scale(0.8f)
                             )
                         }
-                        
+
                         // Label
                         if (itemProgress > 0.85f) {
                             val labelAlpha = LinearEasing.transform(0.85f, 1f, itemProgress)
-                            
-                             val labelRadiusDp = radius + 48.dp 
-                             val labelRadiusPx = with(density) { labelRadiusDp.toPx() }
-                             val labelOffset = calculateOffset(direction, index, items.size, labelRadiusPx,sectorSize)
-    
+
+                            val labelRadiusDp = radius + 48.dp
+                            val labelRadiusPx = with(density) { labelRadiusDp.toPx() }
+                            val labelOffset = calculateOffset(direction, index, items.size, labelRadiusPx, sectorSize)
+
                             Text(
                                 text = item.label,
                                 style = MaterialTheme.typography.labelSmall,
@@ -252,18 +247,32 @@ fun FluidFab(
                     }
                 }
             }
-            
+
+            // White expanding border circle
+            val borderAlpha = LinearEasing.transform(0.8f, 1f, expandedProgress)
+            if (borderAlpha > 0f) {
+                Box(
+                    modifier = Modifier
+                        .size(fabSize)
+                        .border(
+                            width = 2.dp,
+                            color = Color.White.copy(alpha = 0.5f * borderAlpha),
+                            shape = CircleShape
+                        )
+                )
+            }
+
             // White Pulsing Circle (Reference Style) with 50% opacity
             AnimatedBorderCircle(
                 color = Color.White.copy(alpha = 0.5f),
                 animationProgress = clickAnimationProgress
             )
-            
-             // Main Toggle Button (Interactive)
+
+            // Main Toggle Button (Interactive)
             Box(
                 contentAlignment = Alignment.Center,
                 modifier = Modifier
-                    .size(fabSize) 
+                    .size(fabSize)
                     .background(Color.Transparent, CircleShape)
                     .clickable(
                         interactionSource = remember { MutableInteractionSource() },
@@ -271,7 +280,7 @@ fun FluidFab(
                         onClick = { isExpanded = !isExpanded }
                     )
             ) {
-                 Icon(
+                Icon(
                     imageVector = icon,
                     contentDescription = if (isExpanded) "Collapse" else "Expand",
                     tint = contentColor,
@@ -285,12 +294,12 @@ fun FluidFab(
 @Composable
 fun AnimatedBorderCircle(color: Color, animationProgress: Float) {
     val animationValue = sin(PI * animationProgress).toFloat()
-    
+
     // Scale goes 2 -> 1 -> 2 based on reference logic: scale(2 - animationValue)
     // At 0: sin(0)=0 -> scale(2)
     // At 0.5: sin(pi/2)=1 -> scale(1)
     // At 1: sin(pi)=0 -> scale(2)
-    
+
     // Alpha: color.alpha * animationValue
     // At 0: 0
     // At 0.5: Max
@@ -338,19 +347,19 @@ private fun calculateOffset(
     sectorSize: Float
 ): Pair<Float, Float> {
     if (totalCount == 0) return 0f to 0f
-    
+
     val centerAngle = direction.angle
-    
+
     val startAngle = centerAngle - (sectorSize / 2)
     val step = if (totalCount > 1) sectorSize / (totalCount - 1) else 0f
-    
+
     val currentAngle = if (totalCount > 1) startAngle + (step * index) else centerAngle
-    
+
     val rad = currentAngle * (PI / 180.0)
-    
+
     val x = radiusPx * cos(rad).toFloat()
     val y = radiusPx * sin(rad).toFloat()
-    
+
     return x to y
 }
 

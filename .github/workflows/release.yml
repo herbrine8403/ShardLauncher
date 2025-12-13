@@ -35,6 +35,7 @@ jobs:
 
     - name: Build Release APKs for all ABIs
       env:
+        MICROSOFT_CLIENT_ID: ${{ secrets.MICROSOFT_CLIENT_ID }}
         CLIENT_ID: ${{ secrets.CLIENT_ID }}
       run: ./gradlew assembleRelease
 

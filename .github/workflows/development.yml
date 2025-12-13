@@ -39,6 +39,7 @@ jobs:
 
     - name: Build Debug APKs
       env:
+        MICROSOFT_CLIENT_ID: ${{ secrets.MICROSOFT_CLIENT_ID }}
         CLIENT_ID: ${{ secrets.CLIENT_ID }}
       run: ./gradlew assembleDebug
 

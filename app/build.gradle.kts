@@ -80,7 +80,7 @@ android {
         resValue("string", "build_status", buildStatus)
 
 
-        val clientId = localProperties.getProperty("MICROSOFT_CLIENT_ID") ?: System.getenv("CLIENT_ID") ?: ""
+        val clientId = localProperties.getProperty("MICROSOFT_CLIENT_ID") ?: System.getenv("MICROSOFT_CLIENT_ID") ?: System.getenv("CLIENT_ID") ?: ""
         buildConfigField("String", "CLIENT_ID", "\"$clientId\"")
 
     }

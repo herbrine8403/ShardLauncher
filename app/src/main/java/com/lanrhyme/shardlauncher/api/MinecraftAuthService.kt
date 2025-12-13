@@ -16,10 +16,10 @@ import retrofit2.http.POST
 
 interface MinecraftAuthService {
 
-    @POST("https://user.auth.xbox.com/user/authenticate")
+    @POST("https://user.auth.xboxlive.com/user/authenticate")
     suspend fun authXbl(@Body body: XBLRequest): retrofit2.Response<XBLResponse>
 
-    @POST("https://xsts.auth.xbox.com/xsts/authorize")
+    @POST("https://xsts.auth.xboxlive.com/xsts/authorize")
     suspend fun authXsts(@Body body: XSTSRequest): retrofit2.Response<XSTSResponse>
 
     @POST("https://api.minecraftservices.com/authentication/login_with_xbox")

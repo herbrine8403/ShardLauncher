@@ -1,6 +1,7 @@
 package com.lanrhyme.shardlauncher.ui.account
 
-import androidx.lifecycle.ViewModel
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 // import com.lanrhyme.shardlauncher.data.AuthRepository // Keep generic auth logic if needed, but for now ignoring
 import com.lanrhyme.shardlauncher.game.account.Account
@@ -18,7 +19,7 @@ sealed class MicrosoftLoginState {
     data class Error(val message: String) : MicrosoftLoginState()
 }
 
-class AccountViewModel : ViewModel() {
+class AccountViewModel(application: Application) : AndroidViewModel(application) {
 
     // Expose flows directly from AccountsManager
     val accounts: StateFlow<List<Account>> = AccountsManager.accountsFlow
@@ -39,7 +40,7 @@ class AccountViewModel : ViewModel() {
                 
                 // Start polling automatically or wait for user confirmation?
                 // Usually we display code and start polling immediately
-                com.lanrhyme.shardlauncher.game.account.microsoft.MicrosoftAuthenticator.loginWithMicrosoft(response)
+                com.lanrhyme.shardlauncher.game.account.microsoft.MicrosoftAuthenticator.loginWithMicrosoft(response, getApplication())
                     .collect { status ->
                          // Update status message? We could add a Status state to MicrosoftLoginState
                          // For now just log or keep InProgress

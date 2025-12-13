@@ -15,8 +15,9 @@ object ApiClient {
     private const val RMS_API_BASE_URL = "http://api.rms.net.cn/"
 
     private val okHttpClient = OkHttpClient.Builder()
-        .connectTimeout(15, TimeUnit.SECONDS)
-        .readTimeout(15, TimeUnit.SECONDS)
+        .connectTimeout(30, TimeUnit.SECONDS)
+        .readTimeout(30, TimeUnit.SECONDS)
+        .writeTimeout(30, TimeUnit.SECONDS)
         .build()
 
     private fun <T> createService(baseUrl: String, serviceClass: Class<T>): T {

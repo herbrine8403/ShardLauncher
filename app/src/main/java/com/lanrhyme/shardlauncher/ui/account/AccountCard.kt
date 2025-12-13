@@ -103,8 +103,17 @@ fun AccountCard(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 // Avatar
-                val imageRequest = ImageRequest.Builder(LocalContext.current)
-                    .data("https://api.xingzhige.com/API/get_Minecraft_skins/?name=${account.username}&type=avatar&overlay=true")
+                // Avatar
+                val context = LocalContext.current
+                val localSkinFile = java.io.File(context.filesDir, "skins/${account.profileId}.png")
+                val imageUrl = if (localSkinFile.exists()) {
+                    localSkinFile
+                } else {
+                    "https://api.xingzhige.com/API/get_Minecraft_skins/?name=${account.username}&type=avatar&overlay=true"
+                }
+
+                val imageRequest = ImageRequest.Builder(context)
+                    .data(imageUrl)
                     .error(R.drawable.img_steve)
                     .crossfade(true)
                     .diskCachePolicy(CachePolicy.ENABLED)

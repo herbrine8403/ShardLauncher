@@ -56,7 +56,7 @@ object MicrosoftAuthenticator {
         throw IOException("Polling timed out")
     }
 
-    suspend fun loginWithMicrosoft(deviceCodeResponse: DeviceCodeResponse): Flow<String> = flow {
+    suspend fun loginWithMicrosoft(deviceCodeResponse: DeviceCodeResponse, context: android.content.Context): Flow<String> = flow {
         emit("正在等待用户授权...")
         val tokenResponse = pollForToken(deviceCodeResponse.deviceCode, deviceCodeResponse.interval, deviceCodeResponse.expiresIn)
         
@@ -78,22 +78,44 @@ object MicrosoftAuthenticator {
         emit("保存账户...")
         val account = Account(
             username = profile.name,
-            uniqueUUID = profile.id, // Using profile ID as unique UUID for now
+            uniqueUUID = profile.id, 
             accessToken = mcToken.accessToken,
             refreshToken = tokenResponse.refreshToken,
             accountType = ACCOUNT_TYPE_MICROSOFT,
             profileId = profile.id,
-            // skinModelType = SkinModelType.NONE // Placeholder, need logic to parse skins
         )
         // Parse skins if available
-        if (profile.skins.isNotEmpty()) {
-             // Simple logic for now
-             val skin = profile.skins.first()
-             account.skinUrl = skin.url
-             // account.skinModelType = if (skin.variant == "slim") SkinModelType.ALEX else SkinModelType.STEVE
-             // For now just skip logic
-             if (skin.variant == "slim") {
-                 // do nothing
+        val activeSkin = profile.skins.find { it.state == "ACTIVE" } ?: profile.skins.firstOrNull()
+        
+        if (activeSkin != null) {
+             account.skinUrl = activeSkin.url
+             
+             // Download skin to local storage
+             emit("下载皮肤...")
+             try {
+                 val skinsDir = java.io.File(context.filesDir, "skins")
+                 if (!skinsDir.exists()) skinsDir.mkdirs()
+                 val skinFile = java.io.File(skinsDir, "${profile.id}.png")
+                 
+                 // Force file deletion if exists to ensure fresh download
+                 if (skinFile.exists()) skinFile.delete()
+
+                 val request = okhttp3.Request.Builder().url(activeSkin.url).build()
+                 val client = okhttp3.OkHttpClient() 
+                 client.newCall(request).execute().use { response ->
+                     if (response.isSuccessful) {
+                         response.body?.byteStream()?.use { input ->
+                             java.io.FileOutputStream(skinFile).use { output ->
+                                 input.copyTo(output)
+                             }
+                         }
+                         Logger.lDebug("Skin downloaded to ${skinFile.absolutePath}")
+                     } else {
+                         Logger.lWarning("Failed to download skin: ${response.code}")
+                     }
+                 }
+             } catch (e: Exception) {
+                 Logger.lError("Failed to download skin during login", e)
              }
         }
         

@@ -20,6 +20,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyHorizontalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -68,6 +69,7 @@ import androidx.compose.material.icons.filled.Cloud
 import com.lanrhyme.shardlauncher.ui.theme.ShardLauncherTheme
 import androidx.compose.foundation.clickable
 
+@OptIn(androidx.compose.foundation.ExperimentalFoundationApi::class)
 @Composable
 fun AccountScreen(
     navController: NavController, 
@@ -120,8 +122,15 @@ fun AccountScreen(
                     contentAlignment = Alignment.Center
                 ) {
                     selectedAccount?.let { account ->
+                        val localSkinFile = java.io.File(LocalContext.current.filesDir, "skins/${account.profileId}.png")
+                        val imageUrl = if (localSkinFile.exists()) {
+                             localSkinFile
+                        } else {
+                             "https://api.xingzhige.com/API/get_Minecraft_skins/?name=${account.username}&type=身体&overlay=true"
+                        }
+                        
                         val imageRequest = ImageRequest.Builder(LocalContext.current)
-                            .data("https://api.xingzhige.com/API/get_Minecraft_skins/?name=${account.username}&type=身体&overlay=true")
+                            .data(imageUrl)
                             .placeholder(R.drawable.ic_launcher_background)
                             .error(R.drawable.img_lanrhyme)
                             .crossfade(true)
@@ -209,6 +218,14 @@ fun AccountScreen(
             val deviceCodeResponse by accountViewModel.deviceCodeData.collectAsState()
             
             if (deviceCodeResponse != null) {
+                val clipboardManager = androidx.compose.ui.platform.LocalClipboardManager.current
+                LaunchedEffect(deviceCodeResponse) {
+                    deviceCodeResponse?.let {
+                        clipboardManager.setText(androidx.compose.ui.text.AnnotatedString(it.userCode))
+                        android.widget.Toast.makeText(context, "代码已复制到剪贴板", android.widget.Toast.LENGTH_SHORT).show()
+                    }
+                }
+
                 AlertDialog(
                     onDismissRequest = { accountViewModel.cancelMicrosoftLogin() },
                     title = { Text("Microsoft 登录") },
@@ -221,8 +238,18 @@ fun AccountScreen(
                                  context.startActivity(intent)
                              })
                              Spacer(modifier = Modifier.height(16.dp))
-                             Text("代码：", style = MaterialTheme.typography.titleMedium)
-                             Text(deviceCodeResponse!!.userCode, style = MaterialTheme.typography.displayMedium)
+                             Text("代码 (长按复制)：", style = MaterialTheme.typography.titleMedium)
+                             Text(
+                                 text = deviceCodeResponse!!.userCode, 
+                                 style = MaterialTheme.typography.displayMedium,
+                                 modifier = Modifier.combinedClickable(
+                                     onClick = {},
+                                     onLongClick = {
+                                         clipboardManager.setText(androidx.compose.ui.text.AnnotatedString(deviceCodeResponse!!.userCode))
+                                         android.widget.Toast.makeText(context, "代码已复制到剪贴板", android.widget.Toast.LENGTH_SHORT).show()
+                                     }
+                                 )
+                             )
                              Spacer(modifier = Modifier.height(16.dp))
                              CircularProgressIndicator(modifier = Modifier.align(Alignment.CenterHorizontally))
                         }

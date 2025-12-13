@@ -26,4 +26,8 @@ object Logger {
             Log.e(TAG, message)
         }
     }
+
+    fun lWarning(message: String) {
+        Log.w(TAG, message)
+    }
 }

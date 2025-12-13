@@ -284,6 +284,12 @@ fun RightDetailContent(pane: VersionDetailPane, version: Version?, onBack: () ->
                     }
                 )
             }
+            VersionDetailPane.Mods -> {
+                ModsManagementScreen(
+                    version = version,
+                    onBack = onBack
+                )
+            }
             else -> {
                 // Placeholder for other panes
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {

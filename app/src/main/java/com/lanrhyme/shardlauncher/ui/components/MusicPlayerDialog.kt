@@ -96,6 +96,7 @@ import java.util.concurrent.TimeUnit
 fun MusicPlayerDialog(
     onDismissRequest: () -> Unit,
     isCardBlurEnabled: Boolean,
+    cardAlpha: Float,
     hazeState: HazeState,
     musicPlayerViewModel: MusicPlayerViewModel
 ) {
@@ -139,6 +140,7 @@ fun MusicPlayerDialog(
                             MusicPlayerTab.MusicList -> MusicListPage(musicPlayerViewModel = musicPlayerViewModel)
                             MusicPlayerTab.Settings -> MusicPlayerSettingsPage(
                                 isCardBlurEnabled = isCardBlurEnabled,
+                                cardAlpha = cardAlpha,
                                 hazeState = hazeState,
                                 musicPlayerViewModel = musicPlayerViewModel
                             )
@@ -286,6 +288,7 @@ fun MusicListPage(musicPlayerViewModel: MusicPlayerViewModel) {
 @Composable
 fun MusicPlayerSettingsPage(
     isCardBlurEnabled: Boolean,
+    cardAlpha: Float,
     hazeState: HazeState,
     musicPlayerViewModel: MusicPlayerViewModel
 ) {
@@ -326,6 +329,7 @@ fun MusicPlayerSettingsPage(
                  },
                 title = "启动启动器时自动播放", //TODO:i18n
                 isCardBlurEnabled = isCardBlurEnabled,
+                cardAlpha = cardAlpha,
                 hazeState = hazeState
             )
         }
@@ -384,6 +388,7 @@ fun MusicPlayerSettingsPage(
                 enabled = true,
                 isGlowEffectEnabled = true,
                 isCardBlurEnabled = isCardBlurEnabled,
+                cardAlpha = cardAlpha,
                 hazeState = hazeState
             )
         }

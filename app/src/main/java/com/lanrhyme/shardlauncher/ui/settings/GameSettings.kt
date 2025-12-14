@@ -17,6 +17,7 @@ fun GameSettingsContent(
     onUseBmclapiChange: (Boolean) -> Unit,
     animationSpeed: Float,
     isCardBlurEnabled: Boolean,
+    cardAlpha: Float,
     hazeState: HazeState
 ) {
     Column(
@@ -32,6 +33,7 @@ fun GameSettingsContent(
             checked = useBmclapi,
             onCheckedChange = { onUseBmclapiChange(!useBmclapi) },
             isCardBlurEnabled = isCardBlurEnabled,
+            cardAlpha = cardAlpha,
             hazeState = hazeState
         )
     }

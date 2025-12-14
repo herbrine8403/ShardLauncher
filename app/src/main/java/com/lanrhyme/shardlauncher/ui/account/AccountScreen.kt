@@ -68,13 +68,17 @@ import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Cloud
 import com.lanrhyme.shardlauncher.ui.theme.ShardLauncherTheme
 import androidx.compose.foundation.clickable
+import dev.chrisbanes.haze.HazeState
 
 @OptIn(androidx.compose.foundation.ExperimentalFoundationApi::class)
 @Composable
 fun AccountScreen(
     navController: NavController, 
     accountViewModel: AccountViewModel = viewModel(),
-    microsoftAuthCode: String? = null
+    microsoftAuthCode: String? = null,
+    isCardBlurEnabled: Boolean,
+    cardAlpha: Float,
+    hazeState: HazeState
 ) {
     val accounts by accountViewModel.accounts.collectAsState()
     val selectedAccount by accountViewModel.selectedAccount.collectAsState()
@@ -115,7 +119,7 @@ fun AccountScreen(
                     .weight(0.3f)
                     .padding(16.dp),
                 shape = RoundedCornerShape(22.dp),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f))
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = cardAlpha))
             ) {
                 Box(
                     modifier = Modifier.fillMaxSize(),
@@ -173,6 +177,7 @@ fun AccountScreen(
                         onClick = { accountViewModel.selectAccount(account) },
                         onDelete = { accountViewModel.deleteAccount(it) },
                         onEdit = { editingAccount = it },
+                        cardAlpha = cardAlpha,
                         navController = navController
                     )
                 }
@@ -365,6 +370,11 @@ fun EditAccountDialog(account: Account, onDismiss: () -> Unit, onConfirm: (Strin
 @Composable
 fun AccountScreenPreview() {
     ShardLauncherTheme {
-        AccountScreen(navController = rememberNavController())
+        AccountScreen(
+            navController = rememberNavController(),
+            isCardBlurEnabled = false,
+            cardAlpha = 0.6f,
+            hazeState = remember { HazeState() }
+        )
     }
 }

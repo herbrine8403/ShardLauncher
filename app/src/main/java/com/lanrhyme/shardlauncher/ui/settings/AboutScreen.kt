@@ -22,7 +22,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Article
+import androidx.compose.material.icons.automirrored.filled.Article
 import androidx.compose.material.icons.filled.Code
 import androidx.compose.material.icons.filled.HdrWeak
 import androidx.compose.material.icons.filled.Link
@@ -69,6 +69,7 @@ data class OssLibrary(
 fun AboutScreen(
     animationSpeed: Float,
     isCardBlurEnabled: Boolean,
+    cardAlpha: Float,
     hazeState: HazeState
 ) {
     val context = LocalContext.current
@@ -95,6 +96,7 @@ fun AboutScreen(
                     title = "关于",
                     summary = "关于ShardLauncher",
                     isCardBlurEnabled = isCardBlurEnabled,
+                    cardAlpha = cardAlpha,
                     hazeState = hazeState
                 ) {
                     Column(modifier = Modifier.padding(16.dp)) {
@@ -117,7 +119,7 @@ fun AboutScreen(
                             ScalingActionButton(
                                 onClick = { /*TODO*/ },
                                 modifier = Modifier.weight(1f),
-                                icon = Icons.Default.Article,
+                                icon = Icons.AutoMirrored.Filled.Article,
                                 text = "文档"
                             )
                             ScalingActionButton(
@@ -151,6 +153,7 @@ fun AboutScreen(
                         )
                     ),
                     isCardBlurEnabled = isCardBlurEnabled,
+                    cardAlpha = cardAlpha,
                     hazeState = hazeState
                 )
             }
@@ -171,6 +174,7 @@ fun AboutScreen(
                         )
                     ),
                     isCardBlurEnabled = isCardBlurEnabled,
+                    cardAlpha = cardAlpha,
                     hazeState = hazeState
                 )
             }
@@ -218,6 +222,7 @@ fun AboutScreen(
                         )
                     ),
                     isCardBlurEnabled = isCardBlurEnabled,
+                    cardAlpha = cardAlpha,
                     hazeState = hazeState
                 )
             }
@@ -227,6 +232,7 @@ fun AboutScreen(
                         .animatedAppearance(5, animationSpeed),
                     title = "开源许可",
                     isCardBlurEnabled = isCardBlurEnabled,
+                    cardAlpha = cardAlpha,
                     hazeState = hazeState
                 ) {
                     Column(
@@ -247,7 +253,7 @@ fun AboutScreen(
                             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                                 ScalingActionButton(
                                     onClick = { showLicensesDialog = true },
-                                    icon = Icons.Default.Article,
+                                    icon = Icons.AutoMirrored.Filled.Article,
                                     text = "查看许可",
                                     contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp)
                                 )
@@ -269,6 +275,7 @@ fun AboutScreen(
                     .animatedAppearance(1, animationSpeed),
                 title = "版本信息",
                 isCardBlurEnabled = isCardBlurEnabled,
+                cardAlpha = cardAlpha,
                 hazeState = hazeState
             ) {
                 Column(
@@ -394,6 +401,7 @@ fun CreditsCard(
     summary: String? = null,
     items: List<CreditItem>,
     isCardBlurEnabled: Boolean,
+    cardAlpha: Float,
     hazeState: HazeState
 ) {
     val context = LocalContext.current
@@ -402,6 +410,7 @@ fun CreditsCard(
         title = title,
         summary = summary,
         isCardBlurEnabled = isCardBlurEnabled,
+        cardAlpha = cardAlpha,
         hazeState = hazeState
     ) {
         Column(

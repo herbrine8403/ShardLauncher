@@ -54,7 +54,7 @@ import dev.chrisbanes.haze.HazeState
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-fun VersionDetailScreen(navController: NavController, versionId: String?, isCardBlurEnabled: Boolean, hazeState: HazeState) {
+fun VersionDetailScreen(navController: NavController, versionId: String?, isCardBlurEnabled: Boolean, cardAlpha: Float, hazeState: HazeState) {
     if (versionId == null) {
         Text("Error: Version ID is missing.")
         return
@@ -112,6 +112,7 @@ fun VersionDetailScreen(navController: NavController, versionId: String?, isCard
                 title = "模组加载器", 
                 summary = "选择一个模组加载器 (可选)",
                 isCardBlurEnabled = isCardBlurEnabled,
+                cardAlpha = cardAlpha,
                 hazeState = hazeState
             ) {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -160,7 +161,7 @@ fun VersionDetailScreen(navController: NavController, versionId: String?, isCard
                 }
             }
 
-            CombinedCard(title = "光影加载器", summary = "为你的游戏添加光影 (可选)", isCardBlurEnabled = isCardBlurEnabled, hazeState = hazeState) {
+            CombinedCard(title = "光影加载器", summary = "为你的游戏添加光影 (可选)", isCardBlurEnabled = isCardBlurEnabled, cardAlpha = cardAlpha, hazeState = hazeState) {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     StyledFilterChip(
                         selected = isOptifineSelected,

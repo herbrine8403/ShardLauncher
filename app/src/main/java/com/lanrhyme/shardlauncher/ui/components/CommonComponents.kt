@@ -83,6 +83,7 @@ fun CollapsibleCard(
     summary: String? = null,
     animationSpeed: Float = 1.0f,
     isCardBlurEnabled: Boolean = false,
+    cardAlpha: Float = 0.6f,
     hazeState: HazeState? = null,
     content: @Composable () -> Unit
 ) {
@@ -102,7 +103,7 @@ fun CollapsibleCard(
     Card(
         modifier = cardModifier,
         shape = cardShape,
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f)),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = cardAlpha)),
     ) {
         Column {
             Row(
@@ -137,6 +138,7 @@ fun CombinedCard(
     title: String,
     summary: String? = null,
     isCardBlurEnabled: Boolean = false,
+    cardAlpha: Float = 0.6f,
     hazeState: HazeState? = null,
     content: @Composable () -> Unit
 ) {
@@ -152,7 +154,7 @@ fun CombinedCard(
     Card(
         modifier = cardModifier,
         shape = cardShape,
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f)),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = cardAlpha)),
     ) {
         Column(modifier = Modifier.padding(12.dp)) {
             TitleAndSummary(title = title, summary = summary)

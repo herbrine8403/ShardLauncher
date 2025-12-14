@@ -159,6 +159,7 @@ class MainActivity : ComponentActivity() {
             var uiScale by remember { mutableStateOf(settingsRepository.getUiScale()) }
             var isGlowEffectEnabled by remember { mutableStateOf(settingsRepository.getIsGlowEffectEnabled()) }
             var isCardBlurEnabled by remember { mutableStateOf(settingsRepository.getIsCardBlurEnabled()) }
+            var cardAlpha by remember { mutableStateOf(settingsRepository.getCardAlpha()) }
             var useBmclapi by remember { mutableStateOf(settingsRepository.getUseBmclapi()) }
             var isMusicPlayerEnabled by remember { mutableStateOf(settingsRepository.getIsMusicPlayerEnabled()) }
 
@@ -329,6 +330,11 @@ class MainActivity : ComponentActivity() {
                                         isCardBlurEnabled = newValue
                                         settingsRepository.setIsCardBlurEnabled(newValue)
                                     },
+                                    cardAlpha = cardAlpha,
+                                    onCardAlphaChange = {
+                                        cardAlpha = it
+                                        settingsRepository.setCardAlpha(it)
+                                    },
                                     useBmclapi = useBmclapi,
                                     onUseBmclapiChange = { newValue ->
                                         useBmclapi = newValue
@@ -409,6 +415,8 @@ fun MainScreen(
     onIsGlowEffectEnabledChange: () -> Unit,
     isCardBlurEnabled: Boolean,
     onIsCardBlurEnabledChange: () -> Unit,
+    cardAlpha: Float,
+    onCardAlphaChange: (Float) -> Unit,
     useBmclapi: Boolean,
     onUseBmclapiChange: (Boolean) -> Unit,
     isMusicPlayerEnabled: Boolean,
@@ -574,6 +582,8 @@ fun MainScreen(
                 onIsGlowEffectEnabledChange = onIsGlowEffectEnabledChange,
                 isCardBlurEnabled = isCardBlurEnabled,
                 onIsCardBlurEnabledChange = onIsCardBlurEnabledChange,
+                cardAlpha = cardAlpha,
+                onCardAlphaChange = onCardAlphaChange,
                 useBmclapi = useBmclapi,
                 onUseBmclapiChange = onUseBmclapiChange,
                 isMusicPlayerEnabled = isMusicPlayerEnabled,
@@ -657,6 +667,8 @@ fun MainContent(
     onIsGlowEffectEnabledChange: () -> Unit,
     isCardBlurEnabled: Boolean,
     onIsCardBlurEnabledChange: () -> Unit,
+    cardAlpha: Float,
+    onCardAlphaChange: (Float) -> Unit,
     useBmclapi: Boolean,
     onUseBmclapiChange: (Boolean) -> Unit,
     isMusicPlayerEnabled: Boolean,
@@ -759,16 +771,18 @@ fun MainContent(
                         enableVersionCheck = enableVersionCheck, 
                         animationSpeed = animationSpeed, 
                         accountViewModel = accountViewModel, 
-                        isCardBlurEnabled = isCardBlurEnabled, 
+                        isCardBlurEnabled = isCardBlurEnabled,
+                        cardAlpha = cardAlpha,
                         hazeState = hazeState
                     )
                 }
-                composable(Screen.Version.route) { VersionScreen(navController, animationSpeed) }
+                composable(Screen.Version.route) { VersionScreen(navController, animationSpeed, isCardBlurEnabled, cardAlpha, hazeState) }
                 composable(Screen.Download.route) { 
                     DownloadScreen(
                         navController = navController, 
                         useBmclapi = useBmclapi,
                         isCardBlurEnabled = isCardBlurEnabled,
+                        cardAlpha = cardAlpha,
                         hazeState = hazeState
                     ) 
                 }
@@ -777,6 +791,7 @@ fun MainContent(
                         navController, 
                         it.arguments?.getString("versionId"),
                         isCardBlurEnabled = isCardBlurEnabled, 
+                        cardAlpha = cardAlpha,
                         hazeState = hazeState
                     )
                 }
@@ -792,7 +807,10 @@ fun MainContent(
                     AccountScreen(
                         navController = navController, 
                         accountViewModel = accountViewModel,
-                        microsoftAuthCode = backStackEntry.arguments?.getString("code")
+                        microsoftAuthCode = backStackEntry.arguments?.getString("code"),
+                        isCardBlurEnabled = isCardBlurEnabled,
+                        cardAlpha = cardAlpha,
+                        hazeState = hazeState
                     )
                 }
                 composable(Screen.Settings.route) {
@@ -838,6 +856,8 @@ fun MainContent(
                         onIsGlowEffectEnabledChange = onIsGlowEffectEnabledChange,
                         isCardBlurEnabled = isCardBlurEnabled,
                         onIsCardBlurEnabledChange = onIsCardBlurEnabledChange,
+                        cardAlpha = cardAlpha,
+                        onCardAlphaChange = onCardAlphaChange,
                         useBmclapi = useBmclapi,
                         onUseBmclapiChange = onUseBmclapiChange,
                         isMusicPlayerEnabled = isMusicPlayerEnabled,
@@ -847,10 +867,10 @@ fun MainContent(
                     )
                 }
                 composable(Screen.DeveloperOptions.route) {
-                    DeveloperOptionsScreen(navController = navController, isCardBlurEnabled = isCardBlurEnabled, hazeState = hazeState)
+                    DeveloperOptionsScreen(navController = navController, isCardBlurEnabled = isCardBlurEnabled, cardAlpha = cardAlpha, hazeState = hazeState)
                 }
                 composable("component_demo") {
-                    ComponentDemoScreen(isCardBlurEnabled = isCardBlurEnabled, hazeState = hazeState)
+                    ComponentDemoScreen(isCardBlurEnabled = isCardBlurEnabled, cardAlpha = cardAlpha, hazeState = hazeState)
                 }
             }
         }

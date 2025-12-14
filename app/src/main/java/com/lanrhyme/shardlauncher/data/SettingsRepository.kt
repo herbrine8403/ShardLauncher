@@ -282,6 +282,15 @@ class SettingsRepository(context: Context) {
         saveProperties()
     }
 
+    fun getCardAlpha(): Float {
+        return properties.getProperty(KEY_CARD_ALPHA, "0.6").toFloat()
+    }
+
+    fun setCardAlpha(alpha: Float) {
+        properties.setProperty(KEY_CARD_ALPHA, alpha.toString())
+        saveProperties()
+    }
+
     fun getUseBmclapi(): Boolean {
         return properties.getProperty(KEY_USE_BMCLAPI, "true").toBoolean()
     }
@@ -450,6 +459,8 @@ class SettingsRepository(context: Context) {
             private const val KEY_IS_GLOW_EFFECT_ENABLED = "is_glow_effect_enabled"
 
             private const val KEY_IS_CARD_BLUR_ENABLED = "is_card_blur_enabled"
+
+            private const val KEY_CARD_ALPHA = "card_alpha"
 
             private const val KEY_USE_BMCLAPI = "use_bmclapi"
 

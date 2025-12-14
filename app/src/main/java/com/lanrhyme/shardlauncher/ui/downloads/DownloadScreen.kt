@@ -18,6 +18,7 @@ fun DownloadScreen(
     navController: NavController, 
     useBmclapi: Boolean,
     isCardBlurEnabled: Boolean,
+    cardAlpha: Float,
     hazeState: HazeState
 ) {
     var selectedPage by remember { mutableStateOf(DownloadPage.Game) }
@@ -34,7 +35,7 @@ fun DownloadScreen(
         )
 
         when (selectedPage) {
-            DownloadPage.Game -> GameDownloadContent(navController, useBmclapi = useBmclapi, isCardBlurEnabled = isCardBlurEnabled, hazeState = hazeState)
+            DownloadPage.Game -> GameDownloadContent(navController, useBmclapi = useBmclapi, isCardBlurEnabled = isCardBlurEnabled, cardAlpha = cardAlpha, hazeState = hazeState)
             DownloadPage.Mod -> ModDownloadContent()
             DownloadPage.Modpack -> ModpackDownloadContent()
         }

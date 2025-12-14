@@ -77,6 +77,7 @@ fun HomeScreen(
     animationSpeed: Float,
     accountViewModel: AccountViewModel = viewModel(),
     isCardBlurEnabled: Boolean,
+    cardAlpha: Float,
     hazeState: HazeState
 ) {
     val context = LocalContext.current
@@ -141,6 +142,7 @@ fun HomeScreen(
                         title = "主页", 
                         summary = "欢迎回来",
                         isCardBlurEnabled = isCardBlurEnabled,
+                        cardAlpha = cardAlpha,
                         hazeState = hazeState
                     ) {
                         XamlRenderer(nodes = nodes, modifier = Modifier.padding(horizontal = 20.dp))
@@ -153,6 +155,7 @@ fun HomeScreen(
                             title = "Minecraft更新", 
                             summary = "查看最近的更新内容",
                             isCardBlurEnabled = isCardBlurEnabled,
+                            cardAlpha = cardAlpha,
                             hazeState = hazeState
                         ) {
                             when {

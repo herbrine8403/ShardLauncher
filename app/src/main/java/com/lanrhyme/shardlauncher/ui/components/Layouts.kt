@@ -40,6 +40,7 @@ fun SwitchLayout(
     enabled: Boolean = true,
     shape: Shape = RoundedCornerShape(16.dp),
     isCardBlurEnabled: Boolean,
+    cardAlpha: Float,
     hazeState: HazeState
 ) {
     val interactionSource = remember { MutableInteractionSource() }
@@ -62,7 +63,7 @@ fun SwitchLayout(
                 onClick = onCheckedChange
             ),
         shape = shape,
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f)),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = cardAlpha)),
     ) {
         Row(
             modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
@@ -104,6 +105,7 @@ fun IconSwitchLayout(
     enabled: Boolean = true,
     shape: Shape = RoundedCornerShape(16.dp),
     isCardBlurEnabled: Boolean,
+    cardAlpha: Float,
     hazeState: HazeState
 ) {
     val interactionSource = remember { MutableInteractionSource() }
@@ -126,7 +128,7 @@ fun IconSwitchLayout(
                 onClick = onCheckedChange
             ),
         shape = shape,
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f)),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = cardAlpha)),
     ) {
         Row(
             modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
@@ -174,6 +176,7 @@ fun <E> SimpleListLayout(
     autoCollapse: Boolean = true,
     shape: Shape = RoundedCornerShape(16.dp),
     isCardBlurEnabled: Boolean,
+    cardAlpha: Float,
     hazeState: HazeState
 ) {
     var expanded by remember { mutableStateOf(false) }
@@ -191,7 +194,7 @@ fun <E> SimpleListLayout(
     Card(
         modifier = cardModifier,
         shape = shape,
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f)),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = cardAlpha)),
     ) {
         Column {
             Row(
@@ -268,6 +271,7 @@ fun SliderLayout(
     displayValue: Float = value,
     isGlowEffectEnabled: Boolean,
     isCardBlurEnabled: Boolean,
+    cardAlpha: Float,
     hazeState: HazeState
 ) {
     val cardModifier = if (isCardBlurEnabled && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
@@ -283,7 +287,7 @@ fun SliderLayout(
     Card(
         modifier = cardModifier,
         shape = shape,
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f)),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = cardAlpha)),
     ) {
         Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)) {
             TitleAndSummary(

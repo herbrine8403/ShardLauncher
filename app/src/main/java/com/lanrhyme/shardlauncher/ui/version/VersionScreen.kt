@@ -39,6 +39,7 @@ import com.lanrhyme.shardlauncher.game.version.installed.VersionsManager
 import com.lanrhyme.shardlauncher.ui.components.SearchTextField
 import com.lanrhyme.shardlauncher.ui.components.animatedAppearance
 import com.lanrhyme.shardlauncher.ui.components.selectableCard
+import dev.chrisbanes.haze.HazeState
 
 enum class VersionDetailPane(val title: String, val icon: ImageVector) {
     Config("版本配置", Icons.Default.Settings), // TODO: i18n
@@ -49,7 +50,7 @@ enum class VersionDetailPane(val title: String, val icon: ImageVector) {
 }
 
 @Composable
-fun VersionScreen(navController: NavController, animationSpeed: Float) {
+fun VersionScreen(navController: NavController, animationSpeed: Float, isCardBlurEnabled: Boolean, cardAlpha: Float, hazeState: HazeState) {
     // Refresh versions on load
     LaunchedEffect(Unit) {
         VersionsManager.refresh("VersionScreen_Init")
@@ -74,7 +75,7 @@ fun VersionScreen(navController: NavController, animationSpeed: Float) {
                 .padding(start = 16.dp, top = 16.dp, end = 8.dp, bottom = 16.dp),
             shape = RoundedCornerShape(16.dp),
             colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f)
+                containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = cardAlpha)
             )
         ) {
             LeftNavigationPane(
@@ -97,7 +98,10 @@ fun VersionScreen(navController: NavController, animationSpeed: Float) {
                         onVersionClick = { version ->
                             selectedVersion = version
                         },
-                        animationSpeed = animationSpeed
+                        animationSpeed = animationSpeed,
+                        isCardBlurEnabled = isCardBlurEnabled,
+                        cardAlpha = cardAlpha,
+                        hazeState = hazeState
                     )
                 } else {
                     RightDetailContent(pane, selectedVersion, onBack = { resetToVersionList() })
@@ -181,7 +185,10 @@ fun GameVersionListContent(
     versions: List<Version>,
     selectedVersion: Version?,
     onVersionClick: (Version) -> Unit,
-    animationSpeed: Float
+    animationSpeed: Float,
+    isCardBlurEnabled: Boolean,
+    cardAlpha: Float,
+    hazeState: HazeState
 ) {
     var searchText by remember { mutableStateOf("") }
     
@@ -243,7 +250,8 @@ fun GameVersionListContent(
                         isSelected = version == selectedVersion,
                         onClick = { onVersionClick(version) },
                         index = index,
-                        animationSpeed = animationSpeed
+                        animationSpeed = animationSpeed,
+                        cardAlpha = cardAlpha
                     )
                 }
             }
@@ -301,7 +309,7 @@ fun RightDetailContent(pane: VersionDetailPane, version: Version?, onBack: () ->
 }
 
 @Composable
-fun GameVersionCard(version: Version, isSelected: Boolean, onClick: () -> Unit, index: Int, animationSpeed: Float) {
+fun GameVersionCard(version: Version, isSelected: Boolean, onClick: () -> Unit, index: Int, animationSpeed: Float, cardAlpha: Float) {
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
 
@@ -317,7 +325,7 @@ fun GameVersionCard(version: Version, isSelected: Boolean, onClick: () -> Unit, 
         shape = shape,
         border = if (isSelected) BorderStroke(2.dp, MaterialTheme.colorScheme.primary) else null,
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f)
+            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = cardAlpha)
         )
     ) {
         Box(modifier = Modifier.fillMaxSize()) {

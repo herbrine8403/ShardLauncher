@@ -55,7 +55,7 @@ import dev.chrisbanes.haze.HazeState
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
-fun GameDownloadContent(navController: NavController, useBmclapi: Boolean, isCardBlurEnabled: Boolean, hazeState: HazeState) {
+fun GameDownloadContent(navController: NavController, useBmclapi: Boolean, isCardBlurEnabled: Boolean, cardAlpha: Float, hazeState: HazeState) {
     val viewModel: GameDownloadViewModel = viewModel()
 
     val versions by viewModel.filteredVersions.collectAsState()
@@ -85,6 +85,7 @@ fun GameDownloadContent(navController: NavController, useBmclapi: Boolean, isCar
                         title = "版本筛选", 
                         summary = null, 
                         isCardBlurEnabled = isCardBlurEnabled, 
+                        cardAlpha = cardAlpha,
                         hazeState = hazeState
                     ) {
                         Row(

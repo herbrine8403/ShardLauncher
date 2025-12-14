@@ -46,6 +46,7 @@ import dev.chrisbanes.haze.HazeState
 @Composable
 fun ComponentDemoScreen(
     isCardBlurEnabled: Boolean,
+    cardAlpha: Float,
     hazeState: HazeState
 ) {
     var textState by remember { mutableStateOf("Hello") }
@@ -104,6 +105,7 @@ fun ComponentDemoScreen(
                 onCheckedChange = { switchState = !switchState }, 
                 title = "Switch Layout",
                 isCardBlurEnabled = isCardBlurEnabled,
+                cardAlpha = cardAlpha,
                 hazeState = hazeState
             )
         }
@@ -115,6 +117,7 @@ fun ComponentDemoScreen(
                 title = "Slider Layout", 
                 isGlowEffectEnabled = true,
                 isCardBlurEnabled = isCardBlurEnabled,
+                cardAlpha = cardAlpha,
                 hazeState = hazeState
             )
         }
@@ -127,6 +130,7 @@ fun ComponentDemoScreen(
                 onValueChange = { selectedListPage = it },
                 getItemText = { pos -> pos.name  },
                 isCardBlurEnabled = isCardBlurEnabled,
+                cardAlpha = cardAlpha,
                 hazeState = hazeState
             )
         }
@@ -151,6 +155,7 @@ fun ComponentDemoScreen(
                 title = "Combined Card", 
                 summary = "With some content",
                 isCardBlurEnabled = isCardBlurEnabled,
+                cardAlpha = cardAlpha,
                 hazeState = hazeState
             ) {
                 Text("This is the content of the combined card", modifier = Modifier.padding(16.dp))

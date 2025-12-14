@@ -18,7 +18,7 @@ import com.lanrhyme.shardlauncher.ui.navigation.Screen
 import dev.chrisbanes.haze.HazeState
 
 @Composable
-internal fun OtherSettingsContent(navController: NavController, isCardBlurEnabled: Boolean, hazeState: HazeState) {
+internal fun OtherSettingsContent(navController: NavController, isCardBlurEnabled: Boolean, cardAlpha: Float, hazeState: HazeState) {
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
         contentPadding = PaddingValues(16.dp),
@@ -40,6 +40,7 @@ internal fun OtherSettingsContent(navController: NavController, isCardBlurEnable
                 onValueChange = { navController.navigate(Screen.DeveloperOptions.route) },
                 getItemText = { "点击进入开发者选项" },
                 isCardBlurEnabled = isCardBlurEnabled,
+                cardAlpha = cardAlpha,
                 hazeState = hazeState
             )
         }

@@ -76,6 +76,8 @@ fun SettingsScreen(
     onIsGlowEffectEnabledChange: () -> Unit,
     isCardBlurEnabled: Boolean,
     onIsCardBlurEnabledChange: () -> Unit,
+    cardAlpha: Float,
+    onCardAlphaChange: (Float) -> Unit,
     useBmclapi: Boolean,
     onUseBmclapiChange: (Boolean) -> Unit,
     isMusicPlayerEnabled: Boolean,
@@ -135,6 +137,8 @@ fun SettingsScreen(
                         onIsGlowEffectEnabledChange = onIsGlowEffectEnabledChange,
                         isCardBlurEnabled = isCardBlurEnabled,
                         onIsCardBlurEnabledChange = onIsCardBlurEnabledChange,
+                        cardAlpha = cardAlpha,
+                        onCardAlphaChange = onCardAlphaChange,
                         isMusicPlayerEnabled = isMusicPlayerEnabled,
                         onIsMusicPlayerEnabledChange = onIsMusicPlayerEnabledChange,
                         musicPlayerViewModel = musicPlayerViewModel,
@@ -147,14 +151,15 @@ fun SettingsScreen(
                         onUseBmclapiChange = onUseBmclapiChange,
                         animationSpeed = animationSpeed,
                         isCardBlurEnabled = isCardBlurEnabled,
+                        cardAlpha = cardAlpha,
                         hazeState = hazeState
                     )
                 }
                 SettingsPage.About -> {
-                    AboutScreen(animationSpeed = animationSpeed, isCardBlurEnabled = isCardBlurEnabled, hazeState = hazeState)
+                    AboutScreen(animationSpeed = animationSpeed, isCardBlurEnabled = isCardBlurEnabled, cardAlpha = cardAlpha, hazeState = hazeState)
                 }
                 SettingsPage.Other -> {
-                    OtherSettingsContent(navController = navController, isCardBlurEnabled = isCardBlurEnabled, hazeState = hazeState)
+                    OtherSettingsContent(navController = navController, isCardBlurEnabled = isCardBlurEnabled, cardAlpha = cardAlpha, hazeState = hazeState)
                 }
                 // Other categories can be added later
                 else -> { /* Placeholder for other settings pages */ }

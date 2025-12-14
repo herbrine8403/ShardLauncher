@@ -65,6 +65,7 @@ fun AccountCard(
     onLongClick: () -> Unit = {},
     onDelete: (Account) -> Unit,
     onEdit: (Account) -> Unit,
+    cardAlpha: Float,
     navController: NavController
 ) {
     var showMenu by remember { mutableStateOf(false) }
@@ -95,7 +96,7 @@ fun AccountCard(
                     indication = null
                 ),
             shape = RoundedCornerShape(16.dp),
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f)),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = cardAlpha)),
             border = border
         ) {
             Column(

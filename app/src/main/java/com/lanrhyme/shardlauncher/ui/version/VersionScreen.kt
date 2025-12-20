@@ -1,7 +1,7 @@
 package com.lanrhyme.shardlauncher.ui.version
 
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.Crossfade
+import android.os.Build
+import androidx.compose.animation.*
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -15,6 +15,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.Sort
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -39,6 +40,7 @@ import com.lanrhyme.shardlauncher.ui.components.LocalCardLayoutConfig
 import com.lanrhyme.shardlauncher.ui.components.SearchTextField
 import com.lanrhyme.shardlauncher.ui.components.animatedAppearance
 import com.lanrhyme.shardlauncher.ui.components.selectableCard
+import dev.chrisbanes.haze.hazeEffect
 
 enum class VersionDetailPane(val title: String, val icon: ImageVector) {
     Config("版本配置", Icons.Default.Settings), // TODO: i18n
@@ -69,12 +71,21 @@ fun VersionScreen(navController: NavController, animationSpeed: Float) {
 
     Row(modifier = Modifier.fillMaxSize()) {
         // Left Pane (25%)
+        val leftShape = RoundedCornerShape(16.dp)
         Card(
                 modifier =
                         Modifier.weight(0.25f)
                                 .fillMaxHeight()
-                                .padding(start = 16.dp, top = 16.dp, end = 8.dp, bottom = 16.dp),
-                shape = RoundedCornerShape(16.dp),
+                                .padding(start = 16.dp, top = 16.dp, end = 8.dp, bottom = 16.dp)
+                                .then(
+                                        if (isCardBlurEnabled &&
+                                                        Build.VERSION.SDK_INT >=
+                                                                Build.VERSION_CODES.S
+                                        ) {
+                                            Modifier.clip(leftShape).hazeEffect(state = hazeState)
+                                        } else Modifier
+                                ),
+                shape = leftShape,
                 colors =
                         CardDefaults.cardColors(
                                 containerColor =
@@ -218,7 +229,7 @@ fun GameVersionListContent(
                 Icon(Icons.Default.Refresh, contentDescription = "Refresh") // TODO: i18n
             }
             IconButton(onClick = { /* TODO: Sort */}) {
-                Icon(Icons.Default.Sort, contentDescription = "Sort") // TODO: i18n
+                Icon(Icons.AutoMirrored.Filled.Sort, contentDescription = "Sort") // TODO: i18n
             }
             IconButton(onClick = { /* TODO: Filter */}) {
                 Icon(Icons.Default.MoreVert, contentDescription = "Filter") // TODO: i18n
@@ -325,7 +336,13 @@ fun GameVersionCard(
                     Modifier.animatedAppearance(index, animationSpeed)
                             .size(150.dp)
                             .selectableCard(isSelected = isSelected, isPressed = isPressed)
-                            .clip(shape)
+                            .then(
+                                    if (isCardBlurEnabled &&
+                                                    Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
+                                    ) {
+                                        Modifier.clip(shape).hazeEffect(state = hazeState)
+                                    } else Modifier.clip(shape)
+                            )
                             .clickable(
                                     interactionSource = interactionSource,
                                     indication = null,

@@ -59,12 +59,12 @@ fun gitCommitDate(): String {
 
 android {
     namespace = "com.lanrhyme.shardlauncher"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.lanrhyme.shardlauncher"
         minSdk = 26
-        targetSdk = 35
+        targetSdk = 36
         versionCode = 1220
         val vName = "a0.25.1220"
         versionName = vName
@@ -112,9 +112,7 @@ android {
     buildFeatures {
         compose = true
     }
-    composeOptions {
-        kotlinCompilerExtensionVersion = "1.5.14"
-    }
+
     splits {
         abi {
             isEnable = true
@@ -161,7 +159,8 @@ dependencies {
     implementation("org.ow2.asm:asm-all:5.0.4")
     implementation("com.github.oshi:oshi-core:6.3.0")
     implementation("androidx.browser:browser:1.8.0")
-    implementation("dev.chrisbanes.haze:haze-jetpack-compose:0.5.4")
+    implementation("dev.chrisbanes.haze:haze:1.7.1")
+    implementation("dev.chrisbanes.haze:haze-materials:1.7.1")
     implementation(libs.androidx.compose.ui.text)
 
 

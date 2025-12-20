@@ -111,7 +111,7 @@ import com.lanrhyme.shardlauncher.ui.theme.ThemeColor
 import com.lanrhyme.shardlauncher.ui.version.VersionScreen
 import com.lanrhyme.shardlauncher.utils.rememberParallaxSensorHelper
 import dev.chrisbanes.haze.HazeState
-import dev.chrisbanes.haze.haze
+import dev.chrisbanes.haze.hazeSource
 import kotlin.math.abs
 
 class MainActivity : ComponentActivity() {
@@ -511,7 +511,7 @@ fun MainScreen(
 
     Surface(modifier = Modifier.fillMaxSize()) {
         Box(modifier = Modifier.fillMaxSize()) {
-            Box(modifier = Modifier.fillMaxSize().haze(state = hazeState)) {
+            Box(modifier = Modifier.fillMaxSize().hazeSource(state = hazeState)) {
                 if (launcherBackgroundUri != null) {
                     val parallaxScale =
                             if (enableParallax) 1f + (parallaxMagnitude - 1f) / 20f else 1f
@@ -956,8 +956,7 @@ fun MainContent(
                 ) { backStackEntry ->
                     AccountScreen(
                             navController = navController,
-                            accountViewModel = accountViewModel,
-                            microsoftAuthCode = backStackEntry.arguments?.getString("code")
+                            accountViewModel = accountViewModel
                     )
                 }
                 composable(Screen.Settings.route) {

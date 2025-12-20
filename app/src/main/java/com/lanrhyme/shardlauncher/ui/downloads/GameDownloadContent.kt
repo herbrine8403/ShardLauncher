@@ -40,6 +40,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
@@ -51,7 +52,7 @@ import com.lanrhyme.shardlauncher.ui.components.CombinedCard
 import com.lanrhyme.shardlauncher.ui.components.LocalCardLayoutConfig
 import com.lanrhyme.shardlauncher.ui.components.SearchTextField
 import com.lanrhyme.shardlauncher.ui.components.StyledFilterChip
-import dev.chrisbanes.haze.hazeChild
+import dev.chrisbanes.haze.hazeEffect
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
@@ -143,7 +144,8 @@ fun LazyItemScope.VersionItem(version: BmclapiManifest.Version, onClick: () -> U
                             this.scaleX = scale
                             this.scaleY = scale
                         }
-                        .hazeChild(state = hazeState, shape = shape)
+                        .clip(shape)
+                        .hazeEffect(state = hazeState)
                         .clickable { onClick() }
             } else {
                 Modifier.fillMaxWidth()

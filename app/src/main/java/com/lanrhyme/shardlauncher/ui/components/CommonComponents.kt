@@ -76,7 +76,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Popup
 import androidx.compose.ui.window.PopupProperties
-import dev.chrisbanes.haze.hazeChild
+import dev.chrisbanes.haze.hazeEffect
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -94,7 +94,7 @@ fun CollapsibleCard(
 
         val cardModifier =
                 if (isCardBlurEnabled && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                        modifier.fillMaxWidth().hazeChild(state = hazeState, shape = cardShape)
+                        modifier.fillMaxWidth().clip(cardShape).hazeEffect(state = hazeState)
                 } else {
                         modifier.fillMaxWidth()
                 }
@@ -165,7 +165,7 @@ fun CombinedCard(
         val cardShape = RoundedCornerShape(16.dp)
         val cardModifier =
                 if (isCardBlurEnabled && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                        modifier.fillMaxWidth().hazeChild(state = hazeState, shape = cardShape)
+                        modifier.fillMaxWidth().clip(cardShape).hazeEffect(state = hazeState)
                 } else {
                         modifier.fillMaxWidth()
                 }
@@ -667,6 +667,7 @@ fun PopupContainer(
         alignment: Alignment = Alignment.Center,
         content: @Composable () -> Unit
 ) {
+        val (isCardBlurEnabled, cardAlpha, hazeState) = LocalCardLayoutConfig.current
         val visibleState = remember { MutableTransitionState(false) }
 
         LaunchedEffect(visible) { visibleState.targetState = visible }
@@ -714,15 +715,33 @@ fun PopupContainer(
                                                         targetScale = 0.8f
                                                 )
                         ) {
+                                val popupShape = RoundedCornerShape(16.dp)
                                 Card(
-                                        modifier = modifier.padding(16.dp).width(IntrinsicSize.Max),
-                                        shape = RoundedCornerShape(16.dp),
+                                        modifier =
+                                                modifier.padding(16.dp)
+                                                        .width(IntrinsicSize.Max)
+                                                        .then(
+                                                                if (isCardBlurEnabled &&
+                                                                                Build.VERSION
+                                                                                        .SDK_INT >=
+                                                                                        Build.VERSION_CODES
+                                                                                                .S
+                                                                ) {
+                                                                        Modifier.clip(popupShape)
+                                                                                .hazeEffect(
+                                                                                        state =
+                                                                                                hazeState
+                                                                                )
+                                                                } else Modifier
+                                                        ),
+                                        shape = popupShape,
                                         elevation =
                                                 CardDefaults.cardElevation(defaultElevation = 8.dp),
                                         colors =
                                                 CardDefaults.cardColors(
                                                         containerColor =
                                                                 MaterialTheme.colorScheme.surface
+                                                                        .copy(alpha = cardAlpha)
                                                 )
                                 ) { content() }
                         }

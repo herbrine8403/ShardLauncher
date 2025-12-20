@@ -17,6 +17,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
@@ -27,7 +28,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
-import dev.chrisbanes.haze.hazeChild
+import dev.chrisbanes.haze.hazeEffect
 
 @Composable
 fun SwitchLayout(
@@ -45,7 +46,8 @@ fun SwitchLayout(
                 if (isCardBlurEnabled && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
                         modifier.fillMaxWidth()
                                 .alpha(if (enabled) 1f else 0.5f)
-                                .hazeChild(state = hazeState, shape = shape)
+                                .clip(shape)
+                                .hazeEffect(state = hazeState)
                 } else {
                         modifier.fillMaxWidth().alpha(if (enabled) 1f else 0.5f)
                 }
@@ -118,7 +120,8 @@ fun IconSwitchLayout(
                 if (isCardBlurEnabled && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
                         modifier.fillMaxWidth()
                                 .alpha(if (enabled) 1f else 0.5f)
-                                .hazeChild(state = hazeState, shape = shape)
+                                .clip(shape)
+                                .hazeEffect(state = hazeState)
                 } else {
                         modifier.fillMaxWidth().alpha(if (enabled) 1f else 0.5f)
                 }
@@ -195,7 +198,8 @@ fun <E> SimpleListLayout(
                 if (isCardBlurEnabled && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
                         modifier.fillMaxWidth()
                                 .alpha(if (enabled) 1f else 0.5f)
-                                .hazeChild(state = hazeState, shape = shape)
+                                .clip(shape)
+                                .hazeEffect(state = hazeState)
                 } else {
                         modifier.fillMaxWidth().alpha(if (enabled) 1f else 0.5f)
                 }
@@ -315,7 +319,8 @@ fun SliderLayout(
                 if (isCardBlurEnabled && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
                         modifier.fillMaxWidth()
                                 .alpha(if (enabled) 1f else 0.5f)
-                                .hazeChild(state = hazeState, shape = shape)
+                                .clip(shape)
+                                .hazeEffect(state = hazeState)
                 } else {
                         modifier.fillMaxWidth().alpha(if (enabled) 1f else 0.5f)
                 }

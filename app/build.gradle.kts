@@ -88,6 +88,8 @@ android {
 
     buildFeatures {
         buildConfig = true
+        compose = true
+        prefab = true
     }
 
     buildTypes {
@@ -113,6 +115,14 @@ android {
         compose = true
     }
 
+    ndkVersion = "25.2.9519653"
+
+    externalNativeBuild {
+        ndkBuild {
+            path = file("src/main/jni/Android.mk")
+        }
+    }
+
     splits {
         abi {
             isEnable = true
@@ -122,6 +132,10 @@ android {
         }
     }
     packaging {
+        jniLibs {
+            useLegacyPackaging = true
+            pickFirsts += listOf("**/libbytehook.so")
+        }
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
         }
@@ -162,6 +176,9 @@ dependencies {
     implementation("dev.chrisbanes.haze:haze:1.7.1")
     implementation("dev.chrisbanes.haze:haze-materials:1.7.1")
     implementation(libs.androidx.compose.ui.text)
+
+    // Native libraries
+    implementation("com.bytedance:bytehook:1.0.9")
 
 
     testImplementation(libs.junit)

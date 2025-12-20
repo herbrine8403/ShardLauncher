@@ -35,10 +35,10 @@ import coil.compose.AsyncImage
 import com.lanrhyme.shardlauncher.R
 import com.lanrhyme.shardlauncher.game.version.installed.Version
 import com.lanrhyme.shardlauncher.game.version.installed.VersionsManager
+import com.lanrhyme.shardlauncher.ui.components.LocalCardLayoutConfig
 import com.lanrhyme.shardlauncher.ui.components.SearchTextField
 import com.lanrhyme.shardlauncher.ui.components.animatedAppearance
 import com.lanrhyme.shardlauncher.ui.components.selectableCard
-import dev.chrisbanes.haze.HazeState
 
 enum class VersionDetailPane(val title: String, val icon: ImageVector) {
     Config("版本配置", Icons.Default.Settings), // TODO: i18n
@@ -49,13 +49,11 @@ enum class VersionDetailPane(val title: String, val icon: ImageVector) {
 }
 
 @Composable
-fun VersionScreen(
-        navController: NavController,
-        animationSpeed: Float,
-        isCardBlurEnabled: Boolean,
-        cardAlpha: Float,
-        hazeState: HazeState
-) {
+fun VersionScreen(navController: NavController, animationSpeed: Float) {
+    val cardLayoutConfig = LocalCardLayoutConfig.current
+    val isCardBlurEnabled = cardLayoutConfig.isCardBlurEnabled
+    val cardAlpha = cardLayoutConfig.cardAlpha
+    val hazeState = cardLayoutConfig.hazeState
     // Refresh versions on load
     LaunchedEffect(Unit) { VersionsManager.refresh("VersionScreen_Init") }
 
@@ -98,10 +96,7 @@ fun VersionScreen(
                             versions = versions,
                             selectedVersion = selectedVersion,
                             onVersionClick = { version -> selectedVersion = version },
-                            animationSpeed = animationSpeed,
-                            isCardBlurEnabled = isCardBlurEnabled,
-                            cardAlpha = cardAlpha,
-                            hazeState = hazeState
+                            animationSpeed = animationSpeed
                     )
                 } else {
                     RightDetailContent(pane, selectedVersion, onBack = { resetToVersionList() })
@@ -195,11 +190,9 @@ fun GameVersionListContent(
         versions: List<Version>,
         selectedVersion: Version?,
         onVersionClick: (Version) -> Unit,
-        animationSpeed: Float,
-        isCardBlurEnabled: Boolean,
-        cardAlpha: Float,
-        hazeState: HazeState
+        animationSpeed: Float
 ) {
+    val (isCardBlurEnabled, cardAlpha, hazeState) = LocalCardLayoutConfig.current
     var searchText by remember { mutableStateOf("") }
 
     // Filter versions based on search text
@@ -257,8 +250,7 @@ fun GameVersionListContent(
                             isSelected = version == selectedVersion,
                             onClick = { onVersionClick(version) },
                             index = index,
-                            animationSpeed = animationSpeed,
-                            cardAlpha = cardAlpha
+                            animationSpeed = animationSpeed
                     )
                 }
             }
@@ -320,9 +312,9 @@ fun GameVersionCard(
         isSelected: Boolean,
         onClick: () -> Unit,
         index: Int,
-        animationSpeed: Float,
-        cardAlpha: Float
+        animationSpeed: Float
 ) {
+    val (isCardBlurEnabled, cardAlpha, hazeState) = LocalCardLayoutConfig.current
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
 

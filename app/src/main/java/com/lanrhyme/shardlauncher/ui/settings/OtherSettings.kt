@@ -13,39 +13,38 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import com.lanrhyme.shardlauncher.ui.components.LocalCardLayoutConfig
 import com.lanrhyme.shardlauncher.ui.components.SimpleListLayout
 import com.lanrhyme.shardlauncher.ui.navigation.Screen
-import dev.chrisbanes.haze.HazeState
 
 @Composable
-internal fun OtherSettingsContent(navController: NavController, isCardBlurEnabled: Boolean, cardAlpha: Float, hazeState: HazeState) {
+internal fun OtherSettingsContent(navController: NavController) {
+    val cardLayoutConfig = LocalCardLayoutConfig.current
+    val isCardBlurEnabled = cardLayoutConfig.isCardBlurEnabled
+    val cardAlpha = cardLayoutConfig.cardAlpha
+    val hazeState = cardLayoutConfig.hazeState
     LazyColumn(
-        modifier = Modifier.fillMaxSize(),
-        contentPadding = PaddingValues(16.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
+            modifier = Modifier.fillMaxSize(),
+            contentPadding = PaddingValues(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         item {
             Text(
-                text = "高级",
-                style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                    text = "高级",
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
             )
         }
         item {
             SimpleListLayout(
-                title = "开发者选项",
-                items = listOf(Unit),
-                selectedItem = Unit,
-                onValueChange = { navController.navigate(Screen.DeveloperOptions.route) },
-                getItemText = { "点击进入开发者选项" },
-                isCardBlurEnabled = isCardBlurEnabled,
-                cardAlpha = cardAlpha,
-                hazeState = hazeState
+                    title = "开发者选项",
+                    items = listOf(Unit),
+                    selectedItem = Unit,
+                    onValueChange = { navController.navigate(Screen.DeveloperOptions.route) },
+                    getItemText = { "点击进入开发者选项" }
             )
         }
-        item {
-            Spacer(modifier = Modifier.height(45.dp))
-        }
+        item { Spacer(modifier = Modifier.height(45.dp)) }
     }
 }

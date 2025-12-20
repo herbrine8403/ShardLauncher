@@ -61,19 +61,20 @@ import com.lanrhyme.shardlauncher.game.account.Account
 import com.lanrhyme.shardlauncher.ui.components.FluidFab
 import com.lanrhyme.shardlauncher.ui.components.FluidFabDirection
 import com.lanrhyme.shardlauncher.ui.components.FluidFabItem
+import com.lanrhyme.shardlauncher.ui.components.LocalCardLayoutConfig
 import com.lanrhyme.shardlauncher.ui.theme.ShardLauncherTheme
-import dev.chrisbanes.haze.HazeState
 
 @OptIn(androidx.compose.foundation.ExperimentalFoundationApi::class)
 @Composable
 fun AccountScreen(
         navController: NavController,
         accountViewModel: AccountViewModel = viewModel(),
-        microsoftAuthCode: String? = null,
-        isCardBlurEnabled: Boolean,
-        cardAlpha: Float,
-        hazeState: HazeState
+        microsoftAuthCode: String? = null
 ) {
+    val cardLayoutConfig = LocalCardLayoutConfig.current
+    val isCardBlurEnabled = cardLayoutConfig.isCardBlurEnabled
+    val cardAlpha = cardLayoutConfig.cardAlpha
+    val hazeState = cardLayoutConfig.hazeState
     val accounts by accountViewModel.accounts.collectAsState()
     val selectedAccount by accountViewModel.selectedAccount.collectAsState()
     var showOfflineAccountDialog by remember { mutableStateOf(false) }
@@ -390,12 +391,5 @@ fun EditAccountDialog(account: Account, onDismiss: () -> Unit, onConfirm: (Strin
 @Preview(showBackground = true, widthDp = 1280, heightDp = 720)
 @Composable
 fun AccountScreenPreview() {
-    ShardLauncherTheme {
-        AccountScreen(
-                navController = rememberNavController(),
-                isCardBlurEnabled = false,
-                cardAlpha = 0.6f,
-                hazeState = remember { HazeState() }
-        )
-    }
+    ShardLauncherTheme { AccountScreen(navController = rememberNavController()) }
 }

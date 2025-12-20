@@ -21,7 +21,6 @@ import com.lanrhyme.shardlauncher.common.SidebarPosition
 import com.lanrhyme.shardlauncher.ui.components.SegmentedNavigationBar
 import com.lanrhyme.shardlauncher.ui.music.MusicPlayerViewModel
 import com.lanrhyme.shardlauncher.ui.theme.ThemeColor
-import dev.chrisbanes.haze.HazeState
 
 // 1. 定义设置页面分类
 enum class SettingsPage(val title: String) {
@@ -35,144 +34,142 @@ enum class SettingsPage(val title: String) {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(
-    navController: NavController,
-    isDarkTheme: Boolean,
-    onThemeToggle: () -> Unit,
-    sidebarPosition: SidebarPosition,
-    onPositionChange: (SidebarPosition) -> Unit,
-    themeColor: ThemeColor, // Hoisted state for theme color
-    onThemeColorChange: (ThemeColor) -> Unit, // Hoisted callback for theme color
-    customPrimaryColor: Color,
-    onCustomPrimaryColorChange: (Color) -> Unit,
-    lightColorScheme: ColorScheme,
-    darkColorScheme: ColorScheme,
-    onLightColorSchemeChange: (ColorScheme) -> Unit,
-    onDarkColorSchemeChange: (ColorScheme) -> Unit,
-    enableBackgroundLightEffect: Boolean,
-    onEnableBackgroundLightEffectChange: () -> Unit,
-    lightEffectAnimationSpeed: Float,
-    onLightEffectAnimationSpeedChange: (Float) -> Unit,
-    enableBackgroundLightEffectCustomColor: Boolean,
-    onEnableBackgroundLightEffectCustomColorChange: () -> Unit,
-    backgroundLightEffectCustomColor: Color,
-    onBackgroundLightEffectCustomColorChange: (Color) -> Unit,
-    animationSpeed: Float,
-    onAnimationSpeedChange: (Float) -> Unit,
-    launcherBackgroundUri: String?,
-    onLauncherBackgroundUriChange: (String?) -> Unit,
-    launcherBackgroundBlur: Float,
-    onLauncherBackgroundBlurChange: (Float) -> Unit,
-    launcherBackgroundBrightness: Float,
-    onLauncherBackgroundBrightnessChange: (Float) -> Unit,
-    enableParallax: Boolean,
-    onEnableParallaxChange: (Boolean) -> Unit,
-    parallaxMagnitude: Float,
-    onParallaxMagnitudeChange: (Float) -> Unit,
-    enableVersionCheck: Boolean,
-    onEnableVersionCheckChange: () -> Unit,
-    uiScale: Float,
-    onUiScaleChange: (Float) -> Unit,
-    isGlowEffectEnabled: Boolean,
-    onIsGlowEffectEnabledChange: () -> Unit,
-    isCardBlurEnabled: Boolean,
-    onIsCardBlurEnabledChange: () -> Unit,
-    cardAlpha: Float,
-    onCardAlphaChange: (Float) -> Unit,
-    useBmclapi: Boolean,
-    onUseBmclapiChange: (Boolean) -> Unit,
-    isMusicPlayerEnabled: Boolean,
-    onIsMusicPlayerEnabledChange: () -> Unit,
-    musicPlayerViewModel: MusicPlayerViewModel,
-    hazeState: HazeState
+        navController: NavController,
+        isDarkTheme: Boolean,
+        onThemeToggle: () -> Unit,
+        sidebarPosition: SidebarPosition,
+        onPositionChange: (SidebarPosition) -> Unit,
+        themeColor: ThemeColor, // Hoisted state for theme color
+        onThemeColorChange: (ThemeColor) -> Unit, // Hoisted callback for theme color
+        customPrimaryColor: Color,
+        onCustomPrimaryColorChange: (Color) -> Unit,
+        lightColorScheme: ColorScheme,
+        darkColorScheme: ColorScheme,
+        onLightColorSchemeChange: (ColorScheme) -> Unit,
+        onDarkColorSchemeChange: (ColorScheme) -> Unit,
+        enableBackgroundLightEffect: Boolean,
+        onEnableBackgroundLightEffectChange: () -> Unit,
+        lightEffectAnimationSpeed: Float,
+        onLightEffectAnimationSpeedChange: (Float) -> Unit,
+        enableBackgroundLightEffectCustomColor: Boolean,
+        onEnableBackgroundLightEffectCustomColorChange: () -> Unit,
+        backgroundLightEffectCustomColor: Color,
+        onBackgroundLightEffectCustomColorChange: (Color) -> Unit,
+        animationSpeed: Float,
+        onAnimationSpeedChange: (Float) -> Unit,
+        launcherBackgroundUri: String?,
+        onLauncherBackgroundUriChange: (String?) -> Unit,
+        launcherBackgroundBlur: Float,
+        onLauncherBackgroundBlurChange: (Float) -> Unit,
+        launcherBackgroundBrightness: Float,
+        onLauncherBackgroundBrightnessChange: (Float) -> Unit,
+        enableParallax: Boolean,
+        onEnableParallaxChange: (Boolean) -> Unit,
+        parallaxMagnitude: Float,
+        onParallaxMagnitudeChange: (Float) -> Unit,
+        enableVersionCheck: Boolean,
+        onEnableVersionCheckChange: () -> Unit,
+        uiScale: Float,
+        onUiScaleChange: (Float) -> Unit,
+        isGlowEffectEnabled: Boolean,
+        onIsGlowEffectEnabledChange: () -> Unit,
+        onIsCardBlurEnabledChange: () -> Unit,
+        onCardAlphaChange: (Float) -> Unit,
+        useBmclapi: Boolean,
+        onUseBmclapiChange: (Boolean) -> Unit,
+        isMusicPlayerEnabled: Boolean,
+        onIsMusicPlayerEnabledChange: () -> Unit,
+        musicPlayerViewModel: MusicPlayerViewModel
 ) {
     var selectedPage by remember { mutableStateOf(SettingsPage.Launcher) }
     val pages = SettingsPage.entries
 
     Box(modifier = Modifier.fillMaxSize()) {
         AnimatedContent(
-            targetState = selectedPage,
-            label = "Settings Page Animation",
-            transitionSpec = { fadeIn() togetherWith fadeOut() }
+                targetState = selectedPage,
+                label = "Settings Page Animation",
+                transitionSpec = { fadeIn() togetherWith fadeOut() }
         ) { page ->
             when (page) {
                 SettingsPage.Launcher -> {
                     LauncherSettingsContent(
-                        isDarkTheme = isDarkTheme,
-                        onThemeToggle = onThemeToggle,
-                        sidebarPosition = sidebarPosition,
-                        onPositionChange = onPositionChange,
-                        themeColor = themeColor,
-                        onThemeColorChange = onThemeColorChange,
-                        customPrimaryColor = customPrimaryColor,
-                        onCustomPrimaryColorChange = onCustomPrimaryColorChange,
-                        lightColorScheme = lightColorScheme,
-                        darkColorScheme = darkColorScheme,
-                        onLightColorSchemeChange = onLightColorSchemeChange,
-                        onDarkColorSchemeChange = onDarkColorSchemeChange,
-                        enableBackgroundLightEffect = enableBackgroundLightEffect,
-                        onEnableBackgroundLightEffectChange = onEnableBackgroundLightEffectChange,
-                        lightEffectAnimationSpeed = lightEffectAnimationSpeed,
-                        onLightEffectAnimationSpeedChange = onLightEffectAnimationSpeedChange,
-                        enableBackgroundLightEffectCustomColor = enableBackgroundLightEffectCustomColor,
-                        onEnableBackgroundLightEffectCustomColorChange = onEnableBackgroundLightEffectCustomColorChange,
-                        backgroundLightEffectCustomColor = backgroundLightEffectCustomColor,
-                        onBackgroundLightEffectCustomColorChange = onBackgroundLightEffectCustomColorChange,
-                        animationSpeed = animationSpeed,
-                        onAnimationSpeedChange = onAnimationSpeedChange,
-                        launcherBackgroundUri = launcherBackgroundUri,
-                        onLauncherBackgroundUriChange = onLauncherBackgroundUriChange,
-                        launcherBackgroundBlur = launcherBackgroundBlur,
-                        onLauncherBackgroundBlurChange = onLauncherBackgroundBlurChange,
-                        launcherBackgroundBrightness = launcherBackgroundBrightness,
-                        onLauncherBackgroundBrightnessChange = onLauncherBackgroundBrightnessChange,
-                        enableParallax = enableParallax,
-                        onEnableParallaxChange = onEnableParallaxChange,
-                        parallaxMagnitude = parallaxMagnitude,
-                        onParallaxMagnitudeChange = onParallaxMagnitudeChange,
-                        enableVersionCheck = enableVersionCheck,
-                        onEnableVersionCheckChange = onEnableVersionCheckChange,
-                        uiScale = uiScale,
-                        onUiScaleChange = onUiScaleChange,
-                        isGlowEffectEnabled = isGlowEffectEnabled,
-                        onIsGlowEffectEnabledChange = onIsGlowEffectEnabledChange,
-                        isCardBlurEnabled = isCardBlurEnabled,
-                        onIsCardBlurEnabledChange = onIsCardBlurEnabledChange,
-                        cardAlpha = cardAlpha,
-                        onCardAlphaChange = onCardAlphaChange,
-                        isMusicPlayerEnabled = isMusicPlayerEnabled,
-                        onIsMusicPlayerEnabledChange = onIsMusicPlayerEnabledChange,
-                        musicPlayerViewModel = musicPlayerViewModel,
-                        hazeState = hazeState
+                            isDarkTheme = isDarkTheme,
+                            onThemeToggle = onThemeToggle,
+                            sidebarPosition = sidebarPosition,
+                            onPositionChange = onPositionChange,
+                            themeColor = themeColor,
+                            onThemeColorChange = onThemeColorChange,
+                            customPrimaryColor = customPrimaryColor,
+                            onCustomPrimaryColorChange = onCustomPrimaryColorChange,
+                            lightColorScheme = lightColorScheme,
+                            darkColorScheme = darkColorScheme,
+                            onLightColorSchemeChange = onLightColorSchemeChange,
+                            onDarkColorSchemeChange = onDarkColorSchemeChange,
+                            enableBackgroundLightEffect = enableBackgroundLightEffect,
+                            onEnableBackgroundLightEffectChange =
+                                    onEnableBackgroundLightEffectChange,
+                            lightEffectAnimationSpeed = lightEffectAnimationSpeed,
+                            onLightEffectAnimationSpeedChange = onLightEffectAnimationSpeedChange,
+                            enableBackgroundLightEffectCustomColor =
+                                    enableBackgroundLightEffectCustomColor,
+                            onEnableBackgroundLightEffectCustomColorChange =
+                                    onEnableBackgroundLightEffectCustomColorChange,
+                            backgroundLightEffectCustomColor = backgroundLightEffectCustomColor,
+                            onBackgroundLightEffectCustomColorChange =
+                                    onBackgroundLightEffectCustomColorChange,
+                            animationSpeed = animationSpeed,
+                            onAnimationSpeedChange = onAnimationSpeedChange,
+                            launcherBackgroundUri = launcherBackgroundUri,
+                            onLauncherBackgroundUriChange = onLauncherBackgroundUriChange,
+                            launcherBackgroundBlur = launcherBackgroundBlur,
+                            onLauncherBackgroundBlurChange = onLauncherBackgroundBlurChange,
+                            launcherBackgroundBrightness = launcherBackgroundBrightness,
+                            onLauncherBackgroundBrightnessChange =
+                                    onLauncherBackgroundBrightnessChange,
+                            enableParallax = enableParallax,
+                            onEnableParallaxChange = onEnableParallaxChange,
+                            parallaxMagnitude = parallaxMagnitude,
+                            onParallaxMagnitudeChange = onParallaxMagnitudeChange,
+                            enableVersionCheck = enableVersionCheck,
+                            onEnableVersionCheckChange = onEnableVersionCheckChange,
+                            uiScale = uiScale,
+                            onUiScaleChange = onUiScaleChange,
+                            isGlowEffectEnabled = isGlowEffectEnabled,
+                            onIsGlowEffectEnabledChange = onIsGlowEffectEnabledChange,
+                            onIsCardBlurEnabledChange = onIsCardBlurEnabledChange,
+                            onCardAlphaChange = onCardAlphaChange,
+                            isMusicPlayerEnabled = isMusicPlayerEnabled,
+                            onIsMusicPlayerEnabledChange = onIsMusicPlayerEnabledChange,
+                            musicPlayerViewModel = musicPlayerViewModel
                     )
                 }
                 SettingsPage.Game -> {
                     GameSettingsContent(
-                        useBmclapi = useBmclapi,
-                        onUseBmclapiChange = onUseBmclapiChange,
-                        animationSpeed = animationSpeed,
-                        isCardBlurEnabled = isCardBlurEnabled,
-                        cardAlpha = cardAlpha,
-                        hazeState = hazeState
+                            useBmclapi = useBmclapi,
+                            onUseBmclapiChange = onUseBmclapiChange,
+                            animationSpeed = animationSpeed
                     )
                 }
                 SettingsPage.About -> {
-                    AboutScreen(animationSpeed = animationSpeed, isCardBlurEnabled = isCardBlurEnabled, cardAlpha = cardAlpha, hazeState = hazeState)
+                    AboutScreen(animationSpeed = animationSpeed)
                 }
                 SettingsPage.Other -> {
-                    OtherSettingsContent(navController = navController, isCardBlurEnabled = isCardBlurEnabled, cardAlpha = cardAlpha, hazeState = hazeState)
+                    OtherSettingsContent(navController = navController)
                 }
                 // Other categories can be added later
-                else -> { /* Placeholder for other settings pages */ }
+                else -> {
+                    /* Placeholder for other settings pages */
+                }
             }
         }
 
         SegmentedNavigationBar(
-            modifier = Modifier.align(Alignment.BottomCenter),
-            title = "设置",
-            selectedPage = selectedPage,
-            onPageSelected = { selectedPage = it },
-            pages = pages.toList(),
-            getTitle = { it.title }
+                modifier = Modifier.align(Alignment.BottomCenter),
+                title = "设置",
+                selectedPage = selectedPage,
+                onPageSelected = { selectedPage = it },
+                pages = pages.toList(),
+                getTitle = { it.title }
         )
     }
 }

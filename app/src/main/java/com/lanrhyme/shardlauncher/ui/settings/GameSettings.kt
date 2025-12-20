@@ -7,34 +7,30 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.lanrhyme.shardlauncher.ui.components.LocalCardLayoutConfig
 import com.lanrhyme.shardlauncher.ui.components.SwitchLayout
 import com.lanrhyme.shardlauncher.ui.components.animatedAppearance
-import dev.chrisbanes.haze.HazeState
 
 @Composable
 fun GameSettingsContent(
-    useBmclapi: Boolean,
-    onUseBmclapiChange: (Boolean) -> Unit,
-    animationSpeed: Float,
-    isCardBlurEnabled: Boolean,
-    cardAlpha: Float,
-    hazeState: HazeState
+        useBmclapi: Boolean,
+        onUseBmclapiChange: (Boolean) -> Unit,
+        animationSpeed: Float
 ) {
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp)
-    ) {
-        SwitchLayout(
-            modifier = Modifier.animatedAppearance(1, animationSpeed),
-            title = "优先使用 BMCLAPI",
-            summary = "开启后将优先从 BMCLAPI 下载游戏版本，可以加快下载速度",
-            checked = useBmclapi,
-            onCheckedChange = { onUseBmclapiChange(!useBmclapi) },
-            isCardBlurEnabled = isCardBlurEnabled,
-            cardAlpha = cardAlpha,
-            hazeState = hazeState
-        )
-    }
+        val cardLayoutConfig = LocalCardLayoutConfig.current
+        val isCardBlurEnabled = cardLayoutConfig.isCardBlurEnabled
+        val cardAlpha = cardLayoutConfig.cardAlpha
+        val hazeState = cardLayoutConfig.hazeState
+        Column(
+                modifier = Modifier.fillMaxSize().padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+                SwitchLayout(
+                        modifier = Modifier.animatedAppearance(1, animationSpeed),
+                        title = "优先使用 BMCLAPI",
+                        summary = "开启后将优先从 BMCLAPI 下载游戏版本，可以加快下载速度",
+                        checked = useBmclapi,
+                        onCheckedChange = { onUseBmclapiChange(!useBmclapi) }
+                )
+        }
 }

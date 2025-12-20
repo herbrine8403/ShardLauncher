@@ -2,7 +2,6 @@ package com.lanrhyme.shardlauncher
 
 import android.content.Intent
 import android.net.Uri
-import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -23,7 +22,6 @@ import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -50,7 +48,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.ColorMatrix
@@ -83,21 +80,23 @@ import androidx.navigation.navArgument
 import androidx.navigation.navDeepLink
 import coil.compose.rememberAsyncImagePainter
 import com.lanrhyme.shardlauncher.common.SidebarPosition
-import com.lanrhyme.shardlauncher.game.account.AccountsManager
 import com.lanrhyme.shardlauncher.data.SettingsRepository
+import com.lanrhyme.shardlauncher.game.account.AccountsManager
 import com.lanrhyme.shardlauncher.service.MusicPlayerService
 import com.lanrhyme.shardlauncher.ui.LocalSettingsProvider
 import com.lanrhyme.shardlauncher.ui.SplashScreen
 import com.lanrhyme.shardlauncher.ui.account.AccountScreen
 import com.lanrhyme.shardlauncher.ui.account.AccountViewModel
 import com.lanrhyme.shardlauncher.ui.components.BackgroundLightEffect
+import com.lanrhyme.shardlauncher.ui.components.CardLayoutConfig
+import com.lanrhyme.shardlauncher.ui.components.LocalCardLayoutConfig
 import com.lanrhyme.shardlauncher.ui.components.glow
 import com.lanrhyme.shardlauncher.ui.developeroptions.ComponentDemoScreen
 import com.lanrhyme.shardlauncher.ui.developeroptions.DeveloperOptionsScreen
 import com.lanrhyme.shardlauncher.ui.downloads.DownloadScreen
-import com.lanrhyme.shardlauncher.ui.downloads.GameDownloadContent
 import com.lanrhyme.shardlauncher.ui.downloads.VersionDetailScreen
 import com.lanrhyme.shardlauncher.ui.home.HomeScreen
+import com.lanrhyme.shardlauncher.ui.music.MusicPlayerViewModel
 import com.lanrhyme.shardlauncher.ui.navigation.Screen
 import com.lanrhyme.shardlauncher.ui.navigation.getRootRoute
 import com.lanrhyme.shardlauncher.ui.navigation.navigationItems
@@ -113,16 +112,15 @@ import com.lanrhyme.shardlauncher.ui.version.VersionScreen
 import com.lanrhyme.shardlauncher.utils.rememberParallaxSensorHelper
 import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.haze
-import dev.chrisbanes.haze.hazeChild
 import kotlin.math.abs
-
-import com.lanrhyme.shardlauncher.ui.music.MusicPlayerViewModel
 
 class MainActivity : ComponentActivity() {
     private val tag = "MainActivity"
     private lateinit var settingsRepository: SettingsRepository
     private val accountViewModel: AccountViewModel by viewModels()
-    private val musicPlayerViewModel: MusicPlayerViewModel by viewModels { MusicPlayerViewModel.Factory(application, settingsRepository) }
+    private val musicPlayerViewModel: MusicPlayerViewModel by viewModels {
+        MusicPlayerViewModel.Factory(application, settingsRepository)
+    }
     private val newIntentState = mutableStateOf<Intent?>(null)
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -135,33 +133,71 @@ class MainActivity : ComponentActivity() {
         val windowInsetsController = WindowCompat.getInsetsController(window, window.decorView)
         windowInsetsController.hide(WindowInsetsCompat.Type.systemBars())
         windowInsetsController.systemBarsBehavior =
-            WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+                WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
 
         setContent {
             val systemIsDark = isSystemInDarkTheme()
-            var isDarkTheme by remember { mutableStateOf(settingsRepository.getIsDarkTheme(systemIsDark)) }
-            var sidebarPosition by remember { mutableStateOf(settingsRepository.getSidebarPosition()) }
+            var isDarkTheme by remember {
+                mutableStateOf(settingsRepository.getIsDarkTheme(systemIsDark))
+            }
+            var sidebarPosition by remember {
+                mutableStateOf(settingsRepository.getSidebarPosition())
+            }
             var themeColor by remember { mutableStateOf(settingsRepository.getThemeColor()) }
-            var customPrimaryColor by remember { mutableStateOf(Color(settingsRepository.getCustomPrimaryColor())) }
-            var lightColorScheme by remember { mutableStateOf(settingsRepository.getLightColorScheme() ?: ColorPalettes.Green.lightColorScheme) }
-            var darkColorScheme by remember { mutableStateOf(settingsRepository.getDarkColorScheme() ?: ColorPalettes.Green.darkColorScheme) }
-            var animationSpeed by remember { mutableStateOf(settingsRepository.getAnimationSpeed()) }
-            var lightEffectAnimationSpeed by remember { mutableStateOf(settingsRepository.getLightEffectAnimationSpeed()) }
-            var enableBackgroundLightEffect by remember { mutableStateOf(settingsRepository.getEnableBackgroundLightEffect()) }
-            var enableBackgroundLightEffectCustomColor by remember { mutableStateOf(settingsRepository.getEnableBackgroundLightEffectCustomColor()) }
-            var backgroundLightEffectCustomColor by remember { mutableStateOf(Color(settingsRepository.getBackgroundLightEffectCustomColor())) }
+            var customPrimaryColor by remember {
+                mutableStateOf(Color(settingsRepository.getCustomPrimaryColor()))
+            }
+            var lightColorScheme by remember {
+                mutableStateOf(
+                        settingsRepository.getLightColorScheme()
+                                ?: ColorPalettes.Green.lightColorScheme
+                )
+            }
+            var darkColorScheme by remember {
+                mutableStateOf(
+                        settingsRepository.getDarkColorScheme()
+                                ?: ColorPalettes.Green.darkColorScheme
+                )
+            }
+            var animationSpeed by remember {
+                mutableStateOf(settingsRepository.getAnimationSpeed())
+            }
+            var lightEffectAnimationSpeed by remember {
+                mutableStateOf(settingsRepository.getLightEffectAnimationSpeed())
+            }
+            var enableBackgroundLightEffect by remember {
+                mutableStateOf(settingsRepository.getEnableBackgroundLightEffect())
+            }
+            var enableBackgroundLightEffectCustomColor by remember {
+                mutableStateOf(settingsRepository.getEnableBackgroundLightEffectCustomColor())
+            }
+            var backgroundLightEffectCustomColor by remember {
+                mutableStateOf(Color(settingsRepository.getBackgroundLightEffectCustomColor()))
+            }
             var launcherBackgroundUri by remember { mutableStateOf<String?>(null) }
             var launcherBackgroundBlur by remember { mutableStateOf(0f) }
             var launcherBackgroundBrightness by remember { mutableStateOf(0f) }
-            var enableParallax by remember { mutableStateOf(settingsRepository.getEnableParallax()) }
-            var parallaxMagnitude by remember { mutableStateOf(settingsRepository.getParallaxMagnitude()) }
-            var enableVersionCheck by remember { mutableStateOf(settingsRepository.getEnableVersionCheck()) }
+            var enableParallax by remember {
+                mutableStateOf(settingsRepository.getEnableParallax())
+            }
+            var parallaxMagnitude by remember {
+                mutableStateOf(settingsRepository.getParallaxMagnitude())
+            }
+            var enableVersionCheck by remember {
+                mutableStateOf(settingsRepository.getEnableVersionCheck())
+            }
             var uiScale by remember { mutableStateOf(settingsRepository.getUiScale()) }
-            var isGlowEffectEnabled by remember { mutableStateOf(settingsRepository.getIsGlowEffectEnabled()) }
-            var isCardBlurEnabled by remember { mutableStateOf(settingsRepository.getIsCardBlurEnabled()) }
+            var isGlowEffectEnabled by remember {
+                mutableStateOf(settingsRepository.getIsGlowEffectEnabled())
+            }
+            var isCardBlurEnabled by remember {
+                mutableStateOf(settingsRepository.getIsCardBlurEnabled())
+            }
             var cardAlpha by remember { mutableStateOf(settingsRepository.getCardAlpha()) }
             var useBmclapi by remember { mutableStateOf(settingsRepository.getUseBmclapi()) }
-            var isMusicPlayerEnabled by remember { mutableStateOf(settingsRepository.getIsMusicPlayerEnabled()) }
+            var isMusicPlayerEnabled by remember {
+                mutableStateOf(settingsRepository.getIsMusicPlayerEnabled())
+            }
 
             LaunchedEffect(Unit) {
                 val randomBackground = settingsRepository.getRandomBackground()
@@ -175,14 +211,16 @@ class MainActivity : ComponentActivity() {
                     } else {
                         launcherBackgroundUri = settingsRepository.getLauncherBackgroundUri()
                         launcherBackgroundBlur = settingsRepository.getLauncherBackgroundBlur()
-                        launcherBackgroundBrightness = settingsRepository.getLauncherBackgroundBrightness()
+                        launcherBackgroundBrightness =
+                                settingsRepository.getLauncherBackgroundBrightness()
                         enableParallax = settingsRepository.getEnableParallax()
                         parallaxMagnitude = settingsRepository.getParallaxMagnitude()
                     }
                 } else {
                     launcherBackgroundUri = settingsRepository.getLauncherBackgroundUri()
                     launcherBackgroundBlur = settingsRepository.getLauncherBackgroundBlur()
-                    launcherBackgroundBrightness = settingsRepository.getLauncherBackgroundBrightness()
+                    launcherBackgroundBrightness =
+                            settingsRepository.getLauncherBackgroundBrightness()
                     enableParallax = settingsRepository.getEnableParallax()
                     parallaxMagnitude = settingsRepository.getParallaxMagnitude()
                 }
@@ -200,154 +238,180 @@ class MainActivity : ComponentActivity() {
 
             var showSplash by remember { mutableStateOf(true) }
 
-            val scaledDensity = Density(LocalDensity.current.density * uiScale, LocalDensity.current.fontScale * uiScale)
+            val scaledDensity =
+                    Density(
+                            LocalDensity.current.density * uiScale,
+                            LocalDensity.current.fontScale * uiScale
+                    )
 
             CompositionLocalProvider(
-                LocalDensity provides scaledDensity,
-                LocalSettingsProvider provides com.lanrhyme.shardlauncher.ui.SettingsProvider(settingsRepository)
+                    LocalDensity provides scaledDensity,
+                    LocalSettingsProvider provides
+                            com.lanrhyme.shardlauncher.ui.SettingsProvider(settingsRepository)
             ) {
                 Crossfade(
-                    targetState = showSplash,
-                    label = "SplashCrossfade",
-                    animationSpec = tween(durationMillis = 500)
+                        targetState = showSplash,
+                        label = "SplashCrossfade",
+                        animationSpec = tween(durationMillis = 500)
                 ) { show ->
                     if (show) {
-                        ShardLauncherTheme(darkTheme = isDarkTheme, themeColor = themeColor, lightColorScheme = lightColorScheme, darkColorScheme = darkColorScheme) {
-                            SplashScreen(onAnimationFinished = { showSplash = false })
-                        }
+                        ShardLauncherTheme(
+                                darkTheme = isDarkTheme,
+                                themeColor = themeColor,
+                                lightColorScheme = lightColorScheme,
+                                darkColorScheme = darkColorScheme
+                        ) { SplashScreen(onAnimationFinished = { showSplash = false }) }
                     } else {
                         Crossfade(
-                            targetState = isDarkTheme,
-                            label = "ThemeCrossfade",
-                            animationSpec = tween(durationMillis = 500)
+                                targetState = isDarkTheme,
+                                label = "ThemeCrossfade",
+                                animationSpec = tween(durationMillis = 500)
                         ) { isDark ->
-                            ShardLauncherTheme(darkTheme = isDark, themeColor = themeColor, lightColorScheme = lightColorScheme, darkColorScheme = darkColorScheme) {
-                                MainScreen(
-                                    navController = navController,
-                                    isDarkTheme = isDark,
-                                    onThemeToggle = {
-                                        val newTheme = !isDarkTheme
-                                        isDarkTheme = newTheme
-                                        settingsRepository.setIsDarkTheme(newTheme)
-                                    },
-                                    sidebarPosition = sidebarPosition,
-                                    onPositionChange = { newPosition ->
-                                        sidebarPosition = newPosition
-                                        settingsRepository.setSidebarPosition(newPosition)
-                                    },
+                            ShardLauncherTheme(
+                                    darkTheme = isDark,
                                     themeColor = themeColor,
-                                    onThemeColorChange = { newColor ->
-                                        themeColor = newColor
-                                        settingsRepository.setThemeColor(newColor)
-                                    },
-                                    customPrimaryColor = customPrimaryColor,
-                                    onCustomPrimaryColorChange = { newColor ->
-                                        customPrimaryColor = newColor
-                                        settingsRepository.setCustomPrimaryColor(newColor.toArgb())
-                                    },
                                     lightColorScheme = lightColorScheme,
-                                    darkColorScheme = darkColorScheme,
-                                    onLightColorSchemeChange = { newScheme ->
-                                        lightColorScheme = newScheme
-                                        settingsRepository.setLightColorScheme(newScheme)
-                                    },
-                                    onDarkColorSchemeChange = { newScheme ->
-                                        darkColorScheme = newScheme
-                                        settingsRepository.setDarkColorScheme(newScheme)
-                                    },
-                                    animationSpeed = animationSpeed,
-                                    onAnimationSpeedChange = { newSpeed ->
-                                        animationSpeed = newSpeed
-                                        settingsRepository.setAnimationSpeed(newSpeed)
-                                    },
-                                    lightEffectAnimationSpeed = lightEffectAnimationSpeed,
-                                    onLightEffectAnimationSpeedChange = { newSpeed ->
-                                        lightEffectAnimationSpeed = newSpeed
-                                        settingsRepository.setLightEffectAnimationSpeed(newSpeed)
-                                    },
-                                    enableBackgroundLightEffect = enableBackgroundLightEffect,
-                                    onEnableBackgroundLightEffectChange = {
-                                        val newValue = !enableBackgroundLightEffect
-                                        enableBackgroundLightEffect = newValue
-                                        settingsRepository.setEnableBackgroundLightEffect(newValue)
-                                    },
-                                    enableBackgroundLightEffectCustomColor = enableBackgroundLightEffectCustomColor,
-                                    onEnableBackgroundLightEffectCustomColorChange = {
-                                        val newValue = !enableBackgroundLightEffectCustomColor
-                                        enableBackgroundLightEffectCustomColor = newValue
-                                        settingsRepository.setEnableBackgroundLightEffectCustomColor(newValue)
-                                    },
-                                    backgroundLightEffectCustomColor = backgroundLightEffectCustomColor,
-                                    onBackgroundLightEffectCustomColorChange = { newColor ->
-                                        backgroundLightEffectCustomColor = newColor
-                                        settingsRepository.setBackgroundLightEffectCustomColor(newColor.toArgb())
-                                    },
-                                    launcherBackgroundUri = launcherBackgroundUri,
-                                    onLauncherBackgroundUriChange = {
-                                        launcherBackgroundUri = it
-                                        settingsRepository.setLauncherBackgroundUri(it)
-                                    },
-                                    launcherBackgroundBlur = launcherBackgroundBlur,
-                                    onLauncherBackgroundBlurChange = {
-                                        launcherBackgroundBlur = it
-                                        settingsRepository.setLauncherBackgroundBlur(it)
-                                    },
-                                    launcherBackgroundBrightness = launcherBackgroundBrightness,
-                                    onLauncherBackgroundBrightnessChange = {
-                                        launcherBackgroundBrightness = it
-                                        settingsRepository.setLauncherBackgroundBrightness(it)
-                                    },
-                                    enableParallax = enableParallax,
-                                    onEnableParallaxChange = {
-                                        enableParallax = it
-                                        settingsRepository.setEnableParallax(it)
-                                    },
-                                    parallaxMagnitude = parallaxMagnitude,
-                                    onParallaxMagnitudeChange = {
-                                        parallaxMagnitude = it
-                                        settingsRepository.setParallaxMagnitude(it)
-                                    },
-                                    enableVersionCheck = enableVersionCheck,
-                                    onEnableVersionCheckChange = {
-                                        val newValue = !enableVersionCheck
-                                        enableVersionCheck = newValue
-                                        settingsRepository.setEnableVersionCheck(newValue)
-                                    },
-                                    uiScale = uiScale,
-                                    onUiScaleChange = {
-                                        uiScale = it
-                                        settingsRepository.setUiScale(it)
-                                    },
-                                    isGlowEffectEnabled = isGlowEffectEnabled,
-                                    onIsGlowEffectEnabledChange = {
-                                        val newValue = !isGlowEffectEnabled
-                                        isGlowEffectEnabled = newValue
-                                        settingsRepository.setIsGlowEffectEnabled(newValue)
-                                    },
-                                    isCardBlurEnabled = isCardBlurEnabled,
-                                    onIsCardBlurEnabledChange = {
-                                        val newValue = !isCardBlurEnabled
-                                        isCardBlurEnabled = newValue
-                                        settingsRepository.setIsCardBlurEnabled(newValue)
-                                    },
-                                    cardAlpha = cardAlpha,
-                                    onCardAlphaChange = {
-                                        cardAlpha = it
-                                        settingsRepository.setCardAlpha(it)
-                                    },
-                                    useBmclapi = useBmclapi,
-                                    onUseBmclapiChange = { newValue ->
-                                        useBmclapi = newValue
-                                        settingsRepository.setUseBmclapi(newValue)
-                                    },
-                                    isMusicPlayerEnabled = isMusicPlayerEnabled,
-                                    onIsMusicPlayerEnabledChange = {
-                                        val newValue = !isMusicPlayerEnabled
-                                        isMusicPlayerEnabled = newValue
-                                        settingsRepository.setIsMusicPlayerEnabled(newValue)
-                                    },
-                                    accountViewModel = accountViewModel,
-                                    musicPlayerViewModel = musicPlayerViewModel
+                                    darkColorScheme = darkColorScheme
+                            ) {
+                                MainScreen(
+                                        navController = navController,
+                                        isDarkTheme = isDark,
+                                        onThemeToggle = {
+                                            val newTheme = !isDarkTheme
+                                            isDarkTheme = newTheme
+                                            settingsRepository.setIsDarkTheme(newTheme)
+                                        },
+                                        sidebarPosition = sidebarPosition,
+                                        onPositionChange = { newPosition ->
+                                            sidebarPosition = newPosition
+                                            settingsRepository.setSidebarPosition(newPosition)
+                                        },
+                                        themeColor = themeColor,
+                                        onThemeColorChange = { newColor ->
+                                            themeColor = newColor
+                                            settingsRepository.setThemeColor(newColor)
+                                        },
+                                        customPrimaryColor = customPrimaryColor,
+                                        onCustomPrimaryColorChange = { newColor ->
+                                            customPrimaryColor = newColor
+                                            settingsRepository.setCustomPrimaryColor(
+                                                    newColor.toArgb()
+                                            )
+                                        },
+                                        lightColorScheme = lightColorScheme,
+                                        darkColorScheme = darkColorScheme,
+                                        onLightColorSchemeChange = { newScheme ->
+                                            lightColorScheme = newScheme
+                                            settingsRepository.setLightColorScheme(newScheme)
+                                        },
+                                        onDarkColorSchemeChange = { newScheme ->
+                                            darkColorScheme = newScheme
+                                            settingsRepository.setDarkColorScheme(newScheme)
+                                        },
+                                        animationSpeed = animationSpeed,
+                                        onAnimationSpeedChange = { newSpeed ->
+                                            animationSpeed = newSpeed
+                                            settingsRepository.setAnimationSpeed(newSpeed)
+                                        },
+                                        lightEffectAnimationSpeed = lightEffectAnimationSpeed,
+                                        onLightEffectAnimationSpeedChange = { newSpeed ->
+                                            lightEffectAnimationSpeed = newSpeed
+                                            settingsRepository.setLightEffectAnimationSpeed(
+                                                    newSpeed
+                                            )
+                                        },
+                                        enableBackgroundLightEffect = enableBackgroundLightEffect,
+                                        onEnableBackgroundLightEffectChange = {
+                                            val newValue = !enableBackgroundLightEffect
+                                            enableBackgroundLightEffect = newValue
+                                            settingsRepository.setEnableBackgroundLightEffect(
+                                                    newValue
+                                            )
+                                        },
+                                        enableBackgroundLightEffectCustomColor =
+                                                enableBackgroundLightEffectCustomColor,
+                                        onEnableBackgroundLightEffectCustomColorChange = {
+                                            val newValue = !enableBackgroundLightEffectCustomColor
+                                            enableBackgroundLightEffectCustomColor = newValue
+                                            settingsRepository
+                                                    .setEnableBackgroundLightEffectCustomColor(
+                                                            newValue
+                                                    )
+                                        },
+                                        backgroundLightEffectCustomColor =
+                                                backgroundLightEffectCustomColor,
+                                        onBackgroundLightEffectCustomColorChange = { newColor ->
+                                            backgroundLightEffectCustomColor = newColor
+                                            settingsRepository.setBackgroundLightEffectCustomColor(
+                                                    newColor.toArgb()
+                                            )
+                                        },
+                                        launcherBackgroundUri = launcherBackgroundUri,
+                                        onLauncherBackgroundUriChange = {
+                                            launcherBackgroundUri = it
+                                            settingsRepository.setLauncherBackgroundUri(it)
+                                        },
+                                        launcherBackgroundBlur = launcherBackgroundBlur,
+                                        onLauncherBackgroundBlurChange = {
+                                            launcherBackgroundBlur = it
+                                            settingsRepository.setLauncherBackgroundBlur(it)
+                                        },
+                                        launcherBackgroundBrightness = launcherBackgroundBrightness,
+                                        onLauncherBackgroundBrightnessChange = {
+                                            launcherBackgroundBrightness = it
+                                            settingsRepository.setLauncherBackgroundBrightness(it)
+                                        },
+                                        enableParallax = enableParallax,
+                                        onEnableParallaxChange = {
+                                            enableParallax = it
+                                            settingsRepository.setEnableParallax(it)
+                                        },
+                                        parallaxMagnitude = parallaxMagnitude,
+                                        onParallaxMagnitudeChange = {
+                                            parallaxMagnitude = it
+                                            settingsRepository.setParallaxMagnitude(it)
+                                        },
+                                        enableVersionCheck = enableVersionCheck,
+                                        onEnableVersionCheckChange = {
+                                            val newValue = !enableVersionCheck
+                                            enableVersionCheck = newValue
+                                            settingsRepository.setEnableVersionCheck(newValue)
+                                        },
+                                        uiScale = uiScale,
+                                        onUiScaleChange = {
+                                            uiScale = it
+                                            settingsRepository.setUiScale(it)
+                                        },
+                                        isGlowEffectEnabled = isGlowEffectEnabled,
+                                        onIsGlowEffectEnabledChange = {
+                                            val newValue = !isGlowEffectEnabled
+                                            isGlowEffectEnabled = newValue
+                                            settingsRepository.setIsGlowEffectEnabled(newValue)
+                                        },
+                                        isCardBlurEnabled = isCardBlurEnabled,
+                                        onIsCardBlurEnabledChange = {
+                                            val newValue = !isCardBlurEnabled
+                                            isCardBlurEnabled = newValue
+                                            settingsRepository.setIsCardBlurEnabled(newValue)
+                                        },
+                                        cardAlpha = cardAlpha,
+                                        onCardAlphaChange = {
+                                            cardAlpha = it
+                                            settingsRepository.setCardAlpha(it)
+                                        },
+                                        useBmclapi = useBmclapi,
+                                        onUseBmclapiChange = { newValue ->
+                                            useBmclapi = newValue
+                                            settingsRepository.setUseBmclapi(newValue)
+                                        },
+                                        isMusicPlayerEnabled = isMusicPlayerEnabled,
+                                        onIsMusicPlayerEnabledChange = {
+                                            val newValue = !isMusicPlayerEnabled
+                                            isMusicPlayerEnabled = newValue
+                                            settingsRepository.setIsMusicPlayerEnabled(newValue)
+                                        },
+                                        accountViewModel = accountViewModel,
+                                        musicPlayerViewModel = musicPlayerViewModel
                                 )
                             }
                         }
@@ -374,96 +438,101 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun MainScreen(
-    navController: NavHostController,
-    isDarkTheme: Boolean,
-    onThemeToggle: () -> Unit,
-    sidebarPosition: SidebarPosition,
-    onPositionChange: (SidebarPosition) -> Unit,
-    themeColor: ThemeColor,
-    onThemeColorChange: (ThemeColor) -> Unit,
-    customPrimaryColor: Color,
-    onCustomPrimaryColorChange: (Color) -> Unit,
-    lightColorScheme: ColorScheme,
-    darkColorScheme: ColorScheme,
-    onLightColorSchemeChange: (ColorScheme) -> Unit,
-    onDarkColorSchemeChange: (ColorScheme) -> Unit,
-    animationSpeed: Float,
-    onAnimationSpeedChange: (Float) -> Unit,
-    lightEffectAnimationSpeed: Float,
-    onLightEffectAnimationSpeedChange: (Float) -> Unit,
-    enableBackgroundLightEffect: Boolean,
-    onEnableBackgroundLightEffectChange: () -> Unit,
-    enableBackgroundLightEffectCustomColor: Boolean,
-    onEnableBackgroundLightEffectCustomColorChange: () -> Unit,
-    backgroundLightEffectCustomColor: Color,
-    onBackgroundLightEffectCustomColorChange: (Color) -> Unit,
-    launcherBackgroundUri: String?,
-    onLauncherBackgroundUriChange: (String?) -> Unit,
-    launcherBackgroundBlur: Float,
-    onLauncherBackgroundBlurChange: (Float) -> Unit,
-    launcherBackgroundBrightness: Float,
-    onLauncherBackgroundBrightnessChange: (Float) -> Unit,
-    enableParallax: Boolean,
-    onEnableParallaxChange: (Boolean) -> Unit,
-    parallaxMagnitude: Float,
-    onParallaxMagnitudeChange: (Float) -> Unit,
-    enableVersionCheck: Boolean,
-    onEnableVersionCheckChange: () -> Unit,
-    uiScale: Float,
-    onUiScaleChange: (Float) -> Unit,
-    isGlowEffectEnabled: Boolean,
-    onIsGlowEffectEnabledChange: () -> Unit,
-    isCardBlurEnabled: Boolean,
-    onIsCardBlurEnabledChange: () -> Unit,
-    cardAlpha: Float,
-    onCardAlphaChange: (Float) -> Unit,
-    useBmclapi: Boolean,
-    onUseBmclapiChange: (Boolean) -> Unit,
-    isMusicPlayerEnabled: Boolean,
-    onIsMusicPlayerEnabledChange: () -> Unit,
-    accountViewModel: AccountViewModel,
-    musicPlayerViewModel: MusicPlayerViewModel
+        navController: NavHostController,
+        isDarkTheme: Boolean,
+        onThemeToggle: () -> Unit,
+        sidebarPosition: SidebarPosition,
+        onPositionChange: (SidebarPosition) -> Unit,
+        themeColor: ThemeColor,
+        onThemeColorChange: (ThemeColor) -> Unit,
+        customPrimaryColor: Color,
+        onCustomPrimaryColorChange: (Color) -> Unit,
+        lightColorScheme: ColorScheme,
+        darkColorScheme: ColorScheme,
+        onLightColorSchemeChange: (ColorScheme) -> Unit,
+        onDarkColorSchemeChange: (ColorScheme) -> Unit,
+        animationSpeed: Float,
+        onAnimationSpeedChange: (Float) -> Unit,
+        lightEffectAnimationSpeed: Float,
+        onLightEffectAnimationSpeedChange: (Float) -> Unit,
+        enableBackgroundLightEffect: Boolean,
+        onEnableBackgroundLightEffectChange: () -> Unit,
+        enableBackgroundLightEffectCustomColor: Boolean,
+        onEnableBackgroundLightEffectCustomColorChange: () -> Unit,
+        backgroundLightEffectCustomColor: Color,
+        onBackgroundLightEffectCustomColorChange: (Color) -> Unit,
+        launcherBackgroundUri: String?,
+        onLauncherBackgroundUriChange: (String?) -> Unit,
+        launcherBackgroundBlur: Float,
+        onLauncherBackgroundBlurChange: (Float) -> Unit,
+        launcherBackgroundBrightness: Float,
+        onLauncherBackgroundBrightnessChange: (Float) -> Unit,
+        enableParallax: Boolean,
+        onEnableParallaxChange: (Boolean) -> Unit,
+        parallaxMagnitude: Float,
+        onParallaxMagnitudeChange: (Float) -> Unit,
+        enableVersionCheck: Boolean,
+        onEnableVersionCheckChange: () -> Unit,
+        uiScale: Float,
+        onUiScaleChange: (Float) -> Unit,
+        isGlowEffectEnabled: Boolean,
+        onIsGlowEffectEnabledChange: () -> Unit,
+        isCardBlurEnabled: Boolean,
+        onIsCardBlurEnabledChange: () -> Unit,
+        cardAlpha: Float,
+        onCardAlphaChange: (Float) -> Unit,
+        useBmclapi: Boolean,
+        onUseBmclapiChange: (Boolean) -> Unit,
+        isMusicPlayerEnabled: Boolean,
+        onIsMusicPlayerEnabledChange: () -> Unit,
+        accountViewModel: AccountViewModel,
+        musicPlayerViewModel: MusicPlayerViewModel
 ) {
     var isSidebarExpanded by remember { mutableStateOf(false) }
     val animationDuration = (300 / animationSpeed).toInt()
     val hazeState = remember { HazeState() }
     val parallaxState by rememberParallaxSensorHelper(enableParallax, parallaxMagnitude)
 
-    val sidebarWidth by animateDpAsState(
-        targetValue = if (isSidebarExpanded) 220.dp else 72.dp,
-        animationSpec = tween(durationMillis = animationDuration),
-        label = "SidebarWidth"
-    )
+    val sidebarWidth by
+            animateDpAsState(
+                    targetValue = if (isSidebarExpanded) 220.dp else 72.dp,
+                    animationSpec = tween(durationMillis = animationDuration),
+                    label = "SidebarWidth"
+            )
 
-    val contentBlurRadius by animateDpAsState(
-        targetValue = if (isSidebarExpanded) 8.dp else 0.dp,
-        animationSpec = tween(durationMillis = animationDuration),
-        label = "ContentBlur"
-    )
+    val contentBlurRadius by
+            animateDpAsState(
+                    targetValue = if (isSidebarExpanded) 8.dp else 0.dp,
+                    animationSpec = tween(durationMillis = animationDuration),
+                    label = "ContentBlur"
+            )
 
     val context = LocalContext.current
 
     Surface(modifier = Modifier.fillMaxSize()) {
         Box(modifier = Modifier.fillMaxSize()) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .haze(state = hazeState)
-            ) {
+            Box(modifier = Modifier.fillMaxSize().haze(state = hazeState)) {
                 if (launcherBackgroundUri != null) {
-                    val parallaxScale = if (enableParallax) 1f + (parallaxMagnitude - 1f) / 20f else 1f
+                    val parallaxScale =
+                            if (enableParallax) 1f + (parallaxMagnitude - 1f) / 20f else 1f
                     val isVideo = launcherBackgroundUri.endsWith(".mp4")
                     if (isVideo) {
                         Box(modifier = Modifier.fillMaxSize()) {
-                            val exoPlayer = remember(launcherBackgroundUri) {
-                                ExoPlayer.Builder(context).build().apply {
-                                    setMediaItem(MediaItem.fromUri(Uri.parse(launcherBackgroundUri)))
-                                    videoScalingMode = C.VIDEO_SCALING_MODE_SCALE_TO_FIT_WITH_CROPPING
-                                    repeatMode = Player.REPEAT_MODE_ALL
-                                    playWhenReady = true
-                                    prepare()
-                                }
-                            }
+                            val exoPlayer =
+                                    remember(launcherBackgroundUri) {
+                                        ExoPlayer.Builder(context).build().apply {
+                                            setMediaItem(
+                                                    MediaItem.fromUri(
+                                                            Uri.parse(launcherBackgroundUri)
+                                                    )
+                                            )
+                                            videoScalingMode =
+                                                    C.VIDEO_SCALING_MODE_SCALE_TO_FIT_WITH_CROPPING
+                                            repeatMode = Player.REPEAT_MODE_ALL
+                                            playWhenReady = true
+                                            prepare()
+                                        }
+                                    }
 
                             exoPlayer.volume = 0f
 
@@ -472,349 +541,115 @@ fun MainScreen(
                             }
 
                             AndroidView(
-                                factory = { ctx ->
-                                    PlayerView(ctx).apply {
-                                        player = exoPlayer
-                                        useController = false
-                                        resizeMode = AspectRatioFrameLayout.RESIZE_MODE_ZOOM
-                                        layoutParams = android.widget.FrameLayout.LayoutParams(
-                                            android.view.ViewGroup.LayoutParams.MATCH_PARENT,
-                                            android.view.ViewGroup.LayoutParams.MATCH_PARENT
-                                        )
-                                    }
-                                },
-                                modifier = Modifier
-                                    .fillMaxSize()
-                                    .graphicsLayer {
-                                        scaleX = parallaxScale
-                                        scaleY = parallaxScale
-                                        translationX = parallaxState.x
-                                        translationY = parallaxState.y
-                                    }
+                                    factory = { ctx ->
+                                        PlayerView(ctx).apply {
+                                            player = exoPlayer
+                                            useController = false
+                                            resizeMode = AspectRatioFrameLayout.RESIZE_MODE_ZOOM
+                                            layoutParams =
+                                                    android.widget.FrameLayout.LayoutParams(
+                                                            android.view.ViewGroup.LayoutParams
+                                                                    .MATCH_PARENT,
+                                                            android.view.ViewGroup.LayoutParams
+                                                                    .MATCH_PARENT
+                                                    )
+                                        }
+                                    },
+                                    modifier =
+                                            Modifier.fillMaxSize().graphicsLayer {
+                                                scaleX = parallaxScale
+                                                scaleY = parallaxScale
+                                                translationX = parallaxState.x
+                                                translationY = parallaxState.y
+                                            }
                             )
 
                             val brightnessValue = launcherBackgroundBrightness
                             if (brightnessValue != 0f) {
                                 val color = if (brightnessValue > 0) Color.White else Color.Black
-                                Box(modifier = Modifier
-                                    .fillMaxSize()
-                                    .background(color.copy(alpha = abs(brightnessValue) / 100f)))
+                                Box(
+                                        modifier =
+                                                Modifier.fillMaxSize()
+                                                        .background(
+                                                                color.copy(
+                                                                        alpha =
+                                                                                abs(
+                                                                                        brightnessValue
+                                                                                ) / 100f
+                                                                )
+                                                        )
+                                )
                             }
                         }
                     } else {
                         val brightnessValue = launcherBackgroundBrightness
-                        val colorMatrix = ColorMatrix(
-                            floatArrayOf(
-                                1f, 0f, 0f, 0f, brightnessValue,
-                                0f, 1f, 0f, 0f, brightnessValue,
-                                0f, 0f, 1f, 0f, brightnessValue,
-                                0f, 0f, 0f, 1f, 0f
-                            )
-                        )
+                        val colorMatrix =
+                                ColorMatrix(
+                                        floatArrayOf(
+                                                1f,
+                                                0f,
+                                                0f,
+                                                0f,
+                                                brightnessValue,
+                                                0f,
+                                                1f,
+                                                0f,
+                                                0f,
+                                                brightnessValue,
+                                                0f,
+                                                0f,
+                                                1f,
+                                                0f,
+                                                brightnessValue,
+                                                0f,
+                                                0f,
+                                                0f,
+                                                1f,
+                                                0f
+                                        )
+                                )
                         Image(
-                            painter = rememberAsyncImagePainter(Uri.parse(launcherBackgroundUri)),
-                            contentDescription = "Launcher Background",
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .blur(launcherBackgroundBlur.dp)
-                                .graphicsLayer {
-                                    scaleX = parallaxScale
-                                    scaleY = parallaxScale
-                                    translationX = parallaxState.x
-                                    translationY = parallaxState.y
-                                },
-                            contentScale = ContentScale.Crop,
-                            colorFilter = ColorFilter.colorMatrix(colorMatrix)
+                                painter =
+                                        rememberAsyncImagePainter(Uri.parse(launcherBackgroundUri)),
+                                contentDescription = "Launcher Background",
+                                modifier =
+                                        Modifier.fillMaxSize()
+                                                .blur(launcherBackgroundBlur.dp)
+                                                .graphicsLayer {
+                                                    scaleX = parallaxScale
+                                                    scaleY = parallaxScale
+                                                    translationX = parallaxState.x
+                                                    translationY = parallaxState.y
+                                                },
+                                contentScale = ContentScale.Crop,
+                                colorFilter = ColorFilter.colorMatrix(colorMatrix)
                         )
                     }
                 }
                 if (enableBackgroundLightEffect) {
                     BackgroundLightEffect(
-                        themeColor = if (enableBackgroundLightEffectCustomColor) backgroundLightEffectCustomColor else MaterialTheme.colorScheme.primary,
-                        animationSpeed = lightEffectAnimationSpeed
+                            themeColor =
+                                    if (enableBackgroundLightEffectCustomColor)
+                                            backgroundLightEffectCustomColor
+                                    else MaterialTheme.colorScheme.primary,
+                            animationSpeed = lightEffectAnimationSpeed
                     )
                 }
             }
 
-            MainContent(
-                modifier = Modifier.fillMaxSize(),
-                isSidebarExpanded = isSidebarExpanded,
-                contentBlurRadius = contentBlurRadius,
-                onSidebarExpandToggle = { isSidebarExpanded = !isSidebarExpanded },
-                navController = navController,
-                isDarkTheme = isDarkTheme,
-                onThemeToggle = onThemeToggle,
-                sidebarPosition = sidebarPosition,
-                onPositionChange = onPositionChange,
-                themeColor = themeColor,
-                onThemeColorChange = onThemeColorChange,
-                customPrimaryColor = customPrimaryColor,
-                onCustomPrimaryColorChange = onCustomPrimaryColorChange,
-                lightColorScheme = lightColorScheme,
-                darkColorScheme = darkColorScheme,
-                onLightColorSchemeChange = onLightColorSchemeChange,
-                onDarkColorSchemeChange = onDarkColorSchemeChange,
-                animationSpeed = animationSpeed,
-                onAnimationSpeedChange = onAnimationSpeedChange,
-                lightEffectAnimationSpeed = lightEffectAnimationSpeed,
-                onLightEffectAnimationSpeedChange = onLightEffectAnimationSpeedChange,
-                enableBackgroundLightEffect = enableBackgroundLightEffect,
-                onEnableBackgroundLightEffectChange = onEnableBackgroundLightEffectChange,
-                enableBackgroundLightEffectCustomColor = enableBackgroundLightEffectCustomColor,
-                onEnableBackgroundLightEffectCustomColorChange = onEnableBackgroundLightEffectCustomColorChange,
-                backgroundLightEffectCustomColor = backgroundLightEffectCustomColor,
-                onBackgroundLightEffectCustomColorChange = onBackgroundLightEffectCustomColorChange,
-                launcherBackgroundUri = launcherBackgroundUri,
-                onLauncherBackgroundUriChange = onLauncherBackgroundUriChange,
-                launcherBackgroundBlur = launcherBackgroundBlur,
-                onLauncherBackgroundBlurChange = onLauncherBackgroundBlurChange,
-                launcherBackgroundBrightness = launcherBackgroundBrightness,
-                onLauncherBackgroundBrightnessChange = onLauncherBackgroundBrightnessChange,
-                enableParallax = enableParallax,
-                onEnableParallaxChange = onEnableParallaxChange,
-                parallaxMagnitude = parallaxMagnitude,
-                onParallaxMagnitudeChange = onParallaxMagnitudeChange,
-                enableVersionCheck = enableVersionCheck,
-                onEnableVersionCheckChange = onEnableVersionCheckChange,
-                uiScale = uiScale,
-                onUiScaleChange = onUiScaleChange,
-                isGlowEffectEnabled = isGlowEffectEnabled,
-                onIsGlowEffectEnabledChange = onIsGlowEffectEnabledChange,
-                isCardBlurEnabled = isCardBlurEnabled,
-                onIsCardBlurEnabledChange = onIsCardBlurEnabledChange,
-                cardAlpha = cardAlpha,
-                onCardAlphaChange = onCardAlphaChange,
-                useBmclapi = useBmclapi,
-                onUseBmclapiChange = onUseBmclapiChange,
-                isMusicPlayerEnabled = isMusicPlayerEnabled,
-                onIsMusicPlayerEnabledChange = onIsMusicPlayerEnabledChange,
-                accountViewModel = accountViewModel,
-                musicPlayerViewModel = musicPlayerViewModel,
-                hazeState = hazeState
-            )
-
-            val sidebarAlignment = when (sidebarPosition) {
-                SidebarPosition.Left -> Alignment.CenterStart
-                SidebarPosition.Right -> Alignment.CenterEnd
-            }
-
-            SideBar(
-                modifier = Modifier
-                    .align(sidebarAlignment)
-                    .width(sidebarWidth),
-                isExpanded = isSidebarExpanded,
-                onToggleExpand = { isSidebarExpanded = !isSidebarExpanded },
-                navController = navController,
-                position = sidebarPosition,
-                isGlowEffectEnabled = isGlowEffectEnabled,
-                animationSpeed = animationSpeed
-            )
-
-            NotificationPanel(
-                isVisible = isSidebarExpanded,
-                sidebarPosition = sidebarPosition
-            )
-
-            NotificationPopupHost()
-        }
-    }
-}
-
-@Composable
-fun MainContent(
-    modifier: Modifier = Modifier,
-    isSidebarExpanded: Boolean,
-    contentBlurRadius: androidx.compose.ui.unit.Dp,
-    onSidebarExpandToggle: () -> Unit,
-    navController: NavHostController,
-    isDarkTheme: Boolean,
-    onThemeToggle: () -> Unit,
-    sidebarPosition: SidebarPosition,
-    onPositionChange: (SidebarPosition) -> Unit,
-    themeColor: ThemeColor,
-    onThemeColorChange: (ThemeColor) -> Unit,
-    customPrimaryColor: Color,
-    onCustomPrimaryColorChange: (Color) -> Unit,
-    lightColorScheme: ColorScheme,
-    darkColorScheme: ColorScheme,
-    onLightColorSchemeChange: (ColorScheme) -> Unit,
-    onDarkColorSchemeChange: (ColorScheme) -> Unit,
-    animationSpeed: Float,
-    onAnimationSpeedChange: (Float) -> Unit,
-    lightEffectAnimationSpeed: Float,
-    onLightEffectAnimationSpeedChange: (Float) -> Unit,
-    enableBackgroundLightEffect: Boolean,
-    onEnableBackgroundLightEffectChange: () -> Unit,
-    enableBackgroundLightEffectCustomColor: Boolean,
-    onEnableBackgroundLightEffectCustomColorChange: () -> Unit,
-    backgroundLightEffectCustomColor: Color,
-    onBackgroundLightEffectCustomColorChange: (Color) -> Unit,
-    launcherBackgroundUri: String?,
-    onLauncherBackgroundUriChange: (String?) -> Unit,
-    launcherBackgroundBlur: Float,
-    onLauncherBackgroundBlurChange: (Float) -> Unit,
-    launcherBackgroundBrightness: Float,
-    onLauncherBackgroundBrightnessChange: (Float) -> Unit,
-    enableParallax: Boolean,
-    onEnableParallaxChange: (Boolean) -> Unit,
-    parallaxMagnitude: Float,
-    onParallaxMagnitudeChange: (Float) -> Unit,
-    enableVersionCheck: Boolean,
-    onEnableVersionCheckChange: () -> Unit,
-    uiScale: Float,
-    onUiScaleChange: (Float) -> Unit,
-    isGlowEffectEnabled: Boolean,
-    onIsGlowEffectEnabledChange: () -> Unit,
-    isCardBlurEnabled: Boolean,
-    onIsCardBlurEnabledChange: () -> Unit,
-    cardAlpha: Float,
-    onCardAlphaChange: (Float) -> Unit,
-    useBmclapi: Boolean,
-    onUseBmclapiChange: (Boolean) -> Unit,
-    isMusicPlayerEnabled: Boolean,
-    onIsMusicPlayerEnabledChange: () -> Unit,
-    accountViewModel: AccountViewModel,
-    musicPlayerViewModel: MusicPlayerViewModel,
-    hazeState: HazeState
-) {
-    val collapsedSidebarWidth = 72.dp
-    val animationDuration = (300 / animationSpeed).toInt()
-
-    val paddingStart by animateDpAsState(
-        targetValue = if (sidebarPosition == SidebarPosition.Left) collapsedSidebarWidth else 0.dp,
-        animationSpec = tween(durationMillis = animationDuration),
-        label = "ContentPaddingStart"
-    )
-    val paddingEnd by animateDpAsState(
-        targetValue = if (sidebarPosition == SidebarPosition.Right) collapsedSidebarWidth else 0.dp,
-        animationSpec = tween(durationMillis = animationDuration),
-        label = "ContentPaddingEnd"
-    )
-    val contentPadding = PaddingValues(start = paddingStart, end = paddingEnd)
-
-    Box(
-        modifier = modifier.blur(radius = contentBlurRadius)
-    ) {
-        Box(modifier = Modifier.padding(contentPadding)) {
-            val navAnimationDuration = (500 / animationSpeed).toInt()
-            NavHost(
-                navController = navController,
-                startDestination = Screen.Home.route,
-                enterTransition = {
-                    val initialRoute = initialState.destination.route
-                    val targetRoute = targetState.destination.route
-                    val initialIndex = navigationItems.indexOfFirst { it.route == getRootRoute(initialRoute) }
-                    val targetIndex = navigationItems.indexOfFirst { it.route == getRootRoute(targetRoute) }
-
-                    if (targetRoute == Screen.Home.route) {
-                        slideInVertically(animationSpec = tween(navAnimationDuration)) { it } + fadeIn(animationSpec = tween(navAnimationDuration))
-                    } else if (initialIndex == -1 || targetIndex == -1) {
-                        slideInVertically(animationSpec = tween(navAnimationDuration)) { it } + fadeIn(animationSpec = tween(navAnimationDuration))
-                    } else if (targetIndex > initialIndex) {
-                        slideInVertically(animationSpec = tween(navAnimationDuration)) { it } + fadeIn(animationSpec = tween(navAnimationDuration))
-                    } else {
-                        slideInVertically(animationSpec = tween(navAnimationDuration)) { -it } + fadeIn(animationSpec = tween(navAnimationDuration))
-                    }
-                 },
-                exitTransition = {
-                    val initialRoute = initialState.destination.route
-                    val targetRoute = targetState.destination.route
-                    val initialIndex = navigationItems.indexOfFirst { it.route == getRootRoute(initialRoute) }
-                    val targetIndex = navigationItems.indexOfFirst { it.route == getRootRoute(targetRoute) }
-
-                    if (targetRoute == Screen.Home.route) {
-                        slideOutVertically(animationSpec = tween(navAnimationDuration)) { -it } + fadeOut(animationSpec = tween(navAnimationDuration))
-                    } else if (initialIndex == -1 || targetIndex == -1) {
-                        slideOutVertically(animationSpec = tween(navAnimationDuration)) { -it } + fadeOut(animationSpec = tween(navAnimationDuration))
-                    } else if (targetIndex > initialIndex) {
-                        slideOutVertically(animationSpec = tween(navAnimationDuration)) { -it } + fadeOut(animationSpec = tween(navAnimationDuration))
-                    } else {
-                        slideOutVertically(animationSpec = tween(navAnimationDuration)) { it } + fadeOut(animationSpec = tween(navAnimationDuration))
-                    }
-                 },
-                popEnterTransition = {
-                    val initialRoute = initialState.destination.route
-                    val targetRoute = targetState.destination.route
-                    val initialIndex = navigationItems.indexOfFirst { it.route == getRootRoute(initialRoute) }
-                    val targetIndex = navigationItems.indexOfFirst { it.route == getRootRoute(targetRoute) }
-
-                    if (targetRoute == Screen.Home.route) {
-                        slideInVertically(animationSpec = tween(navAnimationDuration)) { -it } + fadeIn(animationSpec = tween(navAnimationDuration))
-                    } else if (initialIndex == -1 || targetIndex == -1) {
-                        slideInVertically(animationSpec = tween(navAnimationDuration)) { -it } + fadeIn(animationSpec = tween(navAnimationDuration))
-                    } else if (targetIndex > initialIndex) {
-                        slideInVertically(animationSpec = tween(navAnimationDuration)) { -it } + fadeIn(animationSpec = tween(navAnimationDuration))
-                    } else {
-                        slideInVertically(animationSpec = tween(navAnimationDuration)) { it } + fadeIn(animationSpec = tween(navAnimationDuration))
-                    }
-                 },
-                popExitTransition = {
-                    val initialRoute = initialState.destination.route
-                    val targetRoute = targetState.destination.route
-                    val initialIndex = navigationItems.indexOfFirst { it.route == getRootRoute(initialRoute) }
-                    val targetIndex = navigationItems.indexOfFirst { it.route == getRootRoute(targetRoute) }
-
-                    if (targetRoute == Screen.Home.route) {
-                        slideOutVertically(animationSpec = tween(navAnimationDuration)) { it } + fadeOut(animationSpec = tween(navAnimationDuration))
-                    } else if (initialIndex == -1 || targetIndex == -1) {
-                        slideOutVertically(animationSpec = tween(navAnimationDuration)) { it } + fadeOut(animationSpec = tween(navAnimationDuration))
-                    } else if (targetIndex > initialIndex) {
-                        slideOutVertically(animationSpec = tween(navAnimationDuration)) { it } + fadeOut(animationSpec = tween(navAnimationDuration))
-                    } else {
-                        slideOutVertically(animationSpec = tween(navAnimationDuration)) { -it } + fadeOut(animationSpec = tween(navAnimationDuration))
-                    }
-                 }
+            CompositionLocalProvider(
+                    LocalCardLayoutConfig provides
+                            CardLayoutConfig(
+                                    isCardBlurEnabled = isCardBlurEnabled,
+                                    cardAlpha = cardAlpha,
+                                    hazeState = hazeState
+                            )
             ) {
-                composable(Screen.Home.route) { 
-                    HomeScreen(
-                        navController, 
-                        enableVersionCheck = enableVersionCheck, 
-                        animationSpeed = animationSpeed, 
-                        accountViewModel = accountViewModel, 
-                        isCardBlurEnabled = isCardBlurEnabled,
-                        cardAlpha = cardAlpha,
-                        hazeState = hazeState
-                    )
-                }
-                composable(Screen.Version.route) { VersionScreen(navController, animationSpeed, isCardBlurEnabled, cardAlpha, hazeState) }
-                composable(Screen.Download.route) { 
-                    DownloadScreen(
-                        navController = navController, 
-                        useBmclapi = useBmclapi,
-                        isCardBlurEnabled = isCardBlurEnabled,
-                        cardAlpha = cardAlpha,
-                        hazeState = hazeState
-                    ) 
-                }
-                composable("version_detail/{versionId}", arguments = listOf(navArgument("versionId") { type = NavType.StringType })) {
-                    VersionDetailScreen(
-                        navController, 
-                        it.arguments?.getString("versionId"),
-                        isCardBlurEnabled = isCardBlurEnabled, 
-                        cardAlpha = cardAlpha,
-                        hazeState = hazeState
-                    )
-                }
-                composable(Screen.Online.route) { OnlineScreen() }
-                composable(
-                    route = Screen.Account.route + "?code={code}",
-                    arguments = listOf(navArgument("code") { 
-                        type = NavType.StringType
-                        nullable = true
-                    }),
-                    deepLinks = listOf(navDeepLink { uriPattern = "shardlauncher://auth/microsoft?code={code}" })
-                ) { backStackEntry ->
-                    AccountScreen(
-                        navController = navController, 
-                        accountViewModel = accountViewModel,
-                        microsoftAuthCode = backStackEntry.arguments?.getString("code"),
-                        isCardBlurEnabled = isCardBlurEnabled,
-                        cardAlpha = cardAlpha,
-                        hazeState = hazeState
-                    )
-                }
-                composable(Screen.Settings.route) {
-                    SettingsScreen(
+                MainContent(
+                        modifier = Modifier.fillMaxSize(),
+                        isSidebarExpanded = isSidebarExpanded,
+                        contentBlurRadius = contentBlurRadius,
+                        onSidebarExpandToggle = { isSidebarExpanded = !isSidebarExpanded },
                         navController = navController,
                         isDarkTheme = isDarkTheme,
                         onThemeToggle = onThemeToggle,
@@ -828,16 +663,19 @@ fun MainContent(
                         darkColorScheme = darkColorScheme,
                         onLightColorSchemeChange = onLightColorSchemeChange,
                         onDarkColorSchemeChange = onDarkColorSchemeChange,
-                        enableBackgroundLightEffect = enableBackgroundLightEffect,
-                        onEnableBackgroundLightEffectChange = onEnableBackgroundLightEffectChange,
-                        enableBackgroundLightEffectCustomColor = enableBackgroundLightEffectCustomColor,
-                        onEnableBackgroundLightEffectCustomColorChange = onEnableBackgroundLightEffectCustomColorChange,
-                        backgroundLightEffectCustomColor = backgroundLightEffectCustomColor,
-                        onBackgroundLightEffectCustomColorChange = onBackgroundLightEffectCustomColorChange,
                         animationSpeed = animationSpeed,
                         onAnimationSpeedChange = onAnimationSpeedChange,
                         lightEffectAnimationSpeed = lightEffectAnimationSpeed,
                         onLightEffectAnimationSpeedChange = onLightEffectAnimationSpeedChange,
+                        enableBackgroundLightEffect = enableBackgroundLightEffect,
+                        onEnableBackgroundLightEffectChange = onEnableBackgroundLightEffectChange,
+                        enableBackgroundLightEffectCustomColor =
+                                enableBackgroundLightEffectCustomColor,
+                        onEnableBackgroundLightEffectCustomColorChange =
+                                onEnableBackgroundLightEffectCustomColorChange,
+                        backgroundLightEffectCustomColor = backgroundLightEffectCustomColor,
+                        onBackgroundLightEffectCustomColorChange =
+                                onBackgroundLightEffectCustomColorChange,
                         launcherBackgroundUri = launcherBackgroundUri,
                         onLauncherBackgroundUriChange = onLauncherBackgroundUriChange,
                         launcherBackgroundBlur = launcherBackgroundBlur,
@@ -854,33 +692,342 @@ fun MainContent(
                         onUiScaleChange = onUiScaleChange,
                         isGlowEffectEnabled = isGlowEffectEnabled,
                         onIsGlowEffectEnabledChange = onIsGlowEffectEnabledChange,
-                        isCardBlurEnabled = isCardBlurEnabled,
                         onIsCardBlurEnabledChange = onIsCardBlurEnabledChange,
-                        cardAlpha = cardAlpha,
                         onCardAlphaChange = onCardAlphaChange,
                         useBmclapi = useBmclapi,
                         onUseBmclapiChange = onUseBmclapiChange,
                         isMusicPlayerEnabled = isMusicPlayerEnabled,
                         onIsMusicPlayerEnabledChange = onIsMusicPlayerEnabledChange,
-                        musicPlayerViewModel = musicPlayerViewModel,
-                        hazeState = hazeState
+                        accountViewModel = accountViewModel,
+                        musicPlayerViewModel = musicPlayerViewModel
+                )
+
+                val sidebarAlignment =
+                        when (sidebarPosition) {
+                            SidebarPosition.Left -> Alignment.CenterStart
+                            SidebarPosition.Right -> Alignment.CenterEnd
+                        }
+
+                SideBar(
+                        modifier = Modifier.align(sidebarAlignment).width(sidebarWidth),
+                        isExpanded = isSidebarExpanded,
+                        onToggleExpand = { isSidebarExpanded = !isSidebarExpanded },
+                        navController = navController,
+                        position = sidebarPosition,
+                        isGlowEffectEnabled = isGlowEffectEnabled,
+                        animationSpeed = animationSpeed
+                )
+
+                NotificationPanel(isVisible = isSidebarExpanded, sidebarPosition = sidebarPosition)
+
+                NotificationPopupHost()
+            }
+        }
+    }
+}
+
+@Composable
+fun MainContent(
+        modifier: Modifier = Modifier,
+        isSidebarExpanded: Boolean,
+        contentBlurRadius: androidx.compose.ui.unit.Dp,
+        onSidebarExpandToggle: () -> Unit,
+        navController: NavHostController,
+        isDarkTheme: Boolean,
+        onThemeToggle: () -> Unit,
+        sidebarPosition: SidebarPosition,
+        onPositionChange: (SidebarPosition) -> Unit,
+        themeColor: ThemeColor,
+        onThemeColorChange: (ThemeColor) -> Unit,
+        customPrimaryColor: Color,
+        onCustomPrimaryColorChange: (Color) -> Unit,
+        lightColorScheme: ColorScheme,
+        darkColorScheme: ColorScheme,
+        onLightColorSchemeChange: (ColorScheme) -> Unit,
+        onDarkColorSchemeChange: (ColorScheme) -> Unit,
+        animationSpeed: Float,
+        onAnimationSpeedChange: (Float) -> Unit,
+        lightEffectAnimationSpeed: Float,
+        onLightEffectAnimationSpeedChange: (Float) -> Unit,
+        enableBackgroundLightEffect: Boolean,
+        onEnableBackgroundLightEffectChange: () -> Unit,
+        enableBackgroundLightEffectCustomColor: Boolean,
+        onEnableBackgroundLightEffectCustomColorChange: () -> Unit,
+        backgroundLightEffectCustomColor: Color,
+        onBackgroundLightEffectCustomColorChange: (Color) -> Unit,
+        launcherBackgroundUri: String?,
+        onLauncherBackgroundUriChange: (String?) -> Unit,
+        launcherBackgroundBlur: Float,
+        onLauncherBackgroundBlurChange: (Float) -> Unit,
+        launcherBackgroundBrightness: Float,
+        onLauncherBackgroundBrightnessChange: (Float) -> Unit,
+        enableParallax: Boolean,
+        onEnableParallaxChange: (Boolean) -> Unit,
+        parallaxMagnitude: Float,
+        onParallaxMagnitudeChange: (Float) -> Unit,
+        enableVersionCheck: Boolean,
+        onEnableVersionCheckChange: () -> Unit,
+        uiScale: Float,
+        onUiScaleChange: (Float) -> Unit,
+        isGlowEffectEnabled: Boolean,
+        onIsGlowEffectEnabledChange: () -> Unit,
+        onIsCardBlurEnabledChange: () -> Unit,
+        onCardAlphaChange: (Float) -> Unit,
+        useBmclapi: Boolean,
+        onUseBmclapiChange: (Boolean) -> Unit,
+        isMusicPlayerEnabled: Boolean,
+        onIsMusicPlayerEnabledChange: () -> Unit,
+        accountViewModel: AccountViewModel,
+        musicPlayerViewModel: MusicPlayerViewModel
+) {
+    val cardLayoutConfig = LocalCardLayoutConfig.current
+    val isCardBlurEnabled = cardLayoutConfig.isCardBlurEnabled
+    val cardAlpha = cardLayoutConfig.cardAlpha
+    val hazeState = cardLayoutConfig.hazeState
+    val collapsedSidebarWidth = 72.dp
+    val animationDuration = (300 / animationSpeed).toInt()
+
+    val paddingStart by
+            animateDpAsState(
+                    targetValue =
+                            if (sidebarPosition == SidebarPosition.Left) collapsedSidebarWidth
+                            else 0.dp,
+                    animationSpec = tween(durationMillis = animationDuration),
+                    label = "ContentPaddingStart"
+            )
+    val paddingEnd by
+            animateDpAsState(
+                    targetValue =
+                            if (sidebarPosition == SidebarPosition.Right) collapsedSidebarWidth
+                            else 0.dp,
+                    animationSpec = tween(durationMillis = animationDuration),
+                    label = "ContentPaddingEnd"
+            )
+    val contentPadding = PaddingValues(start = paddingStart, end = paddingEnd)
+
+    Box(modifier = modifier.blur(radius = contentBlurRadius)) {
+        Box(modifier = Modifier.padding(contentPadding)) {
+            val navAnimationDuration = (500 / animationSpeed).toInt()
+            NavHost(
+                    navController = navController,
+                    startDestination = Screen.Home.route,
+                    enterTransition = {
+                        val initialRoute = initialState.destination.route
+                        val targetRoute = targetState.destination.route
+                        val initialIndex =
+                                navigationItems.indexOfFirst {
+                                    it.route == getRootRoute(initialRoute)
+                                }
+                        val targetIndex =
+                                navigationItems.indexOfFirst {
+                                    it.route == getRootRoute(targetRoute)
+                                }
+
+                        if (targetRoute == Screen.Home.route) {
+                            slideInVertically(animationSpec = tween(navAnimationDuration)) { it } +
+                                    fadeIn(animationSpec = tween(navAnimationDuration))
+                        } else if (initialIndex == -1 || targetIndex == -1) {
+                            slideInVertically(animationSpec = tween(navAnimationDuration)) { it } +
+                                    fadeIn(animationSpec = tween(navAnimationDuration))
+                        } else if (targetIndex > initialIndex) {
+                            slideInVertically(animationSpec = tween(navAnimationDuration)) { it } +
+                                    fadeIn(animationSpec = tween(navAnimationDuration))
+                        } else {
+                            slideInVertically(animationSpec = tween(navAnimationDuration)) { -it } +
+                                    fadeIn(animationSpec = tween(navAnimationDuration))
+                        }
+                    },
+                    exitTransition = {
+                        val initialRoute = initialState.destination.route
+                        val targetRoute = targetState.destination.route
+                        val initialIndex =
+                                navigationItems.indexOfFirst {
+                                    it.route == getRootRoute(initialRoute)
+                                }
+                        val targetIndex =
+                                navigationItems.indexOfFirst {
+                                    it.route == getRootRoute(targetRoute)
+                                }
+
+                        if (targetRoute == Screen.Home.route) {
+                            slideOutVertically(animationSpec = tween(navAnimationDuration)) {
+                                -it
+                            } + fadeOut(animationSpec = tween(navAnimationDuration))
+                        } else if (initialIndex == -1 || targetIndex == -1) {
+                            slideOutVertically(animationSpec = tween(navAnimationDuration)) {
+                                -it
+                            } + fadeOut(animationSpec = tween(navAnimationDuration))
+                        } else if (targetIndex > initialIndex) {
+                            slideOutVertically(animationSpec = tween(navAnimationDuration)) {
+                                -it
+                            } + fadeOut(animationSpec = tween(navAnimationDuration))
+                        } else {
+                            slideOutVertically(animationSpec = tween(navAnimationDuration)) { it } +
+                                    fadeOut(animationSpec = tween(navAnimationDuration))
+                        }
+                    },
+                    popEnterTransition = {
+                        val initialRoute = initialState.destination.route
+                        val targetRoute = targetState.destination.route
+                        val initialIndex =
+                                navigationItems.indexOfFirst {
+                                    it.route == getRootRoute(initialRoute)
+                                }
+                        val targetIndex =
+                                navigationItems.indexOfFirst {
+                                    it.route == getRootRoute(targetRoute)
+                                }
+
+                        if (targetRoute == Screen.Home.route) {
+                            slideInVertically(animationSpec = tween(navAnimationDuration)) { -it } +
+                                    fadeIn(animationSpec = tween(navAnimationDuration))
+                        } else if (initialIndex == -1 || targetIndex == -1) {
+                            slideInVertically(animationSpec = tween(navAnimationDuration)) { -it } +
+                                    fadeIn(animationSpec = tween(navAnimationDuration))
+                        } else if (targetIndex > initialIndex) {
+                            slideInVertically(animationSpec = tween(navAnimationDuration)) { -it } +
+                                    fadeIn(animationSpec = tween(navAnimationDuration))
+                        } else {
+                            slideInVertically(animationSpec = tween(navAnimationDuration)) { it } +
+                                    fadeIn(animationSpec = tween(navAnimationDuration))
+                        }
+                    },
+                    popExitTransition = {
+                        val initialRoute = initialState.destination.route
+                        val targetRoute = targetState.destination.route
+                        val initialIndex =
+                                navigationItems.indexOfFirst {
+                                    it.route == getRootRoute(initialRoute)
+                                }
+                        val targetIndex =
+                                navigationItems.indexOfFirst {
+                                    it.route == getRootRoute(targetRoute)
+                                }
+
+                        if (targetRoute == Screen.Home.route) {
+                            slideOutVertically(animationSpec = tween(navAnimationDuration)) { it } +
+                                    fadeOut(animationSpec = tween(navAnimationDuration))
+                        } else if (initialIndex == -1 || targetIndex == -1) {
+                            slideOutVertically(animationSpec = tween(navAnimationDuration)) { it } +
+                                    fadeOut(animationSpec = tween(navAnimationDuration))
+                        } else if (targetIndex > initialIndex) {
+                            slideOutVertically(animationSpec = tween(navAnimationDuration)) { it } +
+                                    fadeOut(animationSpec = tween(navAnimationDuration))
+                        } else {
+                            slideOutVertically(animationSpec = tween(navAnimationDuration)) {
+                                -it
+                            } + fadeOut(animationSpec = tween(navAnimationDuration))
+                        }
+                    }
+            ) {
+                composable(Screen.Home.route) {
+                    HomeScreen(
+                            navController,
+                            enableVersionCheck = enableVersionCheck,
+                            animationSpeed = animationSpeed,
+                            accountViewModel = accountViewModel
+                    )
+                }
+                composable(Screen.Version.route) { VersionScreen(navController, animationSpeed) }
+                composable(Screen.Download.route) {
+                    DownloadScreen(navController = navController, useBmclapi = useBmclapi)
+                }
+                composable(
+                        "version_detail/{versionId}",
+                        arguments = listOf(navArgument("versionId") { type = NavType.StringType })
+                ) { VersionDetailScreen(navController, it.arguments?.getString("versionId")) }
+                composable(Screen.Online.route) { OnlineScreen() }
+                composable(
+                        route = Screen.Account.route + "?code={code}",
+                        arguments =
+                                listOf(
+                                        navArgument("code") {
+                                            type = NavType.StringType
+                                            nullable = true
+                                        }
+                                ),
+                        deepLinks =
+                                listOf(
+                                        navDeepLink {
+                                            uriPattern =
+                                                    "shardlauncher://auth/microsoft?code={code}"
+                                        }
+                                )
+                ) { backStackEntry ->
+                    AccountScreen(
+                            navController = navController,
+                            accountViewModel = accountViewModel,
+                            microsoftAuthCode = backStackEntry.arguments?.getString("code")
+                    )
+                }
+                composable(Screen.Settings.route) {
+                    SettingsScreen(
+                            navController = navController,
+                            isDarkTheme = isDarkTheme,
+                            onThemeToggle = onThemeToggle,
+                            sidebarPosition = sidebarPosition,
+                            onPositionChange = onPositionChange,
+                            themeColor = themeColor,
+                            onThemeColorChange = onThemeColorChange,
+                            customPrimaryColor = customPrimaryColor,
+                            onCustomPrimaryColorChange = onCustomPrimaryColorChange,
+                            lightColorScheme = lightColorScheme,
+                            darkColorScheme = darkColorScheme,
+                            onLightColorSchemeChange = onLightColorSchemeChange,
+                            onDarkColorSchemeChange = onDarkColorSchemeChange,
+                            enableBackgroundLightEffect = enableBackgroundLightEffect,
+                            onEnableBackgroundLightEffectChange =
+                                    onEnableBackgroundLightEffectChange,
+                            enableBackgroundLightEffectCustomColor =
+                                    enableBackgroundLightEffectCustomColor,
+                            onEnableBackgroundLightEffectCustomColorChange =
+                                    onEnableBackgroundLightEffectCustomColorChange,
+                            backgroundLightEffectCustomColor = backgroundLightEffectCustomColor,
+                            onBackgroundLightEffectCustomColorChange =
+                                    onBackgroundLightEffectCustomColorChange,
+                            animationSpeed = animationSpeed,
+                            onAnimationSpeedChange = onAnimationSpeedChange,
+                            lightEffectAnimationSpeed = lightEffectAnimationSpeed,
+                            onLightEffectAnimationSpeedChange = onLightEffectAnimationSpeedChange,
+                            launcherBackgroundUri = launcherBackgroundUri,
+                            onLauncherBackgroundUriChange = onLauncherBackgroundUriChange,
+                            launcherBackgroundBlur = launcherBackgroundBlur,
+                            onLauncherBackgroundBlurChange = onLauncherBackgroundBlurChange,
+                            launcherBackgroundBrightness = launcherBackgroundBrightness,
+                            onLauncherBackgroundBrightnessChange =
+                                    onLauncherBackgroundBrightnessChange,
+                            enableParallax = enableParallax,
+                            onEnableParallaxChange = onEnableParallaxChange,
+                            parallaxMagnitude = parallaxMagnitude,
+                            onParallaxMagnitudeChange = onParallaxMagnitudeChange,
+                            enableVersionCheck = enableVersionCheck,
+                            onEnableVersionCheckChange = onEnableVersionCheckChange,
+                            uiScale = uiScale,
+                            onUiScaleChange = onUiScaleChange,
+                            isGlowEffectEnabled = isGlowEffectEnabled,
+                            onIsGlowEffectEnabledChange = onIsGlowEffectEnabledChange,
+                            onIsCardBlurEnabledChange = onIsCardBlurEnabledChange,
+                            onCardAlphaChange = onCardAlphaChange,
+                            useBmclapi = useBmclapi,
+                            onUseBmclapiChange = onUseBmclapiChange,
+                            isMusicPlayerEnabled = isMusicPlayerEnabled,
+                            onIsMusicPlayerEnabledChange = onIsMusicPlayerEnabledChange,
+                            musicPlayerViewModel = musicPlayerViewModel
                     )
                 }
                 composable(Screen.DeveloperOptions.route) {
-                    DeveloperOptionsScreen(navController = navController, isCardBlurEnabled = isCardBlurEnabled, cardAlpha = cardAlpha, hazeState = hazeState)
+                    DeveloperOptionsScreen(navController = navController)
                 }
-                composable("component_demo") {
-                    ComponentDemoScreen(isCardBlurEnabled = isCardBlurEnabled, cardAlpha = cardAlpha, hazeState = hazeState)
-                }
+                composable("component_demo") { ComponentDemoScreen() }
             }
         }
 
         if (isSidebarExpanded) {
             Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(Color.Black.copy(alpha = 0.3f))
-                    .clickable { onSidebarExpandToggle() }
+                    modifier =
+                            Modifier.fillMaxSize()
+                                    .background(Color.Black.copy(alpha = 0.3f))
+                                    .clickable { onSidebarExpandToggle() }
             )
         }
     }
@@ -888,79 +1035,83 @@ fun MainContent(
 
 @Composable
 fun SideBar(
-    modifier: Modifier = Modifier,
-    isExpanded: Boolean,
-    onToggleExpand: () -> Unit,
-    navController: NavController,
-    position: SidebarPosition,
-    isGlowEffectEnabled: Boolean,
-    animationSpeed: Float
+        modifier: Modifier = Modifier,
+        isExpanded: Boolean,
+        onToggleExpand: () -> Unit,
+        navController: NavController,
+        position: SidebarPosition,
+        isGlowEffectEnabled: Boolean,
+        animationSpeed: Float
 ) {
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
     val rootRoute = getRootRoute(currentRoute)
 
-    val cardShape = when (position) {
-        SidebarPosition.Left -> RoundedCornerShape(topEnd = 28.dp, bottomEnd = 28.dp)
-        SidebarPosition.Right -> RoundedCornerShape(topStart = 28.dp, bottomStart = 28.dp)
-    }
+    val cardShape =
+            when (position) {
+                SidebarPosition.Left -> RoundedCornerShape(topEnd = 28.dp, bottomEnd = 28.dp)
+                SidebarPosition.Right -> RoundedCornerShape(topStart = 28.dp, bottomStart = 28.dp)
+            }
 
     Box(
-        modifier = modifier
-            .fillMaxHeight()
-            .clip(cardShape)
-            .background(
-                MaterialTheme.colorScheme.surface.copy(alpha = 0.95f)
-            )
+            modifier =
+                    modifier.fillMaxHeight()
+                            .clip(cardShape)
+                            .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.95f))
     ) {
-        SideBarContent(isExpanded, onToggleExpand, navController, rootRoute, isGlowEffectEnabled, animationSpeed)
+        SideBarContent(
+                isExpanded,
+                onToggleExpand,
+                navController,
+                rootRoute,
+                isGlowEffectEnabled,
+                animationSpeed
+        )
     }
 }
 
 @Composable
 private fun SideBarContent(
-    isExpanded: Boolean,
-    onToggleExpand: () -> Unit,
-    navController: NavController,
-    currentRoute: String?,
-    isGlowEffectEnabled: Boolean,
-    animationSpeed: Float
+        isExpanded: Boolean,
+        onToggleExpand: () -> Unit,
+        navController: NavController,
+        currentRoute: String?,
+        isGlowEffectEnabled: Boolean,
+        animationSpeed: Float
 ) {
     val notifications by NotificationManager.notifications.collectAsState()
     val hasPersistentNotifications = notifications.any { it.type != NotificationType.Temporary }
 
     LazyColumn(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(vertical = 16.dp, horizontal = 8.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(10.dp)
+            modifier = Modifier.fillMaxSize().padding(vertical = 16.dp, horizontal = 8.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(10.dp)
     ) {
         item {
             ExpandButton(
-                isExpanded = isExpanded,
-                onClick = onToggleExpand,
-                showBadge = hasPersistentNotifications,
-                animationSpeed = animationSpeed
+                    isExpanded = isExpanded,
+                    onClick = onToggleExpand,
+                    showBadge = hasPersistentNotifications,
+                    animationSpeed = animationSpeed
             )
         }
         items(navigationItems) { screen ->
             val isSelected = currentRoute == screen.route
             SideBarButton(
-                screen = screen,
-                isExpanded = isExpanded,
-                isSelected = isSelected,
-                onClick = {
-                    if (currentRoute != screen.route) {
-                        navController.navigate(screen.route) {
-                            popUpTo(navController.graph.startDestinationId) { saveState = true }
-                            launchSingleTop = true
-                            restoreState = true
+                    screen = screen,
+                    isExpanded = isExpanded,
+                    isSelected = isSelected,
+                    onClick = {
+                        if (currentRoute != screen.route) {
+                            navController.navigate(screen.route) {
+                                popUpTo(navController.graph.startDestinationId) { saveState = true }
+                                launchSingleTop = true
+                                restoreState = true
+                            }
                         }
-                    }
-                },
-                isGlowEffectEnabled = isGlowEffectEnabled,
-                animationSpeed = animationSpeed
+                    },
+                    isGlowEffectEnabled = isGlowEffectEnabled,
+                    animationSpeed = animationSpeed
             )
         }
     }
@@ -968,60 +1119,64 @@ private fun SideBarContent(
 
 @Composable
 fun ExpandButton(
-    isExpanded: Boolean,
-    onClick: () -> Unit,
-    icon: ImageVector? = null,
-    showBadge: Boolean = false,
-    animationSpeed: Float
+        isExpanded: Boolean,
+        onClick: () -> Unit,
+        icon: ImageVector? = null,
+        showBadge: Boolean = false,
+        animationSpeed: Float
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
     val animationDuration = (150 / animationSpeed).toInt()
-    val scale by animateFloatAsState(
-        targetValue = if (isPressed) 0.95f else 1f,
-        animationSpec = tween(durationMillis = animationDuration),
-        label = "ExpandButtonScale"
-    )
+    val scale by
+            animateFloatAsState(
+                    targetValue = if (isPressed) 0.95f else 1f,
+                    animationSpec = tween(durationMillis = animationDuration),
+                    label = "ExpandButtonScale"
+            )
     val shape = RoundedCornerShape(22.dp)
 
-    val buttonModifier = if (isExpanded) {
-        Modifier.fillMaxWidth().height(56.dp)
-    } else {
-        Modifier.size(56.dp)
-    }
+    val buttonModifier =
+            if (isExpanded) {
+                Modifier.fillMaxWidth().height(56.dp)
+            } else {
+                Modifier.size(56.dp)
+            }
 
     Box(
-        modifier = buttonModifier
-            .graphicsLayer {
-                scaleX = scale
-                scaleY = scale
-            }
-            .clip(shape)
-            .clickable(
-                interactionSource = interactionSource,
-                indication = null,
-                onClick = onClick
-            ),
-        contentAlignment = Alignment.Center
+            modifier =
+                    buttonModifier
+                            .graphicsLayer {
+                                scaleX = scale
+                                scaleY = scale
+                            }
+                            .clip(shape)
+                            .clickable(
+                                    interactionSource = interactionSource,
+                                    indication = null,
+                                    onClick = onClick
+                            ),
+            contentAlignment = Alignment.Center
     ) {
         Crossfade(
-            targetState = isExpanded,
-            label = "ToggleIcon",
-            animationSpec = tween(durationMillis = animationDuration)
+                targetState = isExpanded,
+                label = "ToggleIcon",
+                animationSpec = tween(durationMillis = animationDuration)
         ) {
             Icon(
-                imageVector = icon ?: if (it) Icons.AutoMirrored.Filled.ArrowBack else Icons.Filled.Menu,
-                contentDescription = if (it) "Collapse" else "Expand",
-                tint = MaterialTheme.colorScheme.primary
+                    imageVector = icon
+                                    ?: if (it) Icons.AutoMirrored.Filled.ArrowBack
+                                    else Icons.Filled.Menu,
+                    contentDescription = if (it) "Collapse" else "Expand",
+                    tint = MaterialTheme.colorScheme.primary
             )
         }
         if (showBadge) {
             Box(
-                Modifier
-                    .align(Alignment.TopEnd)
-                    .padding(12.dp)
-                    .size(8.dp)
-                    .background(MaterialTheme.colorScheme.primary, RoundedCornerShape(4.dp))
+                    Modifier.align(Alignment.TopEnd)
+                            .padding(12.dp)
+                            .size(8.dp)
+                            .background(MaterialTheme.colorScheme.primary, RoundedCornerShape(4.dp))
             )
         }
     }
@@ -1036,80 +1191,79 @@ fun OnlineScreen() {
 
 @Composable
 fun SideBarButton(
-    screen: Screen,
-    isExpanded: Boolean,
-    isSelected: Boolean,
-    onClick: () -> Unit,
-    isGlowEffectEnabled: Boolean,
-    animationSpeed: Float
+        screen: Screen,
+        isExpanded: Boolean,
+        isSelected: Boolean,
+        onClick: () -> Unit,
+        isGlowEffectEnabled: Boolean,
+        animationSpeed: Float
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
     val animationDuration = (150 / animationSpeed).toInt()
-    val scale by animateFloatAsState(
-        targetValue = if (isPressed) 0.95f else 1f,
-        animationSpec = tween(durationMillis = animationDuration),
-        label = "SidebarButtonScale"
-    )
+    val scale by
+            animateFloatAsState(
+                    targetValue = if (isPressed) 0.95f else 1f,
+                    animationSpec = tween(durationMillis = animationDuration),
+                    label = "SidebarButtonScale"
+            )
 
     val backgroundColor =
-        if (isSelected) MaterialTheme.colorScheme.primary.copy(alpha = 0.1f) else Color.Transparent
+            if (isSelected) MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
+            else Color.Transparent
     val contentColor =
-        if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface.copy(
-            alpha = 0.7f
-        )
+            if (isSelected) MaterialTheme.colorScheme.primary
+            else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
     val shape = RoundedCornerShape(22.dp)
 
-    val buttonModifier = if (isExpanded) {
-        Modifier
-            .fillMaxWidth()
-            .height(56.dp)
-    } else {
-        Modifier.size(56.dp)
-    }
+    val buttonModifier =
+            if (isExpanded) {
+                Modifier.fillMaxWidth().height(56.dp)
+            } else {
+                Modifier.size(56.dp)
+            }
 
     Box(
-        modifier = Modifier
-            .then(buttonModifier)
-            .graphicsLayer {
-                scaleX = scale
-                scaleY = scale
-            }
-            .clip(shape)
-            .background(backgroundColor, shape)
-            .clickable(
-                interactionSource = interactionSource,
-                indication = null,
-                onClick = onClick
-            ),
-        contentAlignment = Alignment.Center
+            modifier =
+                    Modifier.then(buttonModifier)
+                            .graphicsLayer {
+                                scaleX = scale
+                                scaleY = scale
+                            }
+                            .clip(shape)
+                            .background(backgroundColor, shape)
+                            .clickable(
+                                    interactionSource = interactionSource,
+                                    indication = null,
+                                    onClick = onClick
+                            ),
+            contentAlignment = Alignment.Center
     ) {
-
         Row(
-            modifier = Modifier.padding(horizontal = if (isExpanded) 14.dp else 0.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = if (isExpanded) Arrangement.Start else Arrangement.Center
+                modifier = Modifier.padding(horizontal = if (isExpanded) 14.dp else 0.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = if (isExpanded) Arrangement.Start else Arrangement.Center
         ) {
             Icon(
-                imageVector = screen.icon,
-                contentDescription = screen.label,
-                tint = contentColor,
-                modifier = Modifier
-                    .size(28.dp)
-                    .glow(
-                        color = MaterialTheme.colorScheme.primary,
-                        enabled = isGlowEffectEnabled && isSelected,
-                        cornerRadius = 22.dp,
-                        blurRadius = 12.dp
-                    )
+                    imageVector = screen.icon,
+                    contentDescription = screen.label,
+                    tint = contentColor,
+                    modifier =
+                            Modifier.size(28.dp)
+                                    .glow(
+                                            color = MaterialTheme.colorScheme.primary,
+                                            enabled = isGlowEffectEnabled && isSelected,
+                                            cornerRadius = 22.dp,
+                                            blurRadius = 12.dp
+                                    )
             )
             if (isExpanded) {
                 Spacer(modifier = Modifier.width(16.dp))
                 Text(
-                    text = screen.label,
-                    color = contentColor,
-                    style = MaterialTheme.typography.bodyLarge,
-                    maxLines = 1
+                        text = screen.label,
+                        color = contentColor,
+                        style = MaterialTheme.typography.bodyLarge,
+                        maxLines = 1
                 )
             }
         }

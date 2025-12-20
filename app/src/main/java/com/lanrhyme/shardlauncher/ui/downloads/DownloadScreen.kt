@@ -2,7 +2,6 @@ package com.lanrhyme.shardlauncher.ui.downloads
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -11,31 +10,22 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavController
 import com.lanrhyme.shardlauncher.ui.components.SegmentedNavigationBar
-import dev.chrisbanes.haze.HazeState
 
 @Composable
-fun DownloadScreen(
-    navController: NavController, 
-    useBmclapi: Boolean,
-    isCardBlurEnabled: Boolean,
-    cardAlpha: Float,
-    hazeState: HazeState
-) {
+fun DownloadScreen(navController: NavController, useBmclapi: Boolean) {
     var selectedPage by remember { mutableStateOf(DownloadPage.Game) }
 
-    Column(
-        modifier = Modifier.fillMaxSize()
-    ) {
+    Column(modifier = Modifier.fillMaxSize()) {
         SegmentedNavigationBar(
-            title = "下载",
-            selectedPage = selectedPage,
-            onPageSelected = { selectedPage = it },
-            pages = DownloadPage.entries,
-            getTitle = { it.title }
+                title = "下载",
+                selectedPage = selectedPage,
+                onPageSelected = { selectedPage = it },
+                pages = DownloadPage.entries,
+                getTitle = { it.title }
         )
 
         when (selectedPage) {
-            DownloadPage.Game -> GameDownloadContent(navController, useBmclapi = useBmclapi, isCardBlurEnabled = isCardBlurEnabled, cardAlpha = cardAlpha, hazeState = hazeState)
+            DownloadPage.Game -> GameDownloadContent(navController, useBmclapi = useBmclapi)
             DownloadPage.Mod -> ModDownloadContent()
             DownloadPage.Modpack -> ModpackDownloadContent()
         }

@@ -38,6 +38,7 @@ import com.lanrhyme.shardlauncher.ui.components.CustomTextField
 import com.lanrhyme.shardlauncher.ui.components.FluidFab
 import com.lanrhyme.shardlauncher.ui.components.FluidFabDirection
 import com.lanrhyme.shardlauncher.ui.components.FluidFabItem
+import com.lanrhyme.shardlauncher.ui.components.LocalCardLayoutConfig
 import com.lanrhyme.shardlauncher.ui.components.PopupContainer
 import com.lanrhyme.shardlauncher.ui.components.ScalingActionButton
 import com.lanrhyme.shardlauncher.ui.components.SegmentedNavigationBar
@@ -47,10 +48,13 @@ import com.lanrhyme.shardlauncher.ui.components.StyledFilterChip
 import com.lanrhyme.shardlauncher.ui.components.SwitchLayout
 import com.lanrhyme.shardlauncher.ui.components.TitleAndSummary
 import com.lanrhyme.shardlauncher.ui.components.TitledDivider
-import dev.chrisbanes.haze.HazeState
 
 @Composable
-fun ComponentDemoScreen(isCardBlurEnabled: Boolean, cardAlpha: Float, hazeState: HazeState) {
+fun ComponentDemoScreen() {
+    val cardLayoutConfig = LocalCardLayoutConfig.current
+    val isCardBlurEnabled = cardLayoutConfig.isCardBlurEnabled
+    val cardAlpha = cardLayoutConfig.cardAlpha
+    val hazeState = cardLayoutConfig.hazeState
     var textState by remember { mutableStateOf("Hello") }
     var switchState by remember { mutableStateOf(false) }
     var sliderState by remember { mutableStateOf(0.5f) }
@@ -101,10 +105,7 @@ fun ComponentDemoScreen(isCardBlurEnabled: Boolean, cardAlpha: Float, hazeState:
             SwitchLayout(
                     checked = switchState,
                     onCheckedChange = { switchState = !switchState },
-                    title = "Switch Layout",
-                    isCardBlurEnabled = isCardBlurEnabled,
-                    cardAlpha = cardAlpha,
-                    hazeState = hazeState
+                    title = "Switch Layout"
             )
         }
 
@@ -113,10 +114,7 @@ fun ComponentDemoScreen(isCardBlurEnabled: Boolean, cardAlpha: Float, hazeState:
                     value = sliderState,
                     onValueChange = { sliderState = it },
                     title = "Slider Layout",
-                    isGlowEffectEnabled = true,
-                    isCardBlurEnabled = isCardBlurEnabled,
-                    cardAlpha = cardAlpha,
-                    hazeState = hazeState
+                    isGlowEffectEnabled = true
             )
         }
 
@@ -126,10 +124,7 @@ fun ComponentDemoScreen(isCardBlurEnabled: Boolean, cardAlpha: Float, hazeState:
                     items = SidebarPosition.entries,
                     selectedItem = selectedListPage,
                     onValueChange = { selectedListPage = it },
-                    getItemText = { pos -> pos.name },
-                    isCardBlurEnabled = isCardBlurEnabled,
-                    cardAlpha = cardAlpha,
-                    hazeState = hazeState
+                    getItemText = { pos -> pos.name }
             )
         }
 
@@ -183,13 +178,7 @@ fun ComponentDemoScreen(isCardBlurEnabled: Boolean, cardAlpha: Float, hazeState:
         }
 
         item {
-            CombinedCard(
-                    title = "Combined Card",
-                    summary = "With some content",
-                    isCardBlurEnabled = isCardBlurEnabled,
-                    cardAlpha = cardAlpha,
-                    hazeState = hazeState
-            ) {
+            CombinedCard(title = "Combined Card", summary = "With some content") {
                 Text("This is the content of the combined card", modifier = Modifier.padding(16.dp))
             }
         }

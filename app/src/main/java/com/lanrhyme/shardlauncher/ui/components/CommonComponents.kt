@@ -76,7 +76,6 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Popup
 import androidx.compose.ui.window.PopupProperties
-import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.hazeChild
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -86,20 +85,15 @@ fun CollapsibleCard(
         title: String,
         summary: String? = null,
         animationSpeed: Float = 1.0f,
-        isCardBlurEnabled: Boolean = false,
-        cardAlpha: Float = 0.6f,
-        hazeState: HazeState? = null,
         content: @Composable () -> Unit
 ) {
+        val (isCardBlurEnabled, cardAlpha, hazeState) = LocalCardLayoutConfig.current
         var isExpanded by remember { mutableStateOf(false) }
         val animationDuration = (300 / animationSpeed).toInt()
         val cardShape = RoundedCornerShape(16.dp)
 
         val cardModifier =
-                if (isCardBlurEnabled &&
-                                hazeState != null &&
-                                Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
-                ) {
+                if (isCardBlurEnabled && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
                         modifier.fillMaxWidth().hazeChild(state = hazeState, shape = cardShape)
                 } else {
                         modifier.fillMaxWidth()
@@ -165,17 +159,12 @@ fun CombinedCard(
         modifier: Modifier = Modifier,
         title: String,
         summary: String? = null,
-        isCardBlurEnabled: Boolean = false,
-        cardAlpha: Float = 0.6f,
-        hazeState: HazeState? = null,
         content: @Composable () -> Unit
 ) {
+        val (isCardBlurEnabled, cardAlpha, hazeState) = LocalCardLayoutConfig.current
         val cardShape = RoundedCornerShape(16.dp)
         val cardModifier =
-                if (isCardBlurEnabled &&
-                                hazeState != null &&
-                                Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
-                ) {
+                if (isCardBlurEnabled && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
                         modifier.fillMaxWidth().hazeChild(state = hazeState, shape = cardShape)
                 } else {
                         modifier.fillMaxWidth()

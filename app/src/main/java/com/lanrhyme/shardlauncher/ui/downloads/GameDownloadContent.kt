@@ -1,5 +1,6 @@
 package com.lanrhyme.shardlauncher.ui.downloads
 
+import android.os.Build
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
@@ -47,19 +48,18 @@ import androidx.navigation.NavController
 import com.lanrhyme.shardlauncher.R
 import com.lanrhyme.shardlauncher.model.BmclapiManifest
 import com.lanrhyme.shardlauncher.ui.components.CombinedCard
+import com.lanrhyme.shardlauncher.ui.components.LocalCardLayoutConfig
 import com.lanrhyme.shardlauncher.ui.components.SearchTextField
 import com.lanrhyme.shardlauncher.ui.components.StyledFilterChip
-import dev.chrisbanes.haze.HazeState
+import dev.chrisbanes.haze.hazeChild
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
-fun GameDownloadContent(
-        navController: NavController,
-        useBmclapi: Boolean,
-        isCardBlurEnabled: Boolean,
-        cardAlpha: Float,
-        hazeState: HazeState
-) {
+fun GameDownloadContent(navController: NavController, useBmclapi: Boolean) {
+    val cardLayoutConfig = LocalCardLayoutConfig.current
+    val isCardBlurEnabled = cardLayoutConfig.isCardBlurEnabled
+    val cardAlpha = cardLayoutConfig.cardAlpha
+    val hazeState = cardLayoutConfig.hazeState
     val viewModel: GameDownloadViewModel = viewModel()
 
     val versions by viewModel.filteredVersions.collectAsState()
@@ -78,13 +78,7 @@ fun GameDownloadContent(
                     verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 item { ->
-                    CombinedCard(
-                            title = "版本筛选",
-                            summary = null,
-                            isCardBlurEnabled = isCardBlurEnabled,
-                            cardAlpha = cardAlpha,
-                            hazeState = hazeState
-                    ) {
+                    CombinedCard(title = "版本筛选", summary = null) {
                         Row(
                                 modifier = Modifier.fillMaxWidth().height(36.dp),
                                 verticalAlignment = Alignment.CenterVertically,
@@ -127,6 +121,10 @@ fun GameDownloadContent(
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun LazyItemScope.VersionItem(version: BmclapiManifest.Version, onClick: () -> Unit) {
+    val cardLayoutConfig = LocalCardLayoutConfig.current
+    val isCardBlurEnabled = cardLayoutConfig.isCardBlurEnabled
+    val cardAlpha = cardLayoutConfig.cardAlpha
+    val hazeState = cardLayoutConfig.hazeState
     var appeared by remember { mutableStateOf(false) }
     LaunchedEffect(Unit) { appeared = true }
 
@@ -137,18 +135,32 @@ fun LazyItemScope.VersionItem(version: BmclapiManifest.Version, onClick: () -> U
                     label = "scale"
             )
 
+    val shape = RoundedCornerShape(22.dp)
+    val cardModifier =
+            if (isCardBlurEnabled && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                Modifier.fillMaxWidth()
+                        .graphicsLayer {
+                            this.scaleX = scale
+                            this.scaleY = scale
+                        }
+                        .hazeChild(state = hazeState, shape = shape)
+                        .clickable { onClick() }
+            } else {
+                Modifier.fillMaxWidth()
+                        .graphicsLayer {
+                            this.scaleX = scale
+                            this.scaleY = scale
+                        }
+                        .clickable { onClick() }
+            }
+
     Card(
-            modifier =
-                    Modifier.fillMaxWidth()
-                            .graphicsLayer {
-                                this.scaleX = scale
-                                this.scaleY = scale
-                            }
-                            .clickable { onClick() },
-            shape = RoundedCornerShape(22.dp),
+            modifier = cardModifier,
+            shape = shape,
             colors =
                     CardDefaults.cardColors(
-                            containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.6f)
+                            containerColor =
+                                    MaterialTheme.colorScheme.surface.copy(alpha = cardAlpha)
                     ),
     ) {
         Row(

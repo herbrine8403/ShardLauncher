@@ -75,6 +75,7 @@ import com.lanrhyme.shardlauncher.common.SidebarPosition
 import com.lanrhyme.shardlauncher.ui.components.CollapsibleCard
 import com.lanrhyme.shardlauncher.ui.components.CustomDialog
 import com.lanrhyme.shardlauncher.ui.components.IconSwitchLayout
+import com.lanrhyme.shardlauncher.ui.components.LocalCardLayoutConfig
 import com.lanrhyme.shardlauncher.ui.components.MusicPlayerDialog
 import com.lanrhyme.shardlauncher.ui.components.PopupContainer
 import com.lanrhyme.shardlauncher.ui.components.SimpleListLayout
@@ -87,7 +88,6 @@ import com.lanrhyme.shardlauncher.ui.composables.ThemeColorEditor
 import com.lanrhyme.shardlauncher.ui.music.MusicPlayerViewModel
 import com.lanrhyme.shardlauncher.ui.theme.ColorPalettes
 import com.lanrhyme.shardlauncher.ui.theme.ThemeColor
-import dev.chrisbanes.haze.HazeState
 import java.io.File
 import java.io.FileOutputStream
 import java.util.UUID
@@ -171,15 +171,16 @@ internal fun LauncherSettingsContent(
         onUiScaleChange: (Float) -> Unit,
         isGlowEffectEnabled: Boolean,
         onIsGlowEffectEnabledChange: () -> Unit,
-        isCardBlurEnabled: Boolean,
         onIsCardBlurEnabledChange: () -> Unit,
-        cardAlpha: Float,
         onCardAlphaChange: (Float) -> Unit,
         isMusicPlayerEnabled: Boolean,
         onIsMusicPlayerEnabledChange: () -> Unit,
-        musicPlayerViewModel: MusicPlayerViewModel,
-        hazeState: HazeState
+        musicPlayerViewModel: MusicPlayerViewModel
 ) {
+    val cardLayoutConfig = LocalCardLayoutConfig.current
+    val isCardBlurEnabled = cardLayoutConfig.isCardBlurEnabled
+    val cardAlpha = cardLayoutConfig.cardAlpha
+    val hazeState = cardLayoutConfig.hazeState
     val animatedSpeed by
             animateFloatAsState(
                     targetValue = animationSpeed,
@@ -489,10 +490,7 @@ internal fun LauncherSettingsContent(
                             title = "背景模糊",
                             displayValue = tempBlur,
                             enabled = selectedBackground != null && !selectedBackground!!.isVideo,
-                            isGlowEffectEnabled = isGlowEffectEnabled,
-                            isCardBlurEnabled = isCardBlurEnabled,
-                            cardAlpha = cardAlpha,
-                            hazeState = hazeState
+                            isGlowEffectEnabled = isGlowEffectEnabled
                     )
                     Spacer(modifier = Modifier.height(4.dp))
                     SliderLayout(
@@ -502,10 +500,7 @@ internal fun LauncherSettingsContent(
                             title = "背景明度",
                             displayValue = tempBrightness,
                             enabled = selectedBackground != null,
-                            isGlowEffectEnabled = isGlowEffectEnabled,
-                            isCardBlurEnabled = isCardBlurEnabled,
-                            cardAlpha = cardAlpha,
-                            hazeState = hazeState
+                            isGlowEffectEnabled = isGlowEffectEnabled
                     )
                 }
                 item {
@@ -515,18 +510,12 @@ internal fun LauncherSettingsContent(
                     SwitchLayout(
                             checked = randomBackground,
                             onCheckedChange = { randomBackground = !randomBackground },
-                            title = "启动时随机选择背景",
-                            isCardBlurEnabled = isCardBlurEnabled,
-                            cardAlpha = cardAlpha,
-                            hazeState = hazeState
+                            title = "启动时随机选择背景"
                     )
                     SwitchLayout(
                             checked = tempEnableParallax,
                             onCheckedChange = { tempEnableParallax = !tempEnableParallax },
-                            title = "启用背景视差效果",
-                            isCardBlurEnabled = isCardBlurEnabled,
-                            cardAlpha = cardAlpha,
-                            hazeState = hazeState
+                            title = "启用背景视差效果"
                     )
                     if (tempEnableParallax) {
                         SliderLayout(
@@ -535,10 +524,7 @@ internal fun LauncherSettingsContent(
                                 valueRange = 1f..40f,
                                 title = "视差幅度",
                                 displayValue = tempParallaxMagnitude,
-                                isGlowEffectEnabled = isGlowEffectEnabled,
-                                isCardBlurEnabled = isCardBlurEnabled,
-                                cardAlpha = cardAlpha,
-                                hazeState = hazeState
+                                isGlowEffectEnabled = isGlowEffectEnabled
                         )
                     }
                 }
@@ -632,9 +618,6 @@ internal fun LauncherSettingsContent(
     if (showMusicPlayerDialog) {
         MusicPlayerDialog(
                 onDismissRequest = { showMusicPlayerDialog = false },
-                isCardBlurEnabled = isCardBlurEnabled,
-                cardAlpha = cardAlpha,
-                hazeState = hazeState,
                 musicPlayerViewModel = musicPlayerViewModel
         )
     }
@@ -701,10 +684,7 @@ internal fun LauncherSettingsContent(
                     title = "深色模式",
                     summary = if (isDarkTheme) "已开启" else "已关闭",
                     checked = isDarkTheme,
-                    onCheckedChange = { onThemeToggle() },
-                    isCardBlurEnabled = isCardBlurEnabled,
-                    cardAlpha = cardAlpha,
-                    hazeState = hazeState
+                    onCheckedChange = { onThemeToggle() }
             )
         }
         item {
@@ -713,10 +693,7 @@ internal fun LauncherSettingsContent(
                     title = "获取Minecraft最新更新信息",
                     summary = "来源于news.bugjump.net",
                     checked = enableVersionCheck,
-                    onCheckedChange = { onEnableVersionCheckChange() },
-                    isCardBlurEnabled = isCardBlurEnabled,
-                    cardAlpha = cardAlpha,
-                    hazeState = hazeState
+                    onCheckedChange = { onEnableVersionCheckChange() }
             )
         }
         item {
@@ -731,10 +708,7 @@ internal fun LauncherSettingsContent(
                             SidebarPosition.Left -> "左侧"
                             SidebarPosition.Right -> "右侧"
                         }
-                    },
-                    isCardBlurEnabled = isCardBlurEnabled,
-                    cardAlpha = cardAlpha,
-                    hazeState = hazeState
+                    }
             )
         }
         item {
@@ -752,10 +726,7 @@ internal fun LauncherSettingsContent(
                             onThemeColorChange(newColor)
                         }
                     },
-                    getItemText = { it.title },
-                    isCardBlurEnabled = isCardBlurEnabled,
-                    cardAlpha = cardAlpha,
-                    hazeState = hazeState
+                    getItemText = { it.title }
             )
         }
         item {
@@ -781,10 +752,7 @@ internal fun LauncherSettingsContent(
                         )
                     },
                     title = "自定义背景",
-                    summary = if (launcherBackgroundUri != null) "已开启" else "已关闭",
-                    isCardBlurEnabled = isCardBlurEnabled,
-                    cardAlpha = cardAlpha,
-                    hazeState = hazeState
+                    summary = if (launcherBackgroundUri != null) "已开启" else "已关闭"
             )
         }
         item {
@@ -803,10 +771,7 @@ internal fun LauncherSettingsContent(
                         )
                     },
                     title = "启用音乐播放器",
-                    summary = if (isMusicPlayerEnabled) "已开启" else "已关闭",
-                    isCardBlurEnabled = isCardBlurEnabled,
-                    cardAlpha = cardAlpha,
-                    hazeState = hazeState
+                    summary = if (isMusicPlayerEnabled) "已开启" else "已关闭"
             )
         }
         item {
@@ -815,10 +780,7 @@ internal fun LauncherSettingsContent(
                     title = "UI发光效果",
                     summary = "为部分文字和图标添加发光效果",
                     checked = isGlowEffectEnabled,
-                    onCheckedChange = { onIsGlowEffectEnabledChange() },
-                    isCardBlurEnabled = isCardBlurEnabled,
-                    cardAlpha = cardAlpha,
-                    hazeState = hazeState
+                    onCheckedChange = { onIsGlowEffectEnabledChange() }
             )
         }
         item {
@@ -828,10 +790,7 @@ internal fun LauncherSettingsContent(
                     summary = "[Beta](会出现渲染问题)对卡片背景启用毛玻璃效果(Android 12+)",
                     checked = isCardBlurEnabled,
                     onCheckedChange = { onIsCardBlurEnabledChange() },
-                    enabled = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S,
-                    isCardBlurEnabled = isCardBlurEnabled,
-                    cardAlpha = cardAlpha,
-                    hazeState = hazeState
+                    enabled = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
             )
         }
         item {
@@ -844,10 +803,7 @@ internal fun LauncherSettingsContent(
                     title = "卡片背景不透明度",
                     summary = "调整卡片背景的不透明度",
                     displayValue = cardAlpha,
-                    isGlowEffectEnabled = isGlowEffectEnabled,
-                    isCardBlurEnabled = isCardBlurEnabled,
-                    cardAlpha = cardAlpha,
-                    hazeState = hazeState
+                    isGlowEffectEnabled = isGlowEffectEnabled
             )
         }
         item {
@@ -855,18 +811,12 @@ internal fun LauncherSettingsContent(
                     modifier = Modifier.animatedAppearance(8, animationSpeed),
                     title = "背景光效",
                     summary = if (enableBackgroundLightEffect) "已开启" else "已关闭",
-                    animationSpeed = animationSpeed,
-                    isCardBlurEnabled = isCardBlurEnabled,
-                    cardAlpha = cardAlpha,
-                    hazeState = hazeState
+                    animationSpeed = animationSpeed
             ) {
                 SwitchLayout(
                         checked = enableBackgroundLightEffect,
                         onCheckedChange = { onEnableBackgroundLightEffectChange() },
-                        title = "启用背景光效",
-                        isCardBlurEnabled = isCardBlurEnabled,
-                        cardAlpha = cardAlpha,
-                        hazeState = hazeState
+                        title = "启用背景光效"
                 )
                 Spacer(modifier = Modifier.height(16.dp))
                 SliderLayout(
@@ -878,20 +828,14 @@ internal fun LauncherSettingsContent(
                         summary = "控制背景光效的运动速度",
                         displayValue = lightEffectAnimationSpeed,
                         enabled = enableBackgroundLightEffect,
-                        isGlowEffectEnabled = isGlowEffectEnabled,
-                        isCardBlurEnabled = isCardBlurEnabled,
-                        cardAlpha = cardAlpha,
-                        hazeState = hazeState
+                        isGlowEffectEnabled = isGlowEffectEnabled
                 )
                 Spacer(modifier = Modifier.height(16.dp))
                 SwitchLayout(
                         checked = enableBackgroundLightEffectCustomColor,
                         onCheckedChange = { onEnableBackgroundLightEffectCustomColorChange() },
                         title = "自定义光效颜色",
-                        enabled = enableBackgroundLightEffect,
-                        isCardBlurEnabled = isCardBlurEnabled,
-                        cardAlpha = cardAlpha,
-                        hazeState = hazeState
+                        enabled = enableBackgroundLightEffect
                 )
                 if (enableBackgroundLightEffectCustomColor) {
                     Spacer(modifier = Modifier.height(8.dp))
@@ -977,10 +921,7 @@ internal fun LauncherSettingsContent(
                     title = "动画速率",
                     summary = "控制 UI 动画的播放速度",
                     displayValue = animatedSpeed,
-                    isGlowEffectEnabled = isGlowEffectEnabled,
-                    isCardBlurEnabled = isCardBlurEnabled,
-                    cardAlpha = cardAlpha,
-                    hazeState = hazeState
+                    isGlowEffectEnabled = isGlowEffectEnabled
             )
         }
         item {
@@ -993,10 +934,7 @@ internal fun LauncherSettingsContent(
                     title = "UI 缩放",
                     summary = "调整启动器整体界面的大小",
                     displayValue = uiScale,
-                    isGlowEffectEnabled = isGlowEffectEnabled,
-                    isCardBlurEnabled = isCardBlurEnabled,
-                    cardAlpha = cardAlpha,
-                    hazeState = hazeState
+                    isGlowEffectEnabled = isGlowEffectEnabled
             )
         }
         item { Spacer(modifier = Modifier.height(45.dp)) }

@@ -24,6 +24,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import com.lanrhyme.shardlauncher.ui.components.LocalCardLayoutConfig
 import com.lanrhyme.shardlauncher.ui.components.ScalingActionButton
 import com.lanrhyme.shardlauncher.ui.components.SliderLayout
 import com.lanrhyme.shardlauncher.ui.components.SubPageNavigationBar
@@ -31,71 +32,51 @@ import com.lanrhyme.shardlauncher.ui.components.TitleAndSummary
 import com.lanrhyme.shardlauncher.ui.notification.Notification
 import com.lanrhyme.shardlauncher.ui.notification.NotificationManager
 import com.lanrhyme.shardlauncher.ui.notification.NotificationType
-import dev.chrisbanes.haze.HazeState
 
 @Composable
-fun DeveloperOptionsScreen(navController: NavController, isCardBlurEnabled: Boolean, cardAlpha: Float, hazeState: HazeState) {
+fun DeveloperOptionsScreen(navController: NavController) {
+    val cardLayoutConfig = LocalCardLayoutConfig.current
+    val isCardBlurEnabled = cardLayoutConfig.isCardBlurEnabled
+    val cardAlpha = cardLayoutConfig.cardAlpha
+    val hazeState = cardLayoutConfig.hazeState
     LazyColumn(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
+            modifier = Modifier.fillMaxSize().padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         item {
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(22.dp)
-            ) {
+            Card(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(22.dp)) {
                 Column(modifier = Modifier.padding(18.dp)) {
-                    SubPageNavigationBar(
-                        title = "开发者选项",
-                        onBack = { navController.navigateUp() }
+                    SubPageNavigationBar(title = "开发者选项", onBack = { navController.navigateUp() })
+                }
+            }
+        }
+        item {
+            Card(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(22.dp)) {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    TitleAndSummary(title = "组件演示", summary = "查看所有可用组件")
+                    Spacer(modifier = Modifier.height(16.dp))
+                    ScalingActionButton(
+                            onClick = { navController.navigate("component_demo") },
+                            modifier = Modifier.fillMaxWidth(),
+                            text = "打开组件演示"
                     )
                 }
             }
         }
         item {
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(22.dp)
-            ) {
-                Column(modifier = Modifier.padding(16.dp)) {
-                    TitleAndSummary(
-                        title = "组件演示",
-                        summary = "查看所有可用组件"
-                    )
-                    Spacer(modifier = Modifier.height(16.dp))
-                    ScalingActionButton(
-                        onClick = { navController.navigate("component_demo") },
-                        modifier = Modifier.fillMaxWidth(),
-                        text = "打开组件演示"
-                    )
-                }
+            Card(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(22.dp)) {
+                TestNotificationSender()
             }
         }
         item {
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(22.dp)
-            ) {
-                TestNotificationSender(isCardBlurEnabled = isCardBlurEnabled, cardAlpha = cardAlpha, hazeState = hazeState)
-            }
-        }
-        item {
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(22.dp)
-            ) {
+            Card(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(22.dp)) {
                 Column(modifier = Modifier.padding(16.dp)) {
-                    TitleAndSummary(
-                        title = "模拟崩溃",
-                        summary = "测试崩溃报告功能"
-                    )
+                    TitleAndSummary(title = "模拟崩溃", summary = "测试崩溃报告功能")
                     Spacer(modifier = Modifier.height(16.dp))
                     ScalingActionButton(
-                        onClick = { throw RuntimeException("Test Crash") },
-                        modifier = Modifier.fillMaxWidth(),
-                        text = "模拟崩溃"
+                            onClick = { throw RuntimeException("Test Crash") },
+                            modifier = Modifier.fillMaxWidth(),
+                            text = "模拟崩溃"
                     )
                 }
             }
@@ -104,66 +85,130 @@ fun DeveloperOptionsScreen(navController: NavController, isCardBlurEnabled: Bool
 }
 
 @Composable
-private fun TestNotificationSender(isCardBlurEnabled: Boolean, cardAlpha: Float, hazeState: HazeState) {
+private fun TestNotificationSender() {
+    val cardLayoutConfig = LocalCardLayoutConfig.current
+    val isCardBlurEnabled = cardLayoutConfig.isCardBlurEnabled
+    val cardAlpha = cardLayoutConfig.cardAlpha
+    val hazeState = cardLayoutConfig.hazeState
     var progress by remember { mutableStateOf(0f) }
     var progressNotificationId by remember { mutableStateOf<String?>(null) }
 
     val buttons = remember {
         listOf(
-            "Temporary" to { NotificationManager.show(Notification(title = "Temporary", message = "Disappears after 3s", type = NotificationType.Temporary)) },
-            "Normal" to { NotificationManager.show(Notification(title = "Normal", message = "Stays in the list", type = NotificationType.Normal)) },
-            "Warning" to { NotificationManager.show(Notification(title = "Warning", message = "A warning message", type = NotificationType.Warning)) },
-            "Error" to { NotificationManager.show(Notification(title = "Error", message = "An error message", type = NotificationType.Error)) },
-            "Clickable" to { NotificationManager.show(Notification(title = "Clickable", message = "Click me!", type = NotificationType.Normal, isClickable = true, onClick = {})) },
-            "Clickable Warning" to { NotificationManager.show(Notification(title = "Clickable Warning", message = "A clickable warning", type = NotificationType.Warning, isClickable = true, onClick = {})) },
+                "Temporary" to
+                        {
+                            NotificationManager.show(
+                                    Notification(
+                                            title = "Temporary",
+                                            message = "Disappears after 3s",
+                                            type = NotificationType.Temporary
+                                    )
+                            )
+                        },
+                "Normal" to
+                        {
+                            NotificationManager.show(
+                                    Notification(
+                                            title = "Normal",
+                                            message = "Stays in the list",
+                                            type = NotificationType.Normal
+                                    )
+                            )
+                        },
+                "Warning" to
+                        {
+                            NotificationManager.show(
+                                    Notification(
+                                            title = "Warning",
+                                            message = "A warning message",
+                                            type = NotificationType.Warning
+                                    )
+                            )
+                        },
+                "Error" to
+                        {
+                            NotificationManager.show(
+                                    Notification(
+                                            title = "Error",
+                                            message = "An error message",
+                                            type = NotificationType.Error
+                                    )
+                            )
+                        },
+                "Clickable" to
+                        {
+                            NotificationManager.show(
+                                    Notification(
+                                            title = "Clickable",
+                                            message = "Click me!",
+                                            type = NotificationType.Normal,
+                                            isClickable = true,
+                                            onClick = {}
+                                    )
+                            )
+                        },
+                "Clickable Warning" to
+                        {
+                            NotificationManager.show(
+                                    Notification(
+                                            title = "Clickable Warning",
+                                            message = "A clickable warning",
+                                            type = NotificationType.Warning,
+                                            isClickable = true,
+                                            onClick = {}
+                                    )
+                            )
+                        },
         )
     }
 
-    Column(
-        modifier = Modifier.padding(16.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        TitleAndSummary(title = "Test Notifications", summary = "Send different types of notifications")
+    Column(modifier = Modifier.padding(16.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+        TitleAndSummary(
+                title = "Test Notifications",
+                summary = "Send different types of notifications"
+        )
         Spacer(modifier = Modifier.height(16.dp))
 
         LazyVerticalGrid(
-            columns = GridCells.Fixed(2),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
-            modifier = Modifier.height(200.dp) // LazyVerticalGrid needs a fixed height when nested in a LazyColumn
+                columns = GridCells.Fixed(2),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+                modifier =
+                        Modifier.height(
+                                200.dp
+                        ) // LazyVerticalGrid needs a fixed height when nested in a LazyColumn
         ) {
-            items(buttons) { (text, onClick) ->
-                Button(onClick = onClick) {
-                    Text(text)
-                }
-            }
+            items(buttons) { (text, onClick) -> Button(onClick = onClick) { Text(text) } }
             item {
-                Button(onClick = {
-                    val notification = Notification(title = "Progress", message = "Updating...", type = NotificationType.Progress, progress = progress, isClickable = true, onClick = {})
-                    progressNotificationId = notification.id
-                    NotificationManager.show(notification)
-                }) {
-                    Text("Progress")
-                }
+                Button(
+                        onClick = {
+                            val notification =
+                                    Notification(
+                                            title = "Progress",
+                                            message = "Updating...",
+                                            type = NotificationType.Progress,
+                                            progress = progress,
+                                            isClickable = true,
+                                            onClick = {}
+                                    )
+                            progressNotificationId = notification.id
+                            NotificationManager.show(notification)
+                        }
+                ) { Text("Progress") }
             }
         }
 
         Spacer(modifier = Modifier.height(16.dp))
 
         SliderLayout(
-            value = progress,
-            onValueChange = {
-                progress = it
-                progressNotificationId?.let { id ->
-                    NotificationManager.updateProgress(id, it)
-                }
-            },
-            title = "Update Progress",
-            summary = "For the last progress notification sent",
-            isGlowEffectEnabled = true,
-            isCardBlurEnabled = isCardBlurEnabled,
-            cardAlpha = cardAlpha,
-            hazeState = hazeState
+                value = progress,
+                onValueChange = {
+                    progress = it
+                    progressNotificationId?.let { id -> NotificationManager.updateProgress(id, it) }
+                },
+                title = "Update Progress",
+                summary = "For the last progress notification sent",
+                isGlowEffectEnabled = true
         )
     }
 }

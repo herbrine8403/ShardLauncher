@@ -719,7 +719,6 @@ fun PopupContainer(
                                 Card(
                                         modifier =
                                                 modifier.padding(16.dp)
-                                                        .width(IntrinsicSize.Max)
                                                         .then(
                                                                 if (isCardBlurEnabled &&
                                                                                 Build.VERSION

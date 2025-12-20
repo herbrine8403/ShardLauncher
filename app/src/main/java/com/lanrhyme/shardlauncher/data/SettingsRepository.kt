@@ -300,6 +300,15 @@ class SettingsRepository(context: Context) {
         saveProperties()
     }
 
+    fun getCurrentGamePathId(): String {
+        return properties.getProperty(KEY_CURRENT_GAME_PATH_ID, "default")
+    }
+
+    fun setCurrentGamePathId(id: String) {
+        properties.setProperty(KEY_CURRENT_GAME_PATH_ID, id)
+        saveProperties()
+    }
+
         fun getIsMusicPlayerEnabled(): Boolean {
 
             return properties.getProperty(KEY_IS_MUSIC_PLAYER_ENABLED, "false").toBoolean()
@@ -483,6 +492,8 @@ class SettingsRepository(context: Context) {
             private const val KEY_MUSIC_REPEAT_MODE = "music_repeat_mode"
 
             private const val KEY_MUSIC_VOLUME = "music_volume"
+
+            private const val KEY_CURRENT_GAME_PATH_ID = "current_game_path_id"
 
         }
 

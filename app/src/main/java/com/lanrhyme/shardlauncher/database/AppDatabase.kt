@@ -10,9 +10,12 @@ import com.lanrhyme.shardlauncher.game.account.AccountDao
 import com.lanrhyme.shardlauncher.game.account.auth_server.data.AuthServer
 import com.lanrhyme.shardlauncher.game.account.auth_server.data.AuthServerDao
 
+import com.lanrhyme.shardlauncher.game.path.GamePath
+import com.lanrhyme.shardlauncher.game.path.GamePathDao
+
 @Database(
-    entities = [Account::class, AuthServer::class],
-    version = 1,
+    entities = [Account::class, AuthServer::class, GamePath::class],
+    version = 2,
     exportSchema = false
 )
 // @TypeConverters(Converters::class)
@@ -27,6 +30,11 @@ abstract class AppDatabase : RoomDatabase() {
      */
     abstract fun authServerDao(): AuthServerDao
 
+    /**
+     * 游戏目录
+     */
+    abstract fun gamePathDao(): GamePathDao
+
     companion object {
         @Volatile
         private var INSTANCE: AppDatabase? = null
@@ -40,7 +48,8 @@ abstract class AppDatabase : RoomDatabase() {
                     context.applicationContext,
                     AppDatabase::class.java,
                     "launcher_data.db"
-                ).build()
+                ).fallbackToDestructiveMigration()
+                    .build()
                 INSTANCE = instance
                 instance
             }

@@ -1,6 +1,8 @@
 package com.lanrhyme.shardlauncher.ui.version
 
 import android.os.Build
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.*
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
@@ -25,6 +27,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -34,12 +37,15 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import com.lanrhyme.shardlauncher.R
+import com.lanrhyme.shardlauncher.game.path.GamePathManager
 import com.lanrhyme.shardlauncher.game.version.installed.Version
 import com.lanrhyme.shardlauncher.game.version.installed.VersionsManager
 import com.lanrhyme.shardlauncher.ui.components.LocalCardLayoutConfig
+import com.lanrhyme.shardlauncher.ui.components.PopupContainer
 import com.lanrhyme.shardlauncher.ui.components.SearchTextField
 import com.lanrhyme.shardlauncher.ui.components.animatedAppearance
 import com.lanrhyme.shardlauncher.ui.components.selectableCard
+import com.lanrhyme.shardlauncher.utils.file.PathHelper
 import dev.chrisbanes.haze.hazeEffect
 
 enum class VersionDetailPane(val title: String, val icon: ImageVector) {
@@ -58,6 +64,8 @@ fun VersionScreen(navController: NavController, animationSpeed: Float) {
     val hazeState = cardLayoutConfig.hazeState
     // Refresh versions on load
     LaunchedEffect(Unit) { VersionsManager.refresh("VersionScreen_Init") }
+
+    var showDirectoryPopup by remember { mutableStateOf(false) }
 
     // Use versions from manager
     // Note: In a real architecture, this should come from a ViewModel observing the Manager
@@ -107,13 +115,18 @@ fun VersionScreen(navController: NavController, animationSpeed: Float) {
                             versions = versions,
                             selectedVersion = selectedVersion,
                             onVersionClick = { version -> selectedVersion = version },
-                            animationSpeed = animationSpeed
+                            animationSpeed = animationSpeed,
+                            onShowDirectoryPopup = { showDirectoryPopup = true }
                     )
                 } else {
                     RightDetailContent(pane, selectedVersion, onBack = { resetToVersionList() })
                 }
             }
         }
+    }
+
+    if (showDirectoryPopup) {
+        DirectorySelectionPopup(onDismissRequest = { showDirectoryPopup = false })
     }
 }
 
@@ -131,7 +144,7 @@ fun LeftNavigationPane(
             Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.Center
-            ) {
+                ) {
                 val iconFile = selectedVersion?.let { VersionsManager.getVersionIconFile(it) }
                 AsyncImage(
                         model = iconFile,
@@ -201,7 +214,8 @@ fun GameVersionListContent(
         versions: List<Version>,
         selectedVersion: Version?,
         onVersionClick: (Version) -> Unit,
-        animationSpeed: Float
+        animationSpeed: Float,
+        onShowDirectoryPopup: () -> Unit
 ) {
     val (isCardBlurEnabled, cardAlpha, hazeState) = LocalCardLayoutConfig.current
     var searchText by remember { mutableStateOf("") }
@@ -234,7 +248,7 @@ fun GameVersionListContent(
             IconButton(onClick = { /* TODO: Filter */}) {
                 Icon(Icons.Default.MoreVert, contentDescription = "Filter") // TODO: i18n
             }
-            IconButton(onClick = { /* TODO: Directory switch */}) {
+            IconButton(onClick = onShowDirectoryPopup) {
                 Icon(Icons.Default.Folder, contentDescription = "Directory") // TODO: i18n
             }
         }
@@ -340,7 +354,7 @@ fun GameVersionCard(
                                     if (isCardBlurEnabled &&
                                                     Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
                                     ) {
-                                        Modifier.clip(shape).hazeEffect(state = hazeState)
+                                         Modifier.clip(shape).hazeEffect(state = hazeState)
                                     } else Modifier.clip(shape)
                             )
                             .clickable(
@@ -377,6 +391,108 @@ fun GameVersionCard(
                     overflow = TextOverflow.Ellipsis,
                     modifier = Modifier.align(Alignment.BottomStart).padding(12.dp)
             )
+        }
+    }
+}
+
+@Composable
+fun DirectorySelectionPopup(onDismissRequest: () -> Unit) {
+    val context = LocalContext.current
+    val gamePaths by GamePathManager.gamePathData.collectAsState()
+    val currentPathId = GamePathManager.currentPathId
+
+    val launcher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.OpenDocumentTree()
+    ) { uri ->
+        uri?.let {
+            val path = PathHelper.getPathFromUri(context, it)
+            if (path != null) {
+                // TODO: 最好弹出一个对话框让用户输入名称，这里暂且用目录名
+                val title = it.pathSegments.lastOrNull() ?: "新目录" // TODO: i18n
+                GamePathManager.addNewPath(title, path)
+            }
+        }
+    }
+
+    PopupContainer(
+        visible = true,
+        onDismissRequest = onDismissRequest,
+        modifier = Modifier
+            .width(320.dp)
+            .padding(16.dp)
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Text(
+                "选择游戏目录", // TODO: i18n
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+
+            LazyColumn(
+                modifier = Modifier.height(400.dp).fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                items(gamePaths) { path ->
+                    val isSelected = path.id == currentPathId
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable {
+                                GamePathManager.selectPath(path.id)
+                                onDismissRequest()
+                            },
+                        shape = RoundedCornerShape(12.dp),
+                        colors = CardDefaults.cardColors(
+                            containerColor = if (isSelected)
+                                MaterialTheme.colorScheme.primaryContainer
+                            else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+                        ),
+                        border = if (isSelected) BorderStroke(1.dp, MaterialTheme.colorScheme.primary) else null
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(12.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    path.title,
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Bold
+                                )
+                                Text(
+                                    path.path,
+                                    style = MaterialTheme.typography.bodySmall,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                            if (path.id != GamePathManager.DEFAULT_ID) {
+                                IconButton(onClick = { GamePathManager.removePath(path.id) }) {
+                                    Icon(
+                                        Icons.Default.Delete,
+                                        contentDescription = "Delete", // TODO: i18n
+                                        tint = MaterialTheme.colorScheme.error
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+
+                item {
+                    OutlinedButton(
+                        onClick = { launcher.launch(null) },
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(12.dp)
+                    ) {
+                        Icon(Icons.Default.Add, contentDescription = null)
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("添加新目录") // TODO: i18n
+                    }
+                }
+            }
         }
     }
 }

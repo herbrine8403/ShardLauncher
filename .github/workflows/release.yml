@@ -64,7 +64,7 @@ jobs:
       id: changelog
       run: |
         # 寻找上一个 tag (排除掉刚才创建的这个)
-        LAST_TAG=$(git describe --tags --abbrev=0 "${VERSION_NAME}^" 2>/dev/null || echo "")
+        LAST_TAG=$(git describe --tags --abbrev=0 "${{ env.VERSION_NAME }}^" 2>/dev/null || echo "")
         
         echo "CHANGELOG_CONTENT<<EOF" >> $GITHUB_OUTPUT
         if [ -z "$LAST_TAG" ]; then
@@ -73,16 +73,26 @@ jobs:
         else
           echo "Last tag: $LAST_TAG"
           # 获取从 LAST_TAG 到当前 VERSION_NAME 的所有提交
-          git log ${LAST_TAG}..${VERSION_NAME} --pretty=format:"- %s (%h)" --no-merges >> $GITHUB_OUTPUT
+          git log ${LAST_TAG}..${{ env.VERSION_NAME }} --pretty=format:"- %s (%h)" --no-merges >> $GITHUB_OUTPUT
         fi
         echo "" >> $GITHUB_OUTPUT
         echo "EOF" >> $GITHUB_OUTPUT
+    
+    - name: Decode Keystore
+      id: decode_keystore
+      env:
+        SIGNING_KEYSTORE_BASE64: ${{ secrets.SIGNING_KEYSTORE_BASE64 }}
+      run: |
+        echo $SIGNING_KEYSTORE_BASE64 | base64 --decode > app/keystore.jks
 
     - name: Build Release APKs
       env:
         MICROSOFT_CLIENT_ID: ${{ secrets.MICROSOFT_CLIENT_ID }}
         CLIENT_ID: ${{ secrets.CLIENT_ID }}
-      run: ./gradlew assembleRelease
+        SIGNING_KEYSTORE_PASSWORD: ${{ secrets.SIGNING_KEYSTORE_PASSWORD }}
+        SIGNING_KEY_ALIAS: ${{ secrets.SIGNING_KEY_ALIAS }}
+        SIGNING_KEY_PASSWORD: ${{ secrets.SIGNING_KEY_PASSWORD }}
+      run: ./gradlew assembleRelease -Pandroid.injected.signing.store.file=$(pwd)/app/keystore.jks -Pandroid.injected.signing.store.password=$SIGNING_KEYSTORE_PASSWORD -Pandroid.injected.signing.key.alias=$SIGNING_KEY_ALIAS -Pandroid.injected.signing.key.password=$SIGNING_KEY_PASSWORD
 
     - name: Prepare Artifacts
       run: |

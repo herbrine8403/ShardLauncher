@@ -1,13 +1,18 @@
+/*
+ * Shard Launcher
+ * Adapted from Zalith Launcher 2
+ */
+
 package com.lanrhyme.shardlauncher.game.account.wardrobe
 
 /**
- * 皮肤模型枚举
+ * Skin model enumeration
  */
 enum class SkinModelType(val string: String, val targetParity: Int, val modelType: String) {
-    /** 未设定 */
+    /** Undefined */
     NONE("none", -1, ""),
-    /** 粗臂类型 */
+    /** Wide arms (Steve) */
     STEVE("wide", 0, "classic"),
-    /** 细臂类型 */
+    /** Slim arms (Alex) */
     ALEX("slim", 1, "slim")
 }

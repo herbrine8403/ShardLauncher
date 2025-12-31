@@ -1,7 +1,6 @@
 package com.lanrhyme.shardlauncher.game.version.download
 
-import com.lanrhyme.shardlauncher.utils.parseTo
-
+import com.lanrhyme.shardlauncher.utils.GSON
 import android.content.Context
 import com.lanrhyme.shardlauncher.R
 import com.lanrhyme.shardlauncher.coroutine.Task
@@ -68,7 +67,7 @@ class MinecraftDownloader(
                 } else {
                     val jsonFile = downloader.getVersionJsonPath(customName).takeIf { it.canRead() } ?: throw IOException("Version $customName JSON file is unreadable.")
                     val jsonText = jsonFile.readText()
-                    val gameManifest = jsonText.parseTo(GameManifest::class.java)
+                    val gameManifest = GSON.fromJson(jsonText, GameManifest::class.java)
                     progressDownloadTasks(gameManifest, clientName)
                 }
 

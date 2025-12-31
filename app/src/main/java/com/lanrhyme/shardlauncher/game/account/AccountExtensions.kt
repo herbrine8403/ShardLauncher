@@ -20,27 +20,6 @@ const val ACCOUNT_TYPE_MICROSOFT = AccountType.MICROSOFT
 const val ACCOUNT_TYPE_AUTHSERVER = AccountType.AUTHSERVER
 
 /**
- * Check if account is local/offline account
- */
-fun Account.isLocalAccount(): Boolean {
-    return accountType == AccountType.LOCAL
-}
-
-/**
- * Check if account is Microsoft account
- */
-fun Account.isMicrosoftAccount(): Boolean {
-    return accountType == AccountType.MICROSOFT
-}
-
-/**
- * Check if account is auth server account
- */
-fun Account.isAuthServerAccount(): Boolean {
-    return accountType == AccountType.AUTHSERVER
-}
-
-/**
  * Check if account has skin file
  */
 val Account.hasSkinFile: Boolean
@@ -50,7 +29,7 @@ val Account.hasSkinFile: Boolean
  * Get display name for account
  */
 fun Account.getDisplayName(): String {
-    return username.takeIf { it.isNotBlank() } ?: "Unknown User"
+    return accountType?.takeIf { it.isNotBlank() } ?: "Unknown User"
 }
 
 /**

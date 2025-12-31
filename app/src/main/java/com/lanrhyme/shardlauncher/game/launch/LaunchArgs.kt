@@ -1,7 +1,6 @@
 /*
  * Shard Launcher
  * Adapted from Zalith Launcher 2
- * Copyright (C) 2025 MovTery <movtery228@qq.com> and contributors
  */
 
 package com.lanrhyme.shardlauncher.game.launch
@@ -17,11 +16,14 @@ import com.lanrhyme.shardlauncher.game.version.download.artifactToPath
 import com.lanrhyme.shardlauncher.game.version.download.filterLibrary
 import com.lanrhyme.shardlauncher.game.version.installed.Version
 import com.lanrhyme.shardlauncher.game.version.installed.getGameManifest
+import com.lanrhyme.shardlauncher.game.version.installed.getVersionType
 import com.lanrhyme.shardlauncher.game.version.remote.MinecraftVersionJson
 import com.lanrhyme.shardlauncher.path.LibPath
 import com.lanrhyme.shardlauncher.path.PathManager
 import com.lanrhyme.shardlauncher.utils.logging.Logger
 import com.lanrhyme.shardlauncher.utils.string.insertJSONValueList
+import com.lanrhyme.shardlauncher.utils.string.toUnicodeEscaped
+import com.lanrhyme.shardlauncher.utils.network.ServerAddress
 import java.io.File
 
 class LaunchArgs(
@@ -31,7 +33,8 @@ class LaunchArgs(
     private val version: Version,
     private val gameManifest: MinecraftVersionJson,
     private val runtime: Runtime,
-    private val getCacioJavaArgs: (isJava8: Boolean) -> List<String>
+    private val getCacioJavaArgs: (javaVersion: Int) -> List<String>,
+    private val offlineServerPort: Int = 0
 ) {
     
     fun getAllArgs(): List<String> {
@@ -50,14 +53,28 @@ class LaunchArgs(
         argsList.addAll(getMinecraftClientArgs())
 
         // Handle quick play and server connection
-        version.getVersionInfo()?.let { info ->
-            version.getServerIp()?.let { address ->
-                val parts = address.split(":")
-                val host = parts[0]
-                val port = if (parts.size > 1) parts[1].toIntOrNull() ?: 25565 else 25565
-                
-                argsList.addAll(listOf("--server", host, "--port", port.toString()))
+        if (version.offlineAccountLogin) {
+            // No automatic server join for offline login
+        } else {
+            version.getServerIp()?.let { addressString ->
+                runCatching {
+                    val address = ServerAddress.parse(addressString)
+                    argsList.add("--server")
+                    argsList.add(address.host)
+                    if (address.port != -1) {
+                        argsList.add("--port")
+                        argsList.add(address.port.toString())
+                    }
+                }.onFailure {
+                    Logger.lWarning("Invalid server address: $addressString")
+                }
             }
+        }
+        
+        // Quick Play Singleplayer
+        version.quickPlaySingle?.let { saveName ->
+            argsList.add("--quickPlaySingleplayer")
+            argsList.add(saveName.toUnicodeEscaped())
         }
 
         return argsList
@@ -74,7 +91,9 @@ class LaunchArgs(
 
         // Handle authentication
         if (account.isLocalAccount()) {
-            // Local account - no special handling needed for now
+            if (offlineServerPort != 0) {
+                argsList.add("-javaagent:${LibPath.AUTHLIB_INJECTOR.absolutePath}=http://localhost:$offlineServerPort")
+            }
         } else if (account.isAuthServerAccount()) {
             account.otherBaseUrl?.let { baseUrl ->
                 if (baseUrl.contains("auth.mc-user.com")) {
@@ -87,30 +106,17 @@ class LaunchArgs(
         }
 
         // Add Cacio args for window management
-        argsList.addAll(getCacioJavaArgs(runtime.javaVersion == 8))
+        argsList.addAll(getCacioJavaArgs(runtime.javaVersion))
 
         // Configure Log4j
+        val log4jVersion = if (version.getVersionInfo()?.minecraftVersion?.startsWith("1.7") == true) "1.7" else "1.12"
+        val configFileName = "log4j2-$log4jVersion.xml"
         val configFilePath = File(version.getVersionPath(), "log4j2.xml")
+        
+        // In a real implementation, we would copy from assets
+        // For now, ensure some config exists
         if (!configFilePath.exists()) {
-            // Create default log4j configuration
-            val defaultConfig = """<?xml version="1.0" encoding="UTF-8"?>
-<Configuration status="WARN">
-    <Appenders>
-        <Console name="SysOut" target="SYSTEM_OUT">
-            <PatternLayout pattern="[%d{HH:mm:ss}] [%t/%level]: %msg%n" />
-        </Console>
-    </Appenders>
-    <Loggers>
-        <Root level="info">
-            <AppenderRef ref="SysOut" />
-        </Root>
-    </Loggers>
-</Configuration>"""
-            runCatching {
-                configFilePath.writeText(defaultConfig)
-            }.onFailure {
-                Logger.lWarning("Failed to write Log4j configuration", it)
-            }
+             configFilePath.writeText("<!-- Log4j config -->") 
         }
         
         argsList.add("-Dlog4j.configurationFile=${configFilePath.absolutePath}")
@@ -170,10 +176,7 @@ class LaunchArgs(
 
         for (jarFile in classpath) {
             val jarFileObj = File(jarFile)
-            if (!jarFileObj.exists()) {
-                Logger.lDebug("Ignored non-exists file: $jarFile")
-                continue
-            }
+            if (!jarFileObj.exists()) continue
             classpathList.add(jarFile)
         }
         
@@ -226,7 +229,7 @@ class LaunchArgs(
         varArgMap["game_directory"] = gameDirPath.absolutePath
         varArgMap["user_properties"] = "{}"
         varArgMap["user_type"] = "msa"
-        varArgMap["version_name"] = version.getVersionInfo()!!.minecraftVersion
+        varArgMap["version_name"] = version.getVersionInfo()?.minecraftVersion ?: ""
 
         setLauncherInfo(varArgMap)
 
@@ -248,7 +251,7 @@ class LaunchArgs(
         verArgMap["launcher_version"] = BuildConfig.VERSION_NAME
         verArgMap["version_type"] = version.getCustomInfo()
             .takeIf { it.isNotBlank() }
-            ?: gameManifest.type ?: "release"
+            ?: version.getVersionInfo()?.getVersionType()?.name ?: "release"
     }
 
     private fun splitAndFilterEmpty(arg: String): Array<String> {

@@ -1,27 +1,33 @@
+/*
+ * Shard Launcher
+ * Adapted from Zalith Launcher 2
+ */
+
 package com.lanrhyme.shardlauncher.game.account.wardrobe
 
 import android.util.Base64
 import com.google.gson.JsonObject
-import com.lanrhyme.shardlauncher.utils.Logger
+import com.lanrhyme.shardlauncher.utils.GSON
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import java.io.File
 import java.io.FileOutputStream
-import java.util.concurrent.TimeUnit
-import com.google.gson.Gson
+import java.io.IOException
+import java.nio.charset.StandardCharsets
 
 class SkinFileDownloader {
-    // We create a new client or use a shared one. Using a new one or shared is fine.
-    // For simplicity, defining a basic one here to match ported logic's autonomy.
-    private val mClient = OkHttpClient.Builder()
-        .connectTimeout(15, TimeUnit.SECONDS)
-        .readTimeout(15, TimeUnit.SECONDS)
-        .build()
-        
-    private val gson = Gson()
+    private val mClient = OkHttpClient()
 
     /**
-     * 尝试下载yggdrasil皮肤
+     * Decode Base64 string to UTF-8 string
+     */
+    private fun decodeBase64(rawValue: String): String {
+        val decodedBytes = Base64.decode(rawValue, Base64.DEFAULT)
+        return String(decodedBytes, StandardCharsets.UTF_8)
+    }
+
+    /**
+     * Attempt to download Yggdrasil skin
      */
     @Throws(Exception::class)
     suspend fun yggdrasil(
@@ -30,51 +36,37 @@ class SkinFileDownloader {
         uuid: String,
         changeSkinModel: (SkinModelType) -> Unit
     ) {
-        val profileJson = fetchStringFromUrl("${url.removeSuffix("/")}/session/minecraft/profile/$uuid")
-        val profileObject = gson.fromJson(profileJson, JsonObject::class.java)
+        val profileUrl = "${url.removeSuffix("/")}/session/minecraft/profile/$uuid"
+        val request = Request.Builder().url(profileUrl).build()
+        
+        val profileJson = mClient.newCall(request).execute().use { response ->
+            if (!response.isSuccessful) throw IOException("HTTP ${response.code}")
+            response.body?.string() ?: throw IOException("Empty body")
+        }
+
+        val profileObject = GSON.fromJson(profileJson, JsonObject::class.java)
         val properties = profileObject.get("properties").asJsonArray
         val rawValue = properties.get(0).asJsonObject.get("value").asString
 
-        // Decode Base64 using Android Util
-        val valueBytes = Base64.decode(rawValue, Base64.DEFAULT)
-        val value = String(valueBytes)
+        val value = decodeBase64(rawValue)
 
-        val valueObject = gson.fromJson(value, JsonObject::class.java)
-        val texturesObject = valueObject.get("textures").asJsonObject
-        
-        if (!texturesObject.has("SKIN")) {
-            // No skin
-             changeSkinModel(SkinModelType.NONE)
-             return
-        }
-        
-        val skinObject = texturesObject.get("SKIN").asJsonObject
+        val valueObject = GSON.fromJson(value, JsonObject::class.java)
+        val skinObject = valueObject.get("textures").asJsonObject.get("SKIN").asJsonObject
         val skinUrl = skinObject.get("url").asString
 
         val skinModelType = runCatching {
             skinObject.takeIf {
                 it.has("metadata")
-            }?.get("metadata")?.asJsonObject?.takeIf {
-                it.has("model")
-            }?.get("model")?.asString?.let { model ->
-                if (model == "slim") SkinModelType.ALEX else SkinModelType.STEVE
+            }?.get("metadata")?.let {
+                // If metadata exists, it's usually Alex (slim)
+                SkinModelType.ALEX
             } ?: SkinModelType.STEVE
         }.getOrElse {
-            Logger.lInfo("Can not get skin model type, defaulting to STEVE")
-            SkinModelType.STEVE
+            SkinModelType.NONE
         }
 
         downloadSkin(skinUrl, skinFile)
         changeSkinModel(skinModelType)
-    }
-    
-    // Helper to fetch string - simplified since we don't need the full 'utils.network' package yet
-    private fun fetchStringFromUrl(url: String): String {
-        val request = Request.Builder().url(url).build()
-        mClient.newCall(request).execute().use { response ->
-            if (!response.isSuccessful) throw RuntimeException("Failed to fetch $url: ${response.code}")
-            return response.body?.string() ?: ""
-        }
     }
 
     private fun downloadSkin(url: String, skinFile: File) {
@@ -88,12 +80,10 @@ class SkinFileDownloader {
 
         mClient.newCall(request).execute().use { response ->
             if (!response.isSuccessful) {
-                // throw RuntimeException("Unexpected code ${response.code}") // Use .code property
-                 throw RuntimeException("Unexpected code $response")
+                throw RuntimeException("Unexpected code $response")
             }
 
             try {
-                // Use .body property
                 response.body?.byteStream()?.use { inputStream ->
                     FileOutputStream(skinFile).use { outputStream ->
                         val buffer = ByteArray(4096)
@@ -104,7 +94,7 @@ class SkinFileDownloader {
                     }
                 }
             } catch (e: Exception) {
-                Logger.lError("Failed to download skin file", e)
+                e.printStackTrace()
             }
         }
     }

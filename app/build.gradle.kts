@@ -8,6 +8,7 @@ plugins {
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.ksp)
     id("kotlin-parcelize")
+    alias(libs.plugins.kotlinx.serialization)
 }
 
 // --- 读取 local.properties ---
@@ -192,4 +193,21 @@ dependencies {
     implementation(libs.androidx.room.runtime)
     implementation(libs.androidx.room.ktx)
     ksp(libs.androidx.room.compiler)
+
+    // Ktor Server (for local skin server)
+    implementation(libs.ktor.server.core)
+    implementation(libs.ktor.server.cio)
+    implementation(libs.ktor.server.content.negotiation)
+    implementation(libs.ktor.serialization.kotlinx.json)
+
+    // Ktor Client
+    implementation(libs.ktor.client.core)
+    implementation(libs.ktor.client.cio)
+    implementation(libs.ktor.client.content.negotiation)
+
+    // Serialization
+    implementation(libs.kotlinx.serialization.json)
+
+    // OkHttp (already used via retrofit, but making explicit)
+    implementation(libs.okhttp)
 }

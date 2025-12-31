@@ -2,11 +2,12 @@ package com.lanrhyme.shardlauncher.game.account
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
-// import com.lanrhyme.shardlauncher.game.account.wardrobe.SkinModelType
-// import com.lanrhyme.shardlauncher.game.account.wardrobe.SkinFileDownloader
-// import com.lanrhyme.shardlauncher.game.path.PathManager
+import com.lanrhyme.shardlauncher.game.account.wardrobe.SkinModelType
+import com.lanrhyme.shardlauncher.game.account.wardrobe.SkinFileDownloader
+import com.lanrhyme.shardlauncher.path.PathManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import java.io.File
 import java.util.UUID
 
 @Entity(tableName = "accounts")
@@ -26,13 +27,12 @@ data class Account(
     var otherAccount: String? = null,
     var otherPassword: String? = null,
     var accountType: String? = null,
-    // var skinModelType: SkinModelType = SkinModelType.NONE
+    var skinModelType: SkinModelType = SkinModelType.NONE
 ) {
     // Properties for UI logic
     @androidx.room.Ignore
     var skinUrl: String? = null 
 
-/*
     fun getSkinFile() = File(PathManager.DIR_ACCOUNT_SKIN, "$uniqueUUID.png")
 
     val hasSkinFile: Boolean
@@ -52,12 +52,32 @@ data class Account(
 
         runCatching {
             SkinFileDownloader().yggdrasil(url, skinFile, profileId) { modelType ->
-                // this.skinModelType = modelType
+                this.skinModelType = modelType
             }
         }.onFailure { e ->
              e.printStackTrace()
         }
-        AccountsManager.refreshAccountsAvatar()
+        // AccountsManager.refreshAccountsAvatar()
     }
-*/
+}
+
+/**
+ * 是否是本地账号登录
+ */
+fun Account.isLocalAccount(): Boolean {
+    return accountType == "离线登录"
+}
+
+/**
+ * 是否是外置验证登录
+ */
+fun Account.isAuthServerAccount(): Boolean {
+    return accountType == "外置登录"
+}
+
+/**
+ * 是否是微软账号登录
+ */
+fun Account.isMicrosoftAccount(): Boolean {
+    return accountType == "微软登录"
 }

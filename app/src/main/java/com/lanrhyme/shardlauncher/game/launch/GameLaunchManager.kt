@@ -13,6 +13,7 @@ import com.lanrhyme.shardlauncher.game.account.AccountsManager
 import com.lanrhyme.shardlauncher.game.plugin.driver.DriverPluginManager
 import com.lanrhyme.shardlauncher.game.plugin.renderer.RendererPluginManager
 import com.lanrhyme.shardlauncher.game.version.installed.Version
+import com.lanrhyme.shardlauncher.utils.GSON
 import com.lanrhyme.shardlauncher.utils.logging.Logger
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -33,7 +34,7 @@ object GameLaunchManager {
         onExit: (code: Int, isSignal: Boolean) -> Unit = { _, _ -> }
     ): Int = withContext(Dispatchers.IO) {
         
-        try {
+        val exitCodeResult = try {
             // Initialize plugins
             initializePlugins(activity)
             
@@ -68,6 +69,8 @@ object GameLaunchManager {
             LoggerBridge.append("Launch failed: ${e.message}")
             -1
         }
+
+        exitCodeResult as Int
     }
     
     /**

@@ -15,10 +15,10 @@ import com.lanrhyme.shardlauncher.game.path.GamePathDao
 
 @Database(
     entities = [Account::class, AuthServer::class, GamePath::class],
-    version = 2,
+    version = 3,
     exportSchema = false
 )
-// @TypeConverters(Converters::class)
+@TypeConverters(Converters::class)
 abstract class AppDatabase : RoomDatabase() {
     /**
      * 启动器账号

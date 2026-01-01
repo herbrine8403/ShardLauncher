@@ -125,4 +125,130 @@ object RuntimesManager {
             getRuntime(name)
         }
     }
+
+    /**
+     * Install runtime from input stream
+     */
+    suspend fun installRuntime(
+        inputStream: java.io.InputStream,
+        name: String,
+        updateProgress: (Int, Array<Any>) -> Unit = { _, _ -> }
+    ): Runtime = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+        val dest = File(PathManager.DIR_MULTIRT, name)
+        try {
+            if (dest.exists()) {
+                deleteDirectory(dest)
+            }
+            dest.mkdirs()
+            
+            // Extract tar.xz archive
+            uncompressTarXZ(inputStream, dest, updateProgress)
+            
+            // Post-process the runtime
+            postPrepare(name)
+            
+            getRuntime(name)
+        } catch (e: Exception) {
+            if (dest.exists()) {
+                deleteDirectory(dest)
+            }
+            throw e
+        }
+    }
+
+    /**
+     * Remove runtime by name
+     */
+    fun removeRuntime(name: String) {
+        val dest = File(PathManager.DIR_MULTIRT, name)
+        if (dest.exists()) {
+            deleteDirectory(dest)
+        }
+    }
+
+    /**
+     * Delete directory recursively
+     */
+    private fun deleteDirectory(dir: File): Boolean {
+        if (dir.isDirectory) {
+            dir.listFiles()?.forEach { child ->
+                deleteDirectory(child)
+            }
+        }
+        return dir.delete()
+    }
+
+    /**
+     * Post-process runtime after installation
+     */
+    private suspend fun postPrepare(name: String) = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+        val dest = File(PathManager.DIR_MULTIRT, name)
+        if (!dest.exists()) return@withContext
+        
+        val runtime = getRuntime(name)
+        var libFolder = "lib"
+        
+        val arch = runtime.arch
+        if (arch != null && File(dest, "$libFolder/$arch").exists()) {
+            libFolder += "/$arch"
+        }
+        
+        val isJDK8Runtime = isJDK8(dest.absolutePath)
+        if (isJDK8Runtime) {
+            libFolder = "jre/$libFolder"
+        }
+        
+        // Handle freetype library
+        val ftIn = File(dest, "$libFolder/libfreetype.so.6")
+        val ftOut = File(dest, "$libFolder/libfreetype.so")
+        if (ftIn.exists() && (!ftOut.exists() || ftIn.length() != ftOut.length())) {
+            ftIn.renameTo(ftOut)
+        }
+    }
+
+    /**
+     * Uncompress tar.xz archive
+     */
+    private suspend fun uncompressTarXZ(
+        inputStream: java.io.InputStream,
+        destDir: File,
+        updateProgress: (Int, Array<Any>) -> Unit
+    ) = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+        try {
+            val xzInputStream = org.apache.commons.compress.compressors.xz.XZCompressorInputStream(inputStream)
+            val tarInputStream = org.apache.commons.compress.archivers.tar.TarArchiveInputStream(xzInputStream)
+            
+            var entry = tarInputStream.nextTarEntry
+            var processedEntries = 0
+            
+            while (entry != null) {
+                val outputFile = File(destDir, entry.name)
+                
+                if (entry.isDirectory) {
+                    outputFile.mkdirs()
+                } else {
+                    outputFile.parentFile?.mkdirs()
+                    outputFile.outputStream().use { output ->
+                        tarInputStream.copyTo(output)
+                    }
+                    
+                    // Set executable permissions if needed
+                    if (entry.mode and 0x49 != 0) { // Check if executable
+                        outputFile.setExecutable(true)
+                    }
+                }
+                
+                processedEntries++
+                if (processedEntries % 10 == 0) {
+                    updateProgress(processedEntries, arrayOf(entry.name))
+                }
+                
+                entry = tarInputStream.nextTarEntry
+            }
+            
+            tarInputStream.close()
+        } catch (e: Exception) {
+            throw RuntimeException("Failed to extract runtime archive", e)
+        }
+    }
 }

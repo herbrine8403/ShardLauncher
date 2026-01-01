@@ -521,3 +521,56 @@ fun TextInputLayout(
         }
     }
 }
+
+@Composable
+fun ButtonLayout(
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    title: String,
+    summary: String? = null,
+    buttonText: String = "操作",
+    enabled: Boolean = true,
+    shape: Shape = RoundedCornerShape(16.dp)
+) {
+    val (isCardBlurEnabled, cardAlpha, hazeState) = LocalCardLayoutConfig.current
+    val cardModifier =
+        if (isCardBlurEnabled && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            modifier.fillMaxWidth()
+                .alpha(if (enabled) 1f else 0.5f)
+                .clip(shape)
+                .hazeEffect(state = hazeState)
+        } else {
+            modifier.fillMaxWidth().alpha(if (enabled) 1f else 0.5f)
+        }
+
+    Card(
+        modifier = cardModifier,
+        shape = shape,
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surface.copy(alpha = cardAlpha)
+        ),
+    ) {
+        Row(
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            TitleAndSummary(
+                modifier = Modifier.weight(1f),
+                title = title,
+                summary = summary
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            Button(
+                onClick = onClick,
+                enabled = enabled,
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    contentColor = MaterialTheme.colorScheme.onPrimary
+                )
+            ) {
+                Text(buttonText)
+            }
+        }
+    }
+}

@@ -267,27 +267,21 @@ object VersionsManager {
 //        }
     }
 
-    @Composable
     fun validateVersionName(
         newName: String,
-        versionInfo: VersionInfo?,
-        onError: (message: String) -> Unit
-    ): Boolean {
+        versionInfo: VersionInfo?
+    ): String? {
         return when {
             isVersionExists(newName, true) -> {
-                // TODO: i18n
-                onError("Version already exists") // stringResource(R.string.versions_manage_install_exists)
-                true
+                "版本已存在" // TODO: i18n
             }
             versionInfo?.loaderInfo?.let {
                 //如果这个版本是有ModLoader加载器信息的，则不允许修改为与原版名称一致的名称，防止冲突
                 newName == versionInfo.minecraftVersion
             } ?: false -> {
-                // TODO: i18n
-                onError("Cannot use Minecraft version name") // stringResource(R.string.versions_manage_install_cannot_use_mc_name)
-                true
+                "不能使用Minecraft原版名称" // TODO: i18n
             }
-            else -> false
+            else -> null
         }
     }
 

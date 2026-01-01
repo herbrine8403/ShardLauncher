@@ -1,6 +1,8 @@
 package com.lanrhyme.shardlauncher.ui.version
 
 import android.os.Build
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -12,11 +14,13 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.lanrhyme.shardlauncher.game.version.installed.Version
 import com.lanrhyme.shardlauncher.ui.components.LocalCardLayoutConfig
+import com.lanrhyme.shardlauncher.utils.file.FolderUtils
 import dev.chrisbanes.haze.hazeEffect
 import java.io.File
 import java.text.SimpleDateFormat
@@ -28,14 +32,17 @@ fun SavesManagementScreen(
     onBack: () -> Unit
 ) {
     val (isCardBlurEnabled, cardAlpha, hazeState) = LocalCardLayoutConfig.current
-    val savesFolder = File(version.getVersionPath(), "saves")
+    val savesFolder = File(version.getGameDir(), "saves")
     var saveFiles by remember { mutableStateOf<List<File>>(emptyList()) }
     var refreshTrigger by remember { mutableIntStateOf(0) }
+    val context = LocalContext.current
 
     // 刷新存档列表
     LaunchedEffect(refreshTrigger) {
         saveFiles = if (savesFolder.exists()) {
-            savesFolder.listFiles()?.filter { it.isDirectory } ?: emptyList()
+            savesFolder.listFiles()?.filter { 
+                it.isDirectory && File(it, "level.dat").exists()
+            }?.sortedByDescending { it.lastModified() } ?: emptyList()
         } else {
             emptyList()
         }
@@ -60,38 +67,56 @@ fun SavesManagementScreen(
                 containerColor = MaterialTheme.colorScheme.surface.copy(alpha = cardAlpha)
             )
         ) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalAlignment = Alignment.CenterVertically
+            Column(
+                modifier = Modifier.padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                Text(
-                    text = "存档管理",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.weight(1f)
-                )
-                
-                OutlinedButton(
-                    onClick = { 
-                        refreshTrigger++
-                    }
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Icon(Icons.Default.Refresh, contentDescription = null)
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text("刷新")
+                    Text(
+                        text = "存档管理",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.weight(1f)
+                    )
+                    
+                    Text(
+                        text = "${saveFiles.size} 个存档",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
                 }
                 
-                Button(
-                    onClick = {
-                        // TODO: 实现导入存档功能
-                    }
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    Icon(Icons.Default.FileUpload, contentDescription = null)
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text("导入存档")
+                    OutlinedButton(
+                        onClick = { 
+                            if (!savesFolder.exists()) {
+                                savesFolder.mkdirs()
+                            }
+                            refreshTrigger++
+                        }
+                    ) {
+                        Icon(Icons.Default.Refresh, contentDescription = null)
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text("刷新")
+                    }
+                    
+                    OutlinedButton(
+                        onClick = {
+                            FolderUtils.openFolder(context, savesFolder) { error ->
+                                // Handle error if needed
+                            }
+                        }
+                    ) {
+                        Icon(Icons.Default.Folder, contentDescription = null)
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text("打开文件夹")
+                    }
                 }
             }
         }
@@ -134,7 +159,7 @@ fun SavesManagementScreen(
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                         Text(
-                            text = "开始游戏后会自动创建存档",
+                            text = "在游戏中创建世界后存档将显示在这里",
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -153,8 +178,8 @@ fun SavesManagementScreen(
                             saveFile.deleteRecursively()
                             refreshTrigger++
                         },
-                        onExport = {
-                            // TODO: 实现导出存档功能
+                        onBackup = {
+                            // TODO: 实现存档备份功能
                         },
                         isCardBlurEnabled = isCardBlurEnabled,
                         cardAlpha = cardAlpha,
@@ -170,14 +195,14 @@ fun SavesManagementScreen(
 private fun SaveItem(
     saveFile: File,
     onDelete: () -> Unit,
-    onExport: () -> Unit,
+    onBackup: () -> Unit,
     isCardBlurEnabled: Boolean,
     cardAlpha: Float,
     hazeState: dev.chrisbanes.haze.HazeState
 ) {
     var showDeleteDialog by remember { mutableStateOf(false) }
-    val dateFormat = remember { SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault()) }
     val itemCardShape = RoundedCornerShape(12.dp)
+    val dateFormat = remember { SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault()) }
 
     Card(
         modifier = Modifier
@@ -218,19 +243,24 @@ private fun SaveItem(
                     overflow = TextOverflow.Ellipsis
                 )
                 Text(
-                    text = "修改时间: ${dateFormat.format(Date(saveFile.lastModified()))}",
+                    text = "最后游玩: ${dateFormat.format(Date(saveFile.lastModified()))}",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Text(
+                    text = "${(saveFile.length() / 1024 / 1024).toInt()} MB",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
 
-            // 导出按钮
+            // 备份按钮
             IconButton(
-                onClick = onExport
+                onClick = onBackup
             ) {
                 Icon(
-                    imageVector = Icons.Default.FileDownload,
-                    contentDescription = "导出存档",
+                    imageVector = Icons.Default.Backup,
+                    contentDescription = "备份存档",
                     tint = MaterialTheme.colorScheme.primary
                 )
             }
@@ -252,7 +282,17 @@ private fun SaveItem(
         AlertDialog(
             onDismissRequest = { showDeleteDialog = false },
             title = { Text("删除存档") },
-            text = { Text("确定要删除存档 ${saveFile.name} 吗？此操作不可恢复！") },
+            text = { 
+                Column {
+                    Text("确定要删除存档 ${saveFile.name} 吗？")
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        "此操作不可撤销！",
+                        color = MaterialTheme.colorScheme.error,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            },
             confirmButton = {
                 TextButton(
                     onClick = {
@@ -260,7 +300,7 @@ private fun SaveItem(
                         showDeleteDialog = false
                     }
                 ) {
-                    Text("删除")
+                    Text("删除", color = MaterialTheme.colorScheme.error)
                 }
             },
             dismissButton = {

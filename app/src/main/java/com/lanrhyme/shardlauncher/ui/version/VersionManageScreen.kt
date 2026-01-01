@@ -344,7 +344,7 @@ private fun VersionsLayout(
             VersionsOperation(
                 versionsOperation = versionsOperation,
                 updateVersionsOperation = { versionsOperation = it },
-                submitError = submitError
+                onError = { message -> submitError(message) }
             )
 
             Column(modifier = Modifier.fillMaxSize()) {

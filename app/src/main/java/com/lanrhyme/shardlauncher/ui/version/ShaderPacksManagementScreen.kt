@@ -1,6 +1,8 @@
 package com.lanrhyme.shardlauncher.ui.version
 
 import android.os.Build
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -12,11 +14,13 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.lanrhyme.shardlauncher.game.version.installed.Version
 import com.lanrhyme.shardlauncher.ui.components.LocalCardLayoutConfig
+import com.lanrhyme.shardlauncher.utils.file.FolderUtils
 import dev.chrisbanes.haze.hazeEffect
 import java.io.File
 
@@ -26,16 +30,42 @@ fun ShaderPacksManagementScreen(
     onBack: () -> Unit
 ) {
     val (isCardBlurEnabled, cardAlpha, hazeState) = LocalCardLayoutConfig.current
-    val shaderPacksFolder = File(version.getVersionPath(), "shaderpacks")
+    val shaderPacksFolder = File(version.getGameDir(), "shaderpacks")
     var shaderPackFiles by remember { mutableStateOf<List<File>>(emptyList()) }
     var refreshTrigger by remember { mutableIntStateOf(0) }
+    val context = LocalContext.current
+
+    // 文件选择器
+    val filePickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri ->
+        uri?.let { selectedUri ->
+            try {
+                val fileName = getFileName(context, selectedUri) ?: "shaderpack_${System.currentTimeMillis()}.zip"
+                val targetFile = File(shaderPacksFolder, fileName)
+                
+                if (!shaderPacksFolder.exists()) {
+                    shaderPacksFolder.mkdirs()
+                }
+                
+                context.contentResolver.openInputStream(selectedUri)?.use { input ->
+                    targetFile.outputStream().use { output ->
+                        input.copyTo(output)
+                    }
+                }
+                refreshTrigger++
+            } catch (e: Exception) {
+                // TODO: 显示错误信息
+            }
+        }
+    }
 
     // 刷新光影包列表
     LaunchedEffect(refreshTrigger) {
         shaderPackFiles = if (shaderPacksFolder.exists()) {
             shaderPacksFolder.listFiles()?.filter { 
-                it.isFile && (it.extension == "zip" || it.isDirectory)
-            } ?: emptyList()
+                it.isFile && it.extension == "zip"
+            }?.sortedBy { it.name } ?: emptyList()
         } else {
             emptyList()
         }
@@ -60,42 +90,66 @@ fun ShaderPacksManagementScreen(
                 containerColor = MaterialTheme.colorScheme.surface.copy(alpha = cardAlpha)
             )
         ) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalAlignment = Alignment.CenterVertically
+            Column(
+                modifier = Modifier.padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                Text(
-                    text = "光影包管理",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.weight(1f)
-                )
-                
-                OutlinedButton(
-                    onClick = { 
-                        // 创建shaderpacks文件夹
-                        if (!shaderPacksFolder.exists()) {
-                            shaderPacksFolder.mkdirs()
-                        }
-                        refreshTrigger++
-                    }
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Icon(Icons.Default.Refresh, contentDescription = null)
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text("刷新")
+                    Text(
+                        text = "光影包管理",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.weight(1f)
+                    )
+                    
+                    Text(
+                        text = "${shaderPackFiles.size} 个光影包",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
                 }
                 
-                Button(
-                    onClick = {
-                        // TODO: 实现添加光影包功能
-                    }
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    Icon(Icons.Default.Add, contentDescription = null)
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text("添加光影包")
+                    OutlinedButton(
+                        onClick = { 
+                            if (!shaderPacksFolder.exists()) {
+                                shaderPacksFolder.mkdirs()
+                            }
+                            refreshTrigger++
+                        }
+                    ) {
+                        Icon(Icons.Default.Refresh, contentDescription = null)
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text("刷新")
+                    }
+                    
+                    Button(
+                        onClick = {
+                            filePickerLauncher.launch("*/*")
+                        }
+                    ) {
+                        Icon(Icons.Default.Add, contentDescription = null)
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text("添加光影包")
+                    }
+                    
+                    OutlinedButton(
+                        onClick = {
+                            FolderUtils.openFolder(context, shaderPacksFolder) { error ->
+                                // Handle error if needed
+                            }
+                        }
+                    ) {
+                        Icon(Icons.Default.Folder, contentDescription = null)
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text("打开文件夹")
+                    }
                 }
             }
         }
@@ -127,7 +181,7 @@ fun ShaderPacksManagementScreen(
                         verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         Icon(
-                            imageVector = Icons.Default.AutoAwesome,
+                            imageVector = Icons.Default.WbSunny,
                             contentDescription = null,
                             modifier = Modifier.size(48.dp),
                             tint = MaterialTheme.colorScheme.onSurfaceVariant
@@ -154,22 +208,7 @@ fun ShaderPacksManagementScreen(
                     ShaderPackItem(
                         shaderPackFile = shaderPackFile,
                         onDelete = {
-                            if (shaderPackFile.isDirectory) {
-                                shaderPackFile.deleteRecursively()
-                            } else {
-                                shaderPackFile.delete()
-                            }
-                            refreshTrigger++
-                        },
-                        onToggle = { enabled ->
-                            // TODO: 实现光影包启用/禁用功能
-                            val newName = if (enabled) {
-                                shaderPackFile.name.removeSuffix(".disabled")
-                            } else {
-                                shaderPackFile.name + ".disabled"
-                            }
-                            val newFile = File(shaderPackFile.parent, newName)
-                            shaderPackFile.renameTo(newFile)
+                            shaderPackFile.delete()
                             refreshTrigger++
                         },
                         isCardBlurEnabled = isCardBlurEnabled,
@@ -186,12 +225,10 @@ fun ShaderPacksManagementScreen(
 private fun ShaderPackItem(
     shaderPackFile: File,
     onDelete: () -> Unit,
-    onToggle: (Boolean) -> Unit,
     isCardBlurEnabled: Boolean,
     cardAlpha: Float,
     hazeState: dev.chrisbanes.haze.HazeState
 ) {
-    val isEnabled = !shaderPackFile.name.endsWith(".disabled")
     var showDeleteDialog by remember { mutableStateOf(false) }
     val itemCardShape = RoundedCornerShape(12.dp)
 
@@ -205,9 +242,7 @@ private fun ShaderPackItem(
             ),
         shape = itemCardShape,
         colors = CardDefaults.cardColors(
-            containerColor = if (isEnabled) 
-                MaterialTheme.colorScheme.surface.copy(alpha = cardAlpha)
-            else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = cardAlpha * 0.5f)
+            containerColor = MaterialTheme.colorScheme.surface.copy(alpha = cardAlpha)
         )
     ) {
         Row(
@@ -219,39 +254,28 @@ private fun ShaderPackItem(
         ) {
             // 光影包图标
             Icon(
-                imageVector = Icons.Default.AutoAwesome,
+                imageVector = Icons.Default.WbSunny,
                 contentDescription = null,
                 modifier = Modifier.size(32.dp),
-                tint = if (isEnabled) 
-                    MaterialTheme.colorScheme.primary 
-                else MaterialTheme.colorScheme.onSurfaceVariant
+                tint = MaterialTheme.colorScheme.primary
             )
 
             Column(
                 modifier = Modifier.weight(1f)
             ) {
                 Text(
-                    text = shaderPackFile.nameWithoutExtension.removeSuffix(".disabled"),
+                    text = shaderPackFile.nameWithoutExtension,
                     style = MaterialTheme.typography.bodyLarge,
                     fontWeight = FontWeight.Medium,
                     maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                    color = if (isEnabled) 
-                        MaterialTheme.colorScheme.onSurface 
-                    else MaterialTheme.colorScheme.onSurfaceVariant
+                    overflow = TextOverflow.Ellipsis
                 )
                 Text(
-                    text = if (shaderPackFile.isDirectory) "文件夹" else "${(shaderPackFile.length() / 1024).toInt()} KB",
+                    text = "${(shaderPackFile.length() / 1024).toInt()} KB",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
-
-            // 启用/禁用开关
-            Switch(
-                checked = isEnabled,
-                onCheckedChange = onToggle
-            )
 
             // 删除按钮
             IconButton(
@@ -289,5 +313,18 @@ private fun ShaderPackItem(
                 }
             }
         )
+    }
+}
+
+// 获取文件名的辅助函数
+private fun getFileName(context: android.content.Context, uri: android.net.Uri): String? {
+    return try {
+        context.contentResolver.query(uri, null, null, null, null)?.use { cursor ->
+            val nameIndex = cursor.getColumnIndex(android.provider.OpenableColumns.DISPLAY_NAME)
+            cursor.moveToFirst()
+            cursor.getString(nameIndex)
+        }
+    } catch (e: Exception) {
+        null
     }
 }

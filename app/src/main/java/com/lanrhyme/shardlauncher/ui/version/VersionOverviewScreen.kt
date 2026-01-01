@@ -26,7 +26,7 @@ import com.lanrhyme.shardlauncher.ui.components.LocalCardLayoutConfig
 import com.lanrhyme.shardlauncher.ui.components.SimpleAlertDialog
 import com.lanrhyme.shardlauncher.ui.components.SimpleEditDialog
 import com.lanrhyme.shardlauncher.ui.components.SimpleTaskDialog
-import com.lanrhyme.shardlauncher.utils.file.PathHelper
+import com.lanrhyme.shardlauncher.utils.file.FolderUtils
 import com.lanrhyme.shardlauncher.utils.logging.Logger.lError
 import com.lanrhyme.shardlauncher.utils.string.getMessageOrToString
 import dev.chrisbanes.haze.hazeEffect
@@ -315,15 +315,19 @@ private fun VersionQuickActionsCard(
     val cardShape = RoundedCornerShape(16.dp)
 
     fun openFolder(folderName: String) {
-        try {
-            val folder = File(version.getVersionPath(), folderName)
-            if (!folder.exists()) {
-                folder.mkdirs()
+        val folder = if (folderName.isEmpty()) {
+            version.getVersionPath()
+        } else {
+            // 对于游戏相关文件夹，使用getGameDir()
+            val gameRelatedFolders = setOf("saves", "resourcepacks", "shaderpacks", "mods", "screenshots", "config")
+            if (gameRelatedFolders.contains(folderName)) {
+                File(version.getGameDir(), folderName)
+            } else {
+                // 对于版本相关文件夹（如logs, crash-reports），使用getVersionPath()
+                File(version.getVersionPath(), folderName)
             }
-            // TODO: 实现打开文件夹功能
-        } catch (e: Exception) {
-            onError("打开文件夹失败: ${e.message}")
         }
+        FolderUtils.openFolder(context, folder, onError)
     }
 
     Card(
@@ -420,6 +424,36 @@ private fun VersionQuickActionsCard(
                     Text("崩溃报告")
                 }
             }
+
+            // 第五行按钮 - 额外功能
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                OutlinedButton(
+                    onClick = { openFolder("config") },
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Text("配置文件")
+                }
+                OutlinedButton(
+                    onClick = { 
+                        // 分享版本文件夹
+                        try {
+                            val intent = android.content.Intent(android.content.Intent.ACTION_SEND).apply {
+                                type = "text/plain"
+                                putExtra(android.content.Intent.EXTRA_TEXT, "版本路径: ${version.getVersionPath().absolutePath}")
+                                putExtra(android.content.Intent.EXTRA_SUBJECT, "Minecraft版本: ${version.getVersionName()}")
+                            }
+                            context.startActivity(android.content.Intent.createChooser(intent, "分享版本信息"))
+                        } catch (e: Exception) {
+                            onError("分享失败: ${e.message}")
+                        }
+                    },
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Text("分享版本")
+                }
+            }
         }
     }
 }
@@ -458,12 +492,12 @@ private fun VersionOverviewOperations(
             RenameVersionDialog(
                 version = operation.version,
                 onDismissRequest = { updateOperation(VersionOverviewOperation.None) },
-                onConfirm = {
+                onConfirm = { newName: String ->
                     updateOperation(
                         VersionOverviewOperation.RunTask(
                             title = "重命名版本",
                             task = {
-                                VersionsManager.renameVersion(operation.version, it)
+                                VersionsManager.renameVersion(operation.version, newName)
                             }
                         )
                     )
@@ -474,11 +508,13 @@ private fun VersionOverviewOperations(
             DeleteVersionDialog(
                 version = operation.version,
                 onDismissRequest = { updateOperation(VersionOverviewOperation.None) },
-                onConfirm = { title, task ->
+                onConfirm = {
                     updateOperation(
                         VersionOverviewOperation.RunTask(
-                            title = title,
-                            task = task
+                            title = "删除版本",
+                            task = {
+                                VersionsManager.deleteVersion(operation.version)
+                            }
                         )
                     )
                 }

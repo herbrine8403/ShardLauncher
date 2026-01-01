@@ -157,7 +157,7 @@ fun VersionScreen(navController: NavController, animationSpeed: Float) {
     VersionsOperation(
         versionsOperation = versionsOperation,
         updateVersionsOperation = { versionsOperation = it },
-        submitError = { errorMessage = it }
+        onError = { errorMessage = it }
     )
 
     // 错误对话框
@@ -706,4 +706,78 @@ fun DirectorySelectionPopup(onDismissRequest: () -> Unit) {
             }
         }
     }
+}
+
+@Composable
+fun VersionsOperation(
+    versionsOperation: VersionsOperation,
+    updateVersionsOperation: (VersionsOperation) -> Unit,
+    onError: (String) -> Unit
+) {
+    when(versionsOperation) {
+        is VersionsOperation.None -> {}
+        is VersionsOperation.Rename -> {
+            RenameVersionDialog(
+                version = versionsOperation.version,
+                onDismissRequest = { updateVersionsOperation(VersionsOperation.None) },
+                onConfirm = { name: String ->
+                    try {
+                        VersionsManager.renameVersion(versionsOperation.version, name)
+                        updateVersionsOperation(VersionsOperation.None)
+                    } catch (e: Exception) {
+                        onError("重命名版本失败: ${e.message}")
+                        updateVersionsOperation(VersionsOperation.None)
+                    }
+                }
+            )
+        }
+        is VersionsOperation.Copy -> {
+            CopyVersionDialog(
+                version = versionsOperation.version,
+                onDismissRequest = { updateVersionsOperation(VersionsOperation.None) },
+                onConfirm = { name: String, copyAll: Boolean ->
+                    try {
+                        VersionsManager.copyVersion(versionsOperation.version, name, copyAll)
+                        updateVersionsOperation(VersionsOperation.None)
+                    } catch (e: Exception) {
+                        onError("复制版本失败: ${e.message}")
+                        updateVersionsOperation(VersionsOperation.None)
+                    }
+                }
+            )
+        }
+        is VersionsOperation.InvalidDelete -> {
+            updateVersionsOperation(
+                VersionsOperation.Delete(
+                    versionsOperation.version,
+                    "此版本无效，将被删除"
+                )
+            )
+        }
+        is VersionsOperation.Delete -> {
+            DeleteVersionDialog(
+                version = versionsOperation.version,
+                message = versionsOperation.text,
+                onDismissRequest = { updateVersionsOperation(VersionsOperation.None) },
+                onConfirm = {
+                    try {
+                        VersionsManager.deleteVersion(versionsOperation.version)
+                        updateVersionsOperation(VersionsOperation.None)
+                    } catch (e: Exception) {
+                        onError("删除版本失败: ${e.message}")
+                        updateVersionsOperation(VersionsOperation.None)
+                    }
+                }
+            )
+        }
+    }
+}
+
+// 版本操作类型定义
+sealed interface VersionsOperation {
+    data object None: VersionsOperation
+    data class Rename(val version: Version): VersionsOperation
+    data class Copy(val version: Version): VersionsOperation
+    data class Delete(val version: Version, val text: String? = null): VersionsOperation
+    data class InvalidDelete(val version: Version): VersionsOperation
 }

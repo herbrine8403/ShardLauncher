@@ -13,6 +13,8 @@ enum class VersionType {
     SNAPSHOT,
     BETA,
     ALPHA,
+    VANILLA,
+    MODLOADERS,
     UNKNOWN;
     
     companion object {
@@ -32,14 +34,10 @@ enum class VersionType {
  * Extension function to get version type from VersionInfo
  */
 fun VersionInfo?.getVersionType(): VersionType {
-    // Since VersionInfo doesn't have a type field in the current implementation,
-    // we'll determine type based on version string
-    val version = this?.minecraftVersion ?: return VersionType.UNKNOWN
-    return when {
-        version.contains("w") -> VersionType.SNAPSHOT
-        version.contains("pre") -> VersionType.BETA
-        version.contains("rc") -> VersionType.BETA
-        version.matches(Regex("\\d+\\.\\d+(\\.\\d+)?")) -> VersionType.RELEASE
-        else -> VersionType.UNKNOWN
+    // Determine if it's vanilla or has mod loaders
+    return if (this?.loaderInfo != null) {
+        VersionType.MODLOADERS
+    } else {
+        VersionType.VANILLA
     }
 }

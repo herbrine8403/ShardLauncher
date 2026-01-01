@@ -1,5 +1,6 @@
 package com.lanrhyme.shardlauncher
 
+import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
@@ -111,9 +112,12 @@ import com.lanrhyme.shardlauncher.ui.theme.ThemeColor
 import com.lanrhyme.shardlauncher.ui.version.VersionScreen
 import com.lanrhyme.shardlauncher.utils.rememberParallaxSensorHelper
 import com.lanrhyme.shardlauncher.components.ComponentUnpacker
+import com.lanrhyme.shardlauncher.game.resource.ResourceManager
+import com.lanrhyme.shardlauncher.utils.logging.Logger
 import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.hazeSource
 import kotlin.math.abs
+import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
     private val tag = "MainActivity"
@@ -123,6 +127,36 @@ class MainActivity : ComponentActivity() {
         MusicPlayerViewModel.Factory(application, settingsRepository)
     }
     private val newIntentState = mutableStateOf<Intent?>(null)
+
+    /**
+     * Check and install required resources automatically on startup
+     */
+    private suspend fun checkAndInstallResources(context: Context) {
+        try {
+            Logger.i(tag, "Checking required resources...")
+            val checkResult = ResourceManager.checkResources(context)
+            
+            if (checkResult.missingResources.isNotEmpty()) {
+                Logger.i(tag, "Missing resources detected: ${checkResult.missingResources}")
+                
+                // Install essential resources automatically
+                ResourceManager.installEssentialResources(
+                    context = context,
+                    onProgress = { progress, message ->
+                        Logger.d(tag, "Resource installation progress: $progress% - $message")
+                    }
+                ).onSuccess {
+                    Logger.i(tag, "Essential resources installed successfully")
+                }.onFailure { error ->
+                    Logger.e(tag, "Failed to install essential resources", error)
+                }
+            } else {
+                Logger.i(tag, "All required resources are available")
+            }
+        } catch (e: Exception) {
+            Logger.e(tag, "Error during resource check", e)
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -206,6 +240,9 @@ class MainActivity : ComponentActivity() {
             LaunchedEffect(Unit) {
                 // Unpack essential components in background
                 ComponentUnpacker.unpackAll(applicationContext)
+                
+                // Check and install required resources automatically
+                checkAndInstallResources(applicationContext)
 
                 val randomBackground = settingsRepository.getRandomBackground()
                 if (randomBackground) {

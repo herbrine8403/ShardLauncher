@@ -697,7 +697,7 @@ fun TitledDivider(title: String, modifier: Modifier = Modifier) {
 fun PopupContainer(
         visible: Boolean,
         onDismissRequest: () -> Unit,
-        modifier: Modifier = Modifier.width(300.dp),
+        modifier: Modifier = Modifier.width(500.dp),
         alignment: Alignment = Alignment.Center,
         content: @Composable () -> Unit
 ) {

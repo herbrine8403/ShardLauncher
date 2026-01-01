@@ -91,7 +91,7 @@ fun HomeScreen(
     val coroutineScope = rememberCoroutineScope()
     
     // Get installed versions
-    val installedVersions by VersionsManager.versionsFlow.collectAsState()
+    val installedVersions = VersionsManager.versions
     val selectedVersion = installedVersions.firstOrNull { it.isValid() }
 
     val animatedSpeed by
@@ -246,11 +246,7 @@ fun HomeScreen(
                                             Logger.log(context, "HomeScreen", "Game launch failed: ${e.message}")
                                         }
                                     }
-                                } ?: run {
-                                    Logger.log(context, "HomeScreen", "No account selected")
                                 }
-                            } ?: run {
-                                Logger.log(context, "HomeScreen", "No version available")
                             }
                         },
                         modifier = Modifier.fillMaxWidth(),

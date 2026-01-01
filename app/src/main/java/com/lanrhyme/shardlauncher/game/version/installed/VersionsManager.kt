@@ -36,11 +36,14 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import org.apache.commons.io.FileUtils
 import java.io.File
 
 object VersionsManager {
     private val scope = CoroutineScope(Dispatchers.IO)
+    private val mutex = Mutex()
     private val listeners: MutableList<suspend (List<Version>) -> Unit> = mutableListOf()
 
     private const val LAUNCHER_IDENTIFIER = ".shard" // TODO: Add to InfoDistributor or similar
@@ -62,14 +65,8 @@ object VersionsManager {
     /**
      * 当前所有的游戏版本
      */
-    private val _versionsFlow = MutableStateFlow<List<Version>>(emptyList())
-    val versionsFlow: StateFlow<List<Version>> = _versionsFlow.asStateFlow()
-    
     var versions: List<Version> = emptyList()
-        private set(value) {
-            field = value
-            _versionsFlow.value = value
-        }
+        private set
 
     /**
      * 当前的游戏信息
@@ -77,19 +74,14 @@ object VersionsManager {
     var currentGameInfo by mutableStateOf<Any?>(null) // TODO: Implement CurrentGameInfo
         private set
 
-    /**
-     * 当前的版本
-     */
-    var currentVersion by mutableStateOf<Version?>(null)
-        private set
+    private val _currentVersion = MutableStateFlow<Version?>(null)
+    val currentVersion = _currentVersion.asStateFlow()
 
     private var currentJob: Job? = null
 
-    /**
-     * 是否正在刷新版本
-     */
-    var isRefreshing by mutableStateOf(false)
-        private set
+    private val _isRefreshing = MutableStateFlow(false)
+    /** 是否正在刷新版本 */
+    val isRefreshing = _isRefreshing.asStateFlow()
 
     /**
      * 检查版本是否已经存在
@@ -101,38 +93,45 @@ object VersionsManager {
         else folder.exists()
     }
 
-    fun refresh(tag: String) {
+    fun refresh(tag: String, trySetVersion: String? = null) {
         currentJob?.cancel()
         currentJob = scope.launch {
-            isRefreshing = true
-            lDebug("Initiated by $tag: starting to refresh the version list.")
+            mutex.withLock {
+                _isRefreshing.value = true
+                lDebug("Initiated by $tag: starting to refresh the version list.")
 
-            versions = emptyList()
+                if (trySetVersion != null) {
+                    saveCurrentVersion(trySetVersion, refresh = false)
+                    lDebug("Has attempted to save the current version: $trySetVersion")
+                }
 
-            val newVersions = mutableListOf<Version>()
-            File(getVersionsHome()).listFiles()?.forEach { versionFile ->
+                versions = emptyList()
+
+                val newVersions = mutableListOf<Version>()
+                File(getVersionsHome()).listFiles()?.forEach { versionFile ->
+                    runCatching {
+                        processVersionFile(versionFile)
+                    }.getOrNull()?.let {
+                        newVersions.add(it)
+                    }
+                }
+
+                versions = newVersions.toList()
+
+                lDebug("Version list refreshed, refreshing the current version now.")
+                refreshCurrentVersion()
+
+                // Notify listeners
                 runCatching {
-                    processVersionFile(versionFile)
-                }.getOrNull()?.let {
-                    newVersions.add(it)
+                    listeners.forEach { listener ->
+                        listener.invoke(versions)
+                    }
+                }.onFailure { e ->
+                    lError("Failed to notify listeners", e)
                 }
+
+                _isRefreshing.value = false
             }
-
-            versions = newVersions.toList()
-
-            lDebug("Version list refreshed, refreshing the current version now.")
-            refreshCurrentVersion()
-
-            // Notify listeners
-            runCatching {
-                listeners.forEach { listener ->
-                    listener.invoke(versions)
-                }
-            }.onFailure { e ->
-                lError("Failed to notify listeners", e)
-            }
-
-            isRefreshing = false
         }
     }
 
@@ -173,7 +172,7 @@ object VersionsManager {
 
     private fun refreshCurrentVersion() {
         if (versions.isNotEmpty()) {
-             currentVersion = versions.firstOrNull { it.isValid() }
+             _currentVersion.value = versions.firstOrNull { it.isValid() }
         }
 //        currentVersion = run {
 //            if (versions.isEmpty()) return@run null
@@ -296,9 +295,8 @@ object VersionsManager {
      * 重命名当前版本，但并不会在这里对即将重命名的名称，进行非法性判断
      */
     fun renameVersion(version: Version, name: String) {
-        val currentVersionName = currentVersion?.getVersionName()
         //如果当前的版本是即将被重命名的版本，那么就把将要重命名的名字设置为当前版本
-        val saveToCurrent = version.getVersionName() == currentVersionName
+        val saveToCurrent = version.getVersionName() == _currentVersion.value?.getVersionName()
 
         val versionFolder = version.getVersionPath()
         val renameFolder = File(getVersionsHome(), name)

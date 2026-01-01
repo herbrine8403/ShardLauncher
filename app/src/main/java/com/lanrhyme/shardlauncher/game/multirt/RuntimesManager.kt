@@ -46,6 +46,8 @@ object RuntimesManager {
     private const val JAVA_VERSION_STR: String = "JAVA_VERSION=\""
     private const val OS_ARCH_STR: String = "OS_ARCH=\""
 
+    fun getRuntimeFolder(): File = RUNTIME_FOLDER
+
     fun getRuntimes(forceLoad: Boolean = false): List<Runtime> {
         if (!RUNTIME_FOLDER.exists()) {
             Logger.w("RuntimesManager", "Runtime directory not found: ${RUNTIME_FOLDER.absolutePath}")
@@ -138,6 +140,30 @@ object RuntimesManager {
             }
         } catch (e: Exception) {
             FileUtils.deleteDirectory(dest)
+            throw e
+        }
+    }
+
+    @Throws(IOException::class)
+    suspend fun installRuntimeBinaries(
+        inputStream: InputStream,
+        name: String,
+        updateProgress: (Int, Array<Any>) -> Unit = { _, _ -> }
+    ): Unit = withContext(Dispatchers.IO) {
+        val dest = File(RUNTIME_FOLDER, name)
+        if (!dest.exists()) {
+            throw IOException("Runtime directory does not exist: ${dest.absolutePath}")
+        }
+        
+        try {
+            // Extract binaries to existing runtime directory
+            uncompressTarXZ(inputStream, dest, updateProgress)
+            unpack200(PathManager.DIR_NATIVE_LIB, dest.absolutePath)
+            
+            // Re-run post-prepare to handle any new binaries
+            postPrepare(name)
+        } catch (e: Exception) {
+            Logger.e("RuntimesManager", "Failed to install runtime binaries for $name", e)
             throw e
         }
     }

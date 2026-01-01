@@ -24,6 +24,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
@@ -39,10 +40,12 @@ import coil.compose.AsyncImage
 import com.lanrhyme.shardlauncher.R
 import com.lanrhyme.shardlauncher.game.path.GamePathManager
 import com.lanrhyme.shardlauncher.game.version.installed.Version
+import com.lanrhyme.shardlauncher.game.version.installed.VersionType
 import com.lanrhyme.shardlauncher.game.version.installed.VersionsManager
 import com.lanrhyme.shardlauncher.ui.components.LocalCardLayoutConfig
 import com.lanrhyme.shardlauncher.ui.components.PopupContainer
 import com.lanrhyme.shardlauncher.ui.components.SearchTextField
+import com.lanrhyme.shardlauncher.ui.components.SimpleAlertDialog
 import com.lanrhyme.shardlauncher.ui.components.animatedAppearance
 import com.lanrhyme.shardlauncher.ui.components.selectableCard
 import com.lanrhyme.shardlauncher.utils.file.PathHelper
@@ -62,61 +65,80 @@ fun VersionScreen(navController: NavController, animationSpeed: Float) {
     val isCardBlurEnabled = cardLayoutConfig.isCardBlurEnabled
     val cardAlpha = cardLayoutConfig.cardAlpha
     val hazeState = cardLayoutConfig.hazeState
-    // Refresh versions on load
+    
+    // 使用新的VersionsManager API，但保持原有UI
     LaunchedEffect(Unit) { VersionsManager.refresh("VersionScreen_Init") }
 
     var showDirectoryPopup by remember { mutableStateOf(false) }
 
-    // Use versions from manager
-    // Note: In a real architecture, this should come from a ViewModel observing the Manager
+    // 使用新的状态管理
     val versions = VersionsManager.versions
+    val currentVersion by VersionsManager.currentVersion.collectAsState()
+    val isRefreshing by VersionsManager.isRefreshing.collectAsState()
+    
     var selectedVersion by remember { mutableStateOf<Version?>(null) }
     var selectedPane by remember { mutableStateOf<VersionDetailPane?>(null) }
+
+    // 版本分类状态
+    var versionCategory by remember { mutableStateOf(VersionCategory.ALL) }
+    
+    // 过滤版本
+    val filteredVersions = remember(versions, versionCategory) {
+        when (versionCategory) {
+            VersionCategory.ALL -> versions
+            VersionCategory.VANILLA -> versions.filter { it.versionType == VersionType.VANILLA }
+            VersionCategory.MODLOADER -> versions.filter { it.versionType == VersionType.MODLOADERS }
+        }
+    }
+
+    // 版本操作状态
+    var versionsOperation by remember { mutableStateOf<VersionsOperation>(VersionsOperation.None) }
+    var errorMessage by remember { mutableStateOf<String?>(null) }
 
     fun resetToVersionList() {
         selectedPane = null
     }
 
     Row(modifier = Modifier.fillMaxSize()) {
-        // Left Pane (25%)
+        // Left Pane (25%) - 保持原有设计
         val leftShape = RoundedCornerShape(16.dp)
         Card(
-                modifier =
-                        Modifier.weight(0.25f)
-                                .fillMaxHeight()
-                                .padding(start = 16.dp, top = 16.dp, end = 8.dp, bottom = 16.dp)
-                                .then(
-                                        if (isCardBlurEnabled &&
-                                                        Build.VERSION.SDK_INT >=
-                                                                Build.VERSION_CODES.S
-                                        ) {
-                                            Modifier.clip(leftShape).hazeEffect(state = hazeState)
-                                        } else Modifier
-                                ),
-                shape = leftShape,
-                colors =
-                        CardDefaults.cardColors(
-                                containerColor =
-                                        MaterialTheme.colorScheme.surface.copy(alpha = cardAlpha)
-                        )
+            modifier = Modifier.weight(0.25f)
+                .fillMaxHeight()
+                .padding(start = 16.dp, top = 16.dp, end = 8.dp, bottom = 16.dp)
+                .then(
+                    if (isCardBlurEnabled && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                        Modifier.clip(leftShape).hazeEffect(state = hazeState)
+                    } else Modifier
+                ),
+            shape = leftShape,
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.surface.copy(alpha = cardAlpha)
+            )
         ) {
             LeftNavigationPane(
-                    selectedVersion = selectedVersion,
-                    selectedPane = selectedPane,
-                    onPaneSelected = { pane -> selectedPane = pane }
+                selectedVersion = selectedVersion,
+                selectedPane = selectedPane,
+                onPaneSelected = { pane -> selectedPane = pane }
             )
         }
 
-        // Right Pane (75%)
+        // Right Pane (75%) - 保持原有设计但增强功能
         Box(modifier = Modifier.weight(0.75f).fillMaxHeight()) {
             Crossfade(targetState = selectedPane, label = "RightPaneCrossfade") { pane ->
                 if (pane == null) {
                     GameVersionListContent(
-                            versions = versions,
-                            selectedVersion = selectedVersion,
-                            onVersionClick = { version -> selectedVersion = version },
-                            animationSpeed = animationSpeed,
-                            onShowDirectoryPopup = { showDirectoryPopup = true }
+                        versions = filteredVersions,
+                        selectedVersion = selectedVersion,
+                        currentVersion = currentVersion,
+                        isRefreshing = isRefreshing,
+                        versionCategory = versionCategory,
+                        onVersionClick = { version -> selectedVersion = version },
+                        onCategoryChange = { versionCategory = it },
+                        animationSpeed = animationSpeed,
+                        onShowDirectoryPopup = { showDirectoryPopup = true },
+                        onVersionOperation = { versionsOperation = it },
+                        onError = { errorMessage = it }
                     )
                 } else {
                     RightDetailContent(pane, selectedVersion, onBack = { resetToVersionList() })
@@ -125,8 +147,25 @@ fun VersionScreen(navController: NavController, animationSpeed: Float) {
         }
     }
 
+    // 弹窗和对话框
     if (showDirectoryPopup) {
         DirectorySelectionPopup(onDismissRequest = { showDirectoryPopup = false })
+    }
+
+    // 版本操作对话框
+    VersionsOperation(
+        versionsOperation = versionsOperation,
+        updateVersionsOperation = { versionsOperation = it },
+        submitError = { errorMessage = it }
+    )
+
+    // 错误对话框
+    errorMessage?.let { message ->
+        SimpleAlertDialog(
+            title = "错误",
+            text = message,
+            onDismiss = { errorMessage = null }
+        )
     }
 }
 
@@ -211,71 +250,123 @@ fun LeftNavigationPane(
 
 @Composable
 fun GameVersionListContent(
-        versions: List<Version>,
-        selectedVersion: Version?,
-        onVersionClick: (Version) -> Unit,
-        animationSpeed: Float,
-        onShowDirectoryPopup: () -> Unit
+    versions: List<Version>,
+    selectedVersion: Version?,
+    currentVersion: Version?,
+    isRefreshing: Boolean,
+    versionCategory: VersionCategory,
+    onVersionClick: (Version) -> Unit,
+    onCategoryChange: (VersionCategory) -> Unit,
+    animationSpeed: Float,
+    onShowDirectoryPopup: () -> Unit,
+    onVersionOperation: (VersionsOperation) -> Unit,
+    onError: (String) -> Unit
 ) {
     val (isCardBlurEnabled, cardAlpha, hazeState) = LocalCardLayoutConfig.current
     var searchText by remember { mutableStateOf("") }
 
     // Filter versions based on search text
-    val filteredVersions =
-            remember(versions, searchText) {
-                if (searchText.isBlank()) versions
-                else versions.filter { it.getVersionName().contains(searchText, ignoreCase = true) }
-            }
+    val filteredVersions = remember(versions, searchText) {
+        if (searchText.isBlank()) versions
+        else versions.filter { it.getVersionName().contains(searchText, ignoreCase = true) }
+    }
+
+    // 计算各类别版本数量
+    val allVersionsCount = VersionsManager.versions.size
+    val vanillaVersionsCount = VersionsManager.versions.count { it.versionType == VersionType.VANILLA }
+    val modloaderVersionsCount = VersionsManager.versions.count { it.versionType == VersionType.MODLOADERS }
 
     Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
+        // 顶部工具栏 - 保持原有设计但增加分类
         Row(
-                modifier = Modifier.fillMaxWidth().height(36.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            modifier = Modifier.fillMaxWidth().height(36.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             SearchTextField(
-                    value = searchText,
-                    onValueChange = { searchText = it },
-                    hint = "搜索版本", // TODO: i18n
-                    modifier = Modifier.weight(1f)
+                value = searchText,
+                onValueChange = { searchText = it },
+                hint = "搜索版本",
+                modifier = Modifier.weight(1f)
             )
             IconButton(onClick = { VersionsManager.refresh("Manual") }) {
-                Icon(Icons.Default.Refresh, contentDescription = "Refresh") // TODO: i18n
+                Icon(Icons.Default.Refresh, contentDescription = "刷新")
             }
             IconButton(onClick = { /* TODO: Sort */}) {
-                Icon(Icons.AutoMirrored.Filled.Sort, contentDescription = "Sort") // TODO: i18n
+                Icon(Icons.AutoMirrored.Filled.Sort, contentDescription = "排序")
             }
             IconButton(onClick = { /* TODO: Filter */}) {
-                Icon(Icons.Default.MoreVert, contentDescription = "Filter") // TODO: i18n
+                Icon(Icons.Default.MoreVert, contentDescription = "筛选")
             }
             IconButton(onClick = onShowDirectoryPopup) {
-                Icon(Icons.Default.Folder, contentDescription = "Directory") // TODO: i18n
+                Icon(Icons.Default.Folder, contentDescription = "目录")
             }
         }
 
-        if (VersionsManager.isRefreshing) {
+        // 版本分类标签
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            VersionCategoryItem(
+                value = VersionCategory.ALL,
+                versionsCount = allVersionsCount,
+                selected = versionCategory == VersionCategory.ALL,
+                onClick = { onCategoryChange(VersionCategory.ALL) }
+            )
+            VersionCategoryItem(
+                value = VersionCategory.VANILLA,
+                versionsCount = vanillaVersionsCount,
+                selected = versionCategory == VersionCategory.VANILLA,
+                onClick = { onCategoryChange(VersionCategory.VANILLA) }
+            )
+            VersionCategoryItem(
+                value = VersionCategory.MODLOADER,
+                versionsCount = modloaderVersionsCount,
+                selected = versionCategory == VersionCategory.MODLOADER,
+                onClick = { onCategoryChange(VersionCategory.MODLOADER) }
+            )
+        }
+
+        if (isRefreshing) {
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 CircularProgressIndicator()
             }
         } else if (filteredVersions.isEmpty()) {
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                Text("暂无版本", fontSize = 18.sp) // TODO: i18n
+                Text("暂无版本", fontSize = 18.sp)
             }
         } else {
+            // 保持原有的网格卡片布局
             LazyVerticalGrid(
-                    columns = GridCells.Adaptive(minSize = 150.dp),
-                    contentPadding = PaddingValues(vertical = 16.dp),
-                    horizontalArrangement = Arrangement.spacedBy(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(16.dp),
-                    modifier = Modifier.fillMaxSize()
+                columns = GridCells.Adaptive(minSize = 150.dp),
+                contentPadding = PaddingValues(vertical = 16.dp),
+                horizontalArrangement = Arrangement.spacedBy(16.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp),
+                modifier = Modifier.fillMaxSize()
             ) {
                 itemsIndexed(filteredVersions) { index, version ->
                     GameVersionCard(
-                            version = version,
-                            isSelected = version == selectedVersion,
-                            onClick = { onVersionClick(version) },
-                            index = index,
-                            animationSpeed = animationSpeed
+                        version = version,
+                        isSelected = version == selectedVersion,
+                        isCurrent = version == currentVersion,
+                        onClick = { onVersionClick(version) },
+                        onLongClick = { 
+                            // 长按显示操作菜单
+                            onVersionOperation(VersionsOperation.None) // 可以扩展为显示菜单
+                        },
+                        onPinClick = {
+                            try {
+                                version.setPinnedAndSave(!version.pinnedState)
+                            } catch (e: Exception) {
+                                onError("保存版本配置失败: ${e.message}")
+                            }
+                        },
+                        onRenameClick = { onVersionOperation(VersionsOperation.Rename(version)) },
+                        onCopyClick = { onVersionOperation(VersionsOperation.Copy(version)) },
+                        onDeleteClick = { onVersionOperation(VersionsOperation.Delete(version)) },
+                        index = index,
+                        animationSpeed = animationSpeed
                     )
                 }
             }
@@ -333,64 +424,176 @@ fun RightDetailContent(pane: VersionDetailPane, version: Version?, onBack: () ->
 
 @Composable
 fun GameVersionCard(
-        version: Version,
-        isSelected: Boolean,
-        onClick: () -> Unit,
-        index: Int,
-        animationSpeed: Float
+    version: Version,
+    isSelected: Boolean,
+    isCurrent: Boolean = false,
+    onClick: () -> Unit,
+    onLongClick: () -> Unit = {},
+    onPinClick: () -> Unit = {},
+    onRenameClick: () -> Unit = {},
+    onCopyClick: () -> Unit = {},
+    onDeleteClick: () -> Unit = {},
+    index: Int,
+    animationSpeed: Float
 ) {
     val (isCardBlurEnabled, cardAlpha, hazeState) = LocalCardLayoutConfig.current
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
+    var showMenu by remember { mutableStateOf(false) }
 
     val shape = RoundedCornerShape(18.dp)
 
     Card(
-            modifier =
-                    Modifier.animatedAppearance(index, animationSpeed)
-                            .size(150.dp)
-                            .selectableCard(isSelected = isSelected, isPressed = isPressed)
-                            .then(
-                                    if (isCardBlurEnabled &&
-                                                    Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
-                                    ) {
-                                         Modifier.clip(shape).hazeEffect(state = hazeState)
-                                    } else Modifier.clip(shape)
-                            )
-                            .clickable(
-                                    interactionSource = interactionSource,
-                                    indication = null,
-                                    onClick = onClick
-                            ),
-            shape = shape,
-            border =
-                    if (isSelected) BorderStroke(2.dp, MaterialTheme.colorScheme.primary) else null,
-            colors =
-                    CardDefaults.cardColors(
-                            containerColor =
-                                    MaterialTheme.colorScheme.surface.copy(alpha = cardAlpha)
-                    )
+        modifier = Modifier
+            .animatedAppearance(index, animationSpeed)
+            .size(150.dp)
+            .selectableCard(isSelected = isSelected, isPressed = isPressed)
+            .then(
+                if (isCardBlurEnabled && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                    Modifier.clip(shape).hazeEffect(state = hazeState)
+                } else Modifier.clip(shape)
+            )
+            .clickable(
+                interactionSource = interactionSource,
+                indication = null,
+                onClick = onClick
+            ),
+        shape = shape,
+        border = when {
+            isCurrent -> BorderStroke(2.dp, MaterialTheme.colorScheme.primary)
+            isSelected -> BorderStroke(2.dp, MaterialTheme.colorScheme.secondary)
+            else -> null
+        },
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surface.copy(alpha = cardAlpha)
+        )
     ) {
         Box(modifier = Modifier.fillMaxSize()) {
+            // 版本图标
             Box(modifier = Modifier.align(Alignment.Center).fillMaxSize(0.5f)) {
                 AsyncImage(
-                        model = VersionsManager.getVersionIconFile(version),
-                        contentDescription = "${version.getVersionName()} icon",
-                        placeholder = painterResource(id = R.drawable.img_minecraft),
-                        error = painterResource(id = R.drawable.img_minecraft),
-                        contentScale = ContentScale.Fit,
-                        modifier = Modifier.fillMaxSize()
+                    model = VersionsManager.getVersionIconFile(version),
+                    contentDescription = "${version.getVersionName()} icon",
+                    placeholder = painterResource(id = R.drawable.img_minecraft),
+                    error = painterResource(id = R.drawable.img_minecraft),
+                    contentScale = ContentScale.Fit,
+                    modifier = Modifier.fillMaxSize()
                 )
             }
+
+            // 置顶图标
+            if (version.pinnedState) {
+                Icon(
+                    imageVector = Icons.Default.PushPin,
+                    contentDescription = "置顶",
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier
+                        .align(Alignment.TopEnd)
+                        .padding(8.dp)
+                        .size(16.dp)
+                        .rotate(45f)
+                )
+            }
+
+            // 当前版本标识
+            if (isCurrent) {
+                Surface(
+                    color = MaterialTheme.colorScheme.primary,
+                    shape = RoundedCornerShape(bottomStart = 8.dp),
+                    modifier = Modifier.align(Alignment.TopEnd)
+                ) {
+                    Text(
+                        text = "当前",
+                        color = MaterialTheme.colorScheme.onPrimary,
+                        style = MaterialTheme.typography.labelSmall,
+                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                    )
+                }
+            }
+
+            // 版本名称
             Text(
-                    text = version.getVersionName(),
-                    style = MaterialTheme.typography.titleSmall,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurface,
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier.align(Alignment.BottomStart).padding(12.dp)
+                text = version.getVersionName(),
+                style = MaterialTheme.typography.titleSmall,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onSurface,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.align(Alignment.BottomStart).padding(12.dp)
             )
+
+            // 更多操作按钮
+            Box(modifier = Modifier.align(Alignment.BottomEnd)) {
+                IconButton(
+                    onClick = { showMenu = true },
+                    modifier = Modifier.size(32.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.MoreVert,
+                        contentDescription = "更多操作",
+                        modifier = Modifier.size(16.dp)
+                    )
+                }
+
+                DropdownMenu(
+                    expanded = showMenu,
+                    onDismissRequest = { showMenu = false }
+                ) {
+                    DropdownMenuItem(
+                        text = { Text(if (version.pinnedState) "取消置顶" else "置顶") },
+                        leadingIcon = {
+                            Icon(
+                                imageVector = Icons.Default.PushPin,
+                                contentDescription = null
+                            )
+                        },
+                        onClick = {
+                            onPinClick()
+                            showMenu = false
+                        }
+                    )
+                    DropdownMenuItem(
+                        text = { Text("重命名") },
+                        leadingIcon = {
+                            Icon(
+                                imageVector = Icons.Default.Edit,
+                                contentDescription = null
+                            )
+                        },
+                        onClick = {
+                            onRenameClick()
+                            showMenu = false
+                        }
+                    )
+                    DropdownMenuItem(
+                        text = { Text("复制") },
+                        leadingIcon = {
+                            Icon(
+                                imageVector = Icons.Default.FileCopy,
+                                contentDescription = null
+                            )
+                        },
+                        onClick = {
+                            onCopyClick()
+                            showMenu = false
+                        }
+                    )
+                    DropdownMenuItem(
+                        text = { Text("删除") },
+                        leadingIcon = {
+                            Icon(
+                                imageVector = Icons.Default.Delete,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.error
+                            )
+                        },
+                        onClick = {
+                            onDeleteClick()
+                            showMenu = false
+                        }
+                    )
+                }
+            }
         }
     }
 }

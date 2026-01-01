@@ -171,6 +171,7 @@ dependencies {
     implementation("commons-io:commons-io:2.16.1")
     implementation("commons-codec:commons-codec:1.16.1")
     implementation("org.apache.commons:commons-compress:1.26.1")
+    implementation("org.tukaani:xz:1.9") // XZ compression support for tar.xz files
     implementation("org.ow2.asm:asm-all:5.0.4")
     implementation("com.github.oshi:oshi-core:6.3.0")
     implementation("androidx.browser:browser:1.8.0")

@@ -5,6 +5,9 @@
 
 package com.lanrhyme.shardlauncher.ui.settings
 
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -32,11 +35,47 @@ fun RuntimeManageScreen(
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     var runtimes by remember { mutableStateOf(RuntimesManager.getRuntimes()) }
+    var bundledRuntimes by remember { mutableStateOf(RuntimeInstaller.getBundledRuntimes(context)) }
     var showDeleteDialog by remember { mutableStateOf<Runtime?>(null) }
-    var showInstallDialog by remember { mutableStateOf(false) }
+    var showBundledInstallDialog by remember { mutableStateOf(false) }
+    var showImportDialog by remember { mutableStateOf(false) }
     var showProgressDialog by remember { mutableStateOf(false) }
     var progressMessage by remember { mutableStateOf("") }
     var progressValue by remember { mutableStateOf(0) }
+    var importRuntimeName by remember { mutableStateOf("") }
+
+    // File picker for importing tar.xz files
+    val filePickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri: Uri? ->
+        uri?.let { selectedUri ->
+            if (importRuntimeName.isNotBlank()) {
+                showProgressDialog = true
+                progressMessage = "准备导入..."
+                progressValue = 0
+                
+                scope.launch {
+                    RuntimeInstaller.importRuntimeFromFile(
+                        context = context,
+                        uri = selectedUri,
+                        runtimeName = importRuntimeName,
+                        onProgress = { progress, message ->
+                            progressValue = progress
+                            progressMessage = message
+                        }
+                    ).onSuccess {
+                        showProgressDialog = false
+                        showImportDialog = false
+                        importRuntimeName = ""
+                        runtimes = RuntimesManager.getRuntimes()
+                    }.onFailure { error ->
+                        showProgressDialog = false
+                        // TODO: Show error dialog
+                    }
+                }
+            }
+        }
+    }
 
     Column(
         modifier = Modifier
@@ -63,7 +102,7 @@ fun RuntimeManageScreen(
                 )
                 
                 Text(
-                    text = "管理 Java 运行时环境和其他运行库",
+                    text = "管理 Java 运行时环境",
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -73,7 +112,10 @@ fun RuntimeManageScreen(
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     Button(
-                        onClick = { runtimes = RuntimesManager.getRuntimes() },
+                        onClick = { 
+                            runtimes = RuntimesManager.getRuntimes()
+                            bundledRuntimes = RuntimeInstaller.getBundledRuntimes(context)
+                        },
                         modifier = Modifier.weight(1f)
                     ) {
                         Icon(Icons.Default.Refresh, contentDescription = null)
@@ -82,12 +124,21 @@ fun RuntimeManageScreen(
                     }
                     
                     Button(
-                        onClick = { showInstallDialog = true },
+                        onClick = { showBundledInstallDialog = true },
                         modifier = Modifier.weight(1f)
                     ) {
-                        Icon(Icons.Default.CloudDownload, contentDescription = null)
+                        Icon(Icons.Default.GetApp, contentDescription = null)
                         Spacer(Modifier.width(8.dp))
-                        Text("安装")
+                        Text("内置")
+                    }
+                    
+                    Button(
+                        onClick = { showImportDialog = true },
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Icon(Icons.Default.FileOpen, contentDescription = null)
+                        Spacer(Modifier.width(8.dp))
+                        Text("导入")
                     }
                 }
             }
@@ -122,7 +173,7 @@ fun RuntimeManageScreen(
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                         Text(
-                            text = "请安装 Java 运行时环境以启动游戏",
+                            text = "请安装内置运行时或导入 tar.xz 文件",
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -154,9 +205,9 @@ fun RuntimeManageScreen(
             confirmButton = {
                 TextButton(
                     onClick = {
-                        com.lanrhyme.shardlauncher.game.multirt.RuntimesManager.removeRuntime(runtime.name)
+                        RuntimesManager.removeRuntime(runtime.name)
                         showDeleteDialog = null
-                        runtimes = com.lanrhyme.shardlauncher.game.multirt.RuntimesManager.getRuntimes()
+                        runtimes = RuntimesManager.getRuntimes()
                     }
                 ) {
                     Text("删除")
@@ -170,19 +221,22 @@ fun RuntimeManageScreen(
         )
     }
 
-    // Install dialog
-    if (showInstallDialog) {
-        RuntimeInstallDialog(
-            onDismiss = { showInstallDialog = false },
-            onInstall = { runtimeDownload ->
-                showInstallDialog = false
+    // Bundled runtime install dialog
+    if (showBundledInstallDialog) {
+        BundledRuntimeInstallDialog(
+            bundledRuntimes = bundledRuntimes,
+            installedRuntimes = runtimes,
+            onDismiss = { showBundledInstallDialog = false },
+            onInstall = { bundledRuntime ->
+                showBundledInstallDialog = false
                 showProgressDialog = true
-                progressMessage = "准备下载..."
+                progressMessage = "准备安装..."
                 progressValue = 0
                 
                 scope.launch {
-                    RuntimeInstaller.downloadAndInstallRuntime(
-                        runtime = runtimeDownload,
+                    RuntimeInstaller.installBundledRuntime(
+                        context = context,
+                        runtime = bundledRuntime,
                         onProgress = { progress, message ->
                             progressValue = progress
                             progressMessage = message
@@ -194,6 +248,49 @@ fun RuntimeManageScreen(
                         showProgressDialog = false
                         // TODO: Show error dialog
                     }
+                }
+            }
+        )
+    }
+
+    // Import dialog
+    if (showImportDialog) {
+        AlertDialog(
+            onDismissRequest = { showImportDialog = false },
+            title = { Text("导入运行时") },
+            text = {
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    Text("请输入运行时名称，然后选择 tar.xz 文件进行导入。")
+                    
+                    OutlinedTextField(
+                        value = importRuntimeName,
+                        onValueChange = { importRuntimeName = it },
+                        label = { Text("运行时名称") },
+                        placeholder = { Text("例如: openjdk-8-custom") },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        if (importRuntimeName.isNotBlank()) {
+                            filePickerLauncher.launch("application/*")
+                        }
+                    },
+                    enabled = importRuntimeName.isNotBlank()
+                ) {
+                    Text("选择文件")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { 
+                    showImportDialog = false
+                    importRuntimeName = ""
+                }) {
+                    Text("取消")
                 }
             }
         )
@@ -276,43 +373,50 @@ private fun RuntimeItem(
 }
 
 @Composable
-private fun RuntimeInstallDialog(
+private fun BundledRuntimeInstallDialog(
+    bundledRuntimes: List<RuntimeInstaller.BundledRuntime>,
+    installedRuntimes: List<Runtime>,
     onDismiss: () -> Unit,
-    onInstall: (RuntimeInstaller.RuntimeDownload) -> Unit
+    onInstall: (RuntimeInstaller.BundledRuntime) -> Unit
 ) {
-    val availableRuntimes = remember { RuntimeInstaller.getCompatibleRuntimes() }
+    val installedNames = installedRuntimes.map { it.name }.toSet()
+    val availableRuntimes = bundledRuntimes.filter { it.name !in installedNames }
     
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("安装 Java 运行时") },
+        title = { Text("安装内置运行时") },
         text = {
-            LazyColumn(
-                modifier = Modifier.height(300.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                items(availableRuntimes) { runtime ->
-                    Card(
-                        modifier = Modifier.fillMaxWidth(),
-                        onClick = { onInstall(runtime) }
-                    ) {
-                        Column(
-                            modifier = Modifier.padding(12.dp),
-                            verticalArrangement = Arrangement.spacedBy(4.dp)
+            if (availableRuntimes.isEmpty()) {
+                Text("所有兼容的内置运行时都已安装。")
+            } else {
+                LazyColumn(
+                    modifier = Modifier.height(300.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    items(availableRuntimes) { runtime ->
+                        Card(
+                            modifier = Modifier.fillMaxWidth(),
+                            onClick = { onInstall(runtime) }
                         ) {
-                            Text(
-                                text = runtime.displayName,
-                                style = MaterialTheme.typography.titleSmall
-                            )
-                            Text(
-                                text = runtime.description,
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                            Text(
-                                text = "大小: ${formatSize(runtime.size)}",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
+                            Column(
+                                modifier = Modifier.padding(12.dp),
+                                verticalArrangement = Arrangement.spacedBy(4.dp)
+                            ) {
+                                Text(
+                                    text = runtime.displayName,
+                                    style = MaterialTheme.typography.titleSmall
+                                )
+                                Text(
+                                    text = runtime.description,
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                                Text(
+                                    text = "预计大小: ${formatSize(runtime.estimatedSize)}",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
                         }
                     }
                 }
@@ -320,7 +424,7 @@ private fun RuntimeInstallDialog(
         },
         confirmButton = {
             TextButton(onClick = onDismiss) {
-                Text("取消")
+                Text("关闭")
             }
         }
     )

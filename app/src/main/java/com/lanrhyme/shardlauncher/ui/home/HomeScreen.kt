@@ -235,7 +235,7 @@ fun HomeScreen(
                             // 可选：同时设置为当前版本
                             VersionsManager.saveCurrentVersion(version.getVersionName())
                         },
-                        modifier = Modifier.fillMaxWidth(0.8f)
+                        modifier = Modifier.fillMaxWidth(1f)
                     )
                     
                     Spacer(modifier = Modifier.height(16.dp))
@@ -264,7 +264,7 @@ fun HomeScreen(
                                 }
                             }
                         },
-                        modifier = Modifier.fillMaxWidth(0.8f),
+                        modifier = Modifier.fillMaxWidth(1f),
                         text = if (selectedVersionForLaunch != null && selectedAccount != null) "启动游戏" else "无法启动",
                         enabled = selectedVersionForLaunch != null && selectedAccount != null
                     )

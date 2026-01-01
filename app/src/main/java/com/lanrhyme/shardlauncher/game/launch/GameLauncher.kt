@@ -182,7 +182,7 @@ class GameLauncher(
         val renderer = Renderers.getCurrentRenderer()
         LoggerBridge.appendTitle("Launch Minecraft")
         LoggerBridge.append("Info: Launcher version: ${BuildConfig.VERSION_NAME}")
-        LoggerBridge.append("Info: Architecture: ${Architecture.archAsString()}")
+        LoggerBridge.append("Info: Architecture: ${Architecture.archAsString(Architecture.getDeviceArchitecture())}")
         LoggerBridge.append("Info: Renderer: ${renderer.getRendererName()}")
         LoggerBridge.append("Info: Selected Minecraft version: ${version.getVersionName()}")
         LoggerBridge.append("Info: Game Path: ${version.getGameDir().absolutePath} (Isolation: ${version.isIsolation()})")

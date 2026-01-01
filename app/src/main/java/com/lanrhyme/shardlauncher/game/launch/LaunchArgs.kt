@@ -22,7 +22,7 @@ import com.lanrhyme.shardlauncher.game.version.remote.MinecraftVersionJson
 import com.lanrhyme.shardlauncher.path.LibPath
 import com.lanrhyme.shardlauncher.path.PathManager
 import com.lanrhyme.shardlauncher.utils.logging.Logger
-import com.lanrhyme.shardlauncher.utils.string.insertJSONValueList
+import com.lanrhyme.shardlauncher.utils.json.insertJSONValueList
 import com.lanrhyme.shardlauncher.utils.string.toUnicodeEscaped
 import com.lanrhyme.shardlauncher.utils.network.ServerAddress
 import java.io.File
@@ -162,7 +162,8 @@ class LaunchArgs(
             ?.toTypedArray()
             ?: emptyArray()
 
-        val replacedArgs = insertJSONValueList(jvmArgs, varArgMap)
+        val allArgs = jvmArgs.toList() + varArgMap.keys.toList()
+        val replacedArgs = insertJSONValueList(*allArgs.toTypedArray())
         return if (hasClasspath) {
             replacedArgs
         } else {
@@ -239,12 +240,12 @@ class LaunchArgs(
             game?.forEach { if (it.isJsonPrimitive && it.asJsonPrimitive.isString) minecraftArgs.add(it.asString) }
         }
 
-        return insertJSONValueList(
-            splitAndFilterEmpty(
-                gameManifest.minecraftArguments ?:
-                minecraftArgs.toTypedArray().joinToString(" ")
-            ), varArgMap
+        val baseArgs = splitAndFilterEmpty(
+            gameManifest.minecraftArguments ?:
+            minecraftArgs.toTypedArray().joinToString(" ")
         )
+        val allArgs = baseArgs.toList() + varArgMap.keys.toList()
+        return insertJSONValueList(*allArgs.toTypedArray())
     }
 
     private fun setLauncherInfo(verArgMap: MutableMap<String, String>) {

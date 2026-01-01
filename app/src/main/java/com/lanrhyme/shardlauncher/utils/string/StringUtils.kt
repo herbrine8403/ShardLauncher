@@ -1,61 +1,80 @@
 /*
  * Shard Launcher
  * Adapted from Zalith Launcher 2
+ * Copyright (C) 2025 MovTery <movtery228@qq.com> and contributors
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/gpl-3.0.txt>.
  */
 
 package com.lanrhyme.shardlauncher.utils.string
 
 /**
- * Insert JSON value list with variable replacement
+ * 比较版本号
  */
-fun insertJSONValueList(args: Array<String>, varArgMap: Map<String, String>): Array<String> {
-    return args.map { arg ->
-        var result = arg
-        varArgMap.forEach { (key, value) ->
-            result = result.replace("\${$key}", value)
+fun String.compareVersions(other: String): Int {
+    val thisParts = this.split(".")
+    val otherParts = other.split(".")
+    val maxLength = maxOf(thisParts.size, otherParts.size)
+    
+    for (i in 0 until maxLength) {
+        val thisPart = thisParts.getOrNull(i)?.toIntOrNull() ?: 0
+        val otherPart = otherParts.getOrNull(i)?.toIntOrNull() ?: 0
+        
+        when {
+            thisPart < otherPart -> return -1
+            thisPart > otherPart -> return 1
         }
-        result
-    }.toTypedArray()
+    }
+    return 0
 }
 
 /**
- * Check if string is not empty or blank
+ * 从字符串中提取指定前缀后到指定字符之间的内容
+ */
+fun String.extractUntilCharacter(prefix: String, endChar: Char): String? {
+    val startIndex = this.indexOf(prefix)
+    if (startIndex == -1) return null
+    
+    val contentStart = startIndex + prefix.length
+    val endIndex = this.indexOf(endChar, contentStart)
+    if (endIndex == -1) return null
+    
+    return this.substring(contentStart, endIndex)
+}
+/**
+ * 检查字符串是否不为空且不为空白
  */
 fun String?.isNotEmptyOrBlank(): Boolean {
     return !this.isNullOrBlank()
 }
 
 /**
- * Check if version is lower than another
+ * 检查字符串是否为空或空白
  */
-fun String.isVersionLowerThan(other: String): Boolean {
-    val thisParts = this.split(".").map { it.toIntOrNull() ?: 0 }
-    val otherParts = other.split(".").map { it.toIntOrNull() ?: 0 }
-    
-    val maxLength = maxOf(thisParts.size, otherParts.size)
-    
-    for (i in 0 until maxLength) {
-        val thisPart = thisParts.getOrNull(i) ?: 0
-        val otherPart = otherParts.getOrNull(i) ?: 0
-        
-        when {
-            thisPart < otherPart -> return true
-            thisPart > otherPart -> return false
-        }
-    }
-    
-    return false
+fun String?.isEmptyOrBlank(): Boolean {
+    return this.isNullOrBlank()
 }
 
 /**
- * Check if string equals another (case sensitive)
+ * 获取异常的消息或toString
  */
-fun String.isStringEqualTo(other: String): Boolean {
-    return this == other
+fun Throwable.getMessageOrToString(): String {
+    return this.message ?: this.toString()
 }
 
 /**
- * Convert string to Unicode escaped format
+ * 将字符串转换为Unicode转义
  */
 fun String.toUnicodeEscaped(): String {
     return this.map { char ->
@@ -66,22 +85,3 @@ fun String.toUnicodeEscaped(): String {
         }
     }.joinToString("")
 }
-
-/**
- * Check if string is empty or blank
- */
-fun String?.isEmptyOrBlank(): Boolean {
-    return this.isNullOrBlank()
-}
-
-/**
- * Get message or toString for exceptions
- */
-fun Throwable.getMessageOrToString(): String {
-    return this.message ?: this.toString()
-}
-
-/**
- * Get string not null - return empty string if null
- */
-fun getStringNotNull(string: String?): String = string ?: ""

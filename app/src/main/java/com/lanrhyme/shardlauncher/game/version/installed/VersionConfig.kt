@@ -27,7 +27,6 @@ import com.lanrhyme.shardlauncher.utils.GSON
 import com.lanrhyme.shardlauncher.utils.logging.Logger.lError
 import com.lanrhyme.shardlauncher.utils.logging.Logger.lInfo
 import com.lanrhyme.shardlauncher.utils.json.*
-import com.lanrhyme.shardlauncher.utils.string.getStringNotNull
 import java.io.File
 import java.io.FileWriter
 
@@ -289,3 +288,8 @@ enum class SettingState(val textRes: Int) {
 }
 
 private fun getSettingStateNotNull(type: SettingState?) = type ?: SettingState.FOLLOW_GLOBAL
+
+/**
+ * Get string value, return empty string if null
+ */
+private fun getStringNotNull(value: String?) = value ?: ""

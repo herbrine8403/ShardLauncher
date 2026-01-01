@@ -20,3 +20,10 @@ fun JsonObject.getStringNotNull(key: String): String {
 fun JsonObject.getStringOrDefault(key: String, default: String = ""): String {
     return this.get(key)?.asString ?: default
 }
+
+/**
+ * 插入JSON值列表
+ */
+fun insertJSONValueList(vararg values: String): Array<String> {
+    return values.toList().toTypedArray()
+}

@@ -1,30 +1,52 @@
 /*
  * Shard Launcher
  * Adapted from Zalith Launcher 2
+ * Copyright (C) 2025 MovTery <movtery228@qq.com> and contributors
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/gpl-3.0.txt>.
  */
 
 package com.lanrhyme.shardlauncher.utils.logging
 
-import android.content.Context
 import android.util.Log
 
-/**
- * Logging utilities
- */
 object Logger {
     private const val TAG = "ShardLauncher"
 
-    fun initialize(context: Context) {
-        // Initialize logging system
-        lInfo("Logger initialized")
+    fun d(tag: String, message: String) {
+        Log.d("$TAG-$tag", message)
     }
 
-    fun lDebug(message: String, throwable: Throwable? = null) {
-        Log.d(TAG, message, throwable)
+    fun i(tag: String, message: String) {
+        Log.i("$TAG-$tag", message)
     }
 
-    fun lInfo(message: String, throwable: Throwable? = null) {
-        Log.i(TAG, message, throwable)
+    fun w(tag: String, message: String) {
+        Log.w("$TAG-$tag", message)
+    }
+
+    fun e(tag: String, message: String, throwable: Throwable? = null) {
+        Log.e("$TAG-$tag", message, throwable)
+    }
+
+    // Legacy methods for compatibility
+    fun lDebug(message: String) {
+        Log.d(TAG, message)
+    }
+
+    fun lInfo(message: String) {
+        Log.i(TAG, message)
     }
 
     fun lWarning(message: String, throwable: Throwable? = null) {

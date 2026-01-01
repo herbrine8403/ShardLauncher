@@ -11,7 +11,6 @@ class ShardLauncherApp : Application() {
     override fun onCreate() {
         super.onCreate()
         com.lanrhyme.shardlauncher.path.PathManager.refreshPaths(this)
-        com.lanrhyme.shardlauncher.utils.logging.Logger.initialize(this)
         setCrashHandler()
     }
 

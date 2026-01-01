@@ -20,94 +20,52 @@
 package com.lanrhyme.shardlauncher.game.multirt
 
 import com.lanrhyme.shardlauncher.path.PathManager
+import com.lanrhyme.shardlauncher.utils.file.FileUtils
+import com.lanrhyme.shardlauncher.utils.logging.Logger
+import com.lanrhyme.shardlauncher.utils.string.compareVersions
+import com.lanrhyme.shardlauncher.utils.string.extractUntilCharacter
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ensureActive
+import kotlinx.coroutines.withContext
+import org.apache.commons.compress.archivers.tar.TarArchiveInputStream
+import org.apache.commons.compress.compressors.xz.XZCompressorInputStream
+import org.apache.commons.io.IOUtils
 import java.io.File
+import java.io.FileOutputStream
+import java.io.IOException
+import java.io.InputStream
+import java.util.concurrent.ConcurrentHashMap
 
+/**
+ * [Modified from PojavLauncher](https://github.com/PojavLauncherTeam/PojavLauncher/blob/v3_openjdk/app_pojavlauncher/src/main/java/net/kdt/pojavlaunch/multirt/MultiRTUtils.java)
+ */
 object RuntimesManager {
-    fun getRuntimeHome(runtimeName: String): File {
-        return File(PathManager.DIR_MULTIRT, runtimeName)
-    }
+    private val cache = ConcurrentHashMap<String, Runtime>()
 
-    fun isJDK8(runtimePath: String): Boolean {
-        // Check if the runtime is JDK 8 by looking for jre subdirectory
-        val jreDir = File(runtimePath, "jre")
-        return jreDir.exists() && jreDir.isDirectory
-    }
+    private val RUNTIME_FOLDER = PathManager.DIR_MULTIRT
+    private const val JAVA_VERSION_STR: String = "JAVA_VERSION=\""
+    private const val OS_ARCH_STR: String = "OS_ARCH=\""
 
-    /**
-     * Get runtime by name
-     */
-    fun getRuntime(name: String): Runtime {
-        val runtimeHome = getRuntimeHome(name)
-        val isJDK8 = isJDK8(runtimeHome.absolutePath)
-        
-        return Runtime(
-            name = name,
-            versionString = null,
-            arch = System.getProperty("os.arch"),
-            javaVersion = if (isJDK8) 8 else 17,
-            isJDK8 = isJDK8
-        )
-    }
-
-    /**
-     * Get default runtime for Java version
-     */
-    fun getDefaultRuntime(javaVersion: Int): Runtime? {
-        val runtimesDir = PathManager.DIR_MULTIRT
-        runtimesDir.listFiles()?.let { runtimes ->
-            for (runtime in runtimes) {
-                val isJDK8 = isJDK8(runtime.absolutePath)
-                val runtimeJavaVersion = if (isJDK8) 8 else 17
-                
-                if (runtimeJavaVersion >= javaVersion) {
-                    return Runtime(
-                        name = runtime.name,
-                        versionString = null,
-                        arch = System.getProperty("os.arch"),
-                        javaVersion = runtimeJavaVersion,
-                        isJDK8 = isJDK8
-                    )
-                }
-            }
-        }
-        return null
-    }
-
-    /**
-     * Get all detected runtimes
-     */
-    fun getRuntimes(): List<Runtime> {
-        val runtimes = mutableListOf<Runtime>()
-        val runtimesDir = PathManager.DIR_MULTIRT
-        
-        if (!runtimesDir.exists()) {
+    fun getRuntimes(forceLoad: Boolean = false): List<Runtime> {
+        if (!RUNTIME_FOLDER.exists()) {
+            Logger.w("RuntimesManager", "Runtime directory not found: ${RUNTIME_FOLDER.absolutePath}")
             return emptyList()
         }
-        
-        runtimesDir.listFiles()?.forEach { file ->
-            if (file.isDirectory) {
-                runtimes.add(Runtime(
-                    name = file.name,
-                    versionString = null,
-                    arch = System.getProperty("os.arch"),
-                    javaVersion = if (isJDK8(file.absolutePath)) 8 else 17,
-                    isJDK8 = isJDK8(file.absolutePath)
-                ))
+
+        return RUNTIME_FOLDER.listFiles()
+            ?.filter { it.isDirectory }
+            ?.mapNotNull { loadRuntime(it.name, forceLoad = forceLoad) }
+            ?.sortedWith { o1, o2 ->
+                val thisVer = o1.versionString ?: o1.name
+                -thisVer.compareVersions(o2.versionString ?: o2.name)
             }
-        }
-        return runtimes.sortedBy { it.name }
+            ?: throw IllegalStateException("Failed to access runtime directory")
     }
 
-    /**
-     * Get exact runtime by Java version
-     */
     fun getExactJreName(majorVersion: Int): String? {
         return getRuntimes().firstOrNull { it.javaVersion == majorVersion }?.name
     }
 
-    /**
-     * Get nearest runtime by Java version (finds the closest higher version)
-     */
     fun getNearestJreName(majorVersion: Int): String? {
         val runtimes = getRuntimes()
         return runtimes
@@ -115,140 +73,225 @@ object RuntimesManager {
             .minByOrNull { it.javaVersion }?.name
     }
 
-    /**
-     * Load runtime with caching support
-     */
-    fun loadRuntime(name: String): Runtime {
-        return if (name.isEmpty()) {
-            Runtime("", null, null, 0, false)
-        } else {
-            getRuntime(name)
+    fun getRuntime(name: String): Runtime {
+        return loadRuntime(name)
+    }
+
+    fun getDefaultRuntime(javaVersion: Int): Runtime? {
+        val runtimes = getRuntimes()
+        return runtimes
+            .filter { it.javaVersion >= javaVersion }
+            .minByOrNull { it.javaVersion }
+    }
+
+    fun loadRuntime(name: String, forceLoad: Boolean = false): Runtime {
+        return cache[name]?.takeIf { !forceLoad } ?: run {
+            val runtimeDir = File(RUNTIME_FOLDER, name)
+            val releaseFile = File(runtimeDir, "release")
+
+            if (!releaseFile.exists()) return Runtime(name).also { cache[name] = it }
+
+            runCatching {
+                val content = releaseFile.readText()
+                val javaVersion = content.extractUntilCharacter(JAVA_VERSION_STR, '"')
+                val osArch = content.extractUntilCharacter(OS_ARCH_STR, '"')
+
+                if (javaVersion != null && osArch != null) {
+                    val versionParts = javaVersion.split('.')
+                    val majorVersion = if (versionParts.first() == "1") {
+                        versionParts.getOrNull(1)?.toIntOrNull() ?: 0
+                    } else {
+                        versionParts.first().toIntOrNull() ?: 0
+                    }
+
+                    Runtime(
+                        name = name,
+                        versionString = javaVersion,
+                        arch = osArch,
+                        javaVersion = majorVersion,
+                        isJDK8 = isJDK8(runtimeDir.absolutePath)
+                    )
+                } else {
+                    Runtime(name)
+                }
+            }.onFailure { e ->
+                Logger.e("RuntimesManager", "Failed to load runtime $name", e)
+            }.getOrElse {
+                Runtime(name)
+            }.also { cache[name] = it }
         }
     }
 
-    /**
-     * Install runtime from input stream
-     */
+    @Throws(IOException::class)
     suspend fun installRuntime(
-        inputStream: java.io.InputStream,
+        inputStream: InputStream,
         name: String,
         updateProgress: (Int, Array<Any>) -> Unit = { _, _ -> }
-    ): Runtime = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
-        val dest = File(PathManager.DIR_MULTIRT, name)
+    ): Runtime = withContext(Dispatchers.IO) {
+        val dest = File(RUNTIME_FOLDER, name)
         try {
-            if (dest.exists()) {
-                deleteDirectory(dest)
-            }
-            dest.mkdirs()
-            
-            // Extract tar.xz archive
+            if (dest.exists()) FileUtils.deleteDirectory(dest)
             uncompressTarXZ(inputStream, dest, updateProgress)
-            
-            // Post-process the runtime
-            postPrepare(name)
-            
-            getRuntime(name)
-        } catch (e: Exception) {
-            if (dest.exists()) {
-                deleteDirectory(dest)
+            unpack200(PathManager.DIR_NATIVE_LIB, dest.absolutePath)
+            loadRuntime(name).also { runtime ->
+                postPrepare(runtime)
             }
+        } catch (e: Exception) {
+            FileUtils.deleteDirectory(dest)
             throw e
         }
     }
 
-    /**
-     * Remove runtime by name
-     */
-    fun removeRuntime(name: String) {
-        val dest = File(PathManager.DIR_MULTIRT, name)
-        if (dest.exists()) {
-            deleteDirectory(dest)
-        }
-    }
-
-    /**
-     * Delete directory recursively
-     */
-    private fun deleteDirectory(dir: File): Boolean {
-        if (dir.isDirectory) {
-            dir.listFiles()?.forEach { child ->
-                deleteDirectory(child)
-            }
-        }
-        return dir.delete()
-    }
-
-    /**
-     * Post-process runtime after installation
-     */
-    private suspend fun postPrepare(name: String) = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
-        val dest = File(PathManager.DIR_MULTIRT, name)
+    @Throws(IOException::class)
+    suspend fun postPrepare(name: String) = withContext(Dispatchers.IO) {
+        val dest = File(RUNTIME_FOLDER, name)
         if (!dest.exists()) return@withContext
-        
-        val runtime = getRuntime(name)
+        val runtime = loadRuntime(name)
+        postPrepare(runtime)
+    }
+
+    @Throws(IOException::class)
+    suspend fun postPrepare(runtime: Runtime) = withContext(Dispatchers.IO) {
+        val dest = File(RUNTIME_FOLDER, runtime.name)
+        if (!dest.exists()) return@withContext
         var libFolder = "lib"
-        
+
         val arch = runtime.arch
         if (arch != null && File(dest, "$libFolder/$arch").exists()) {
             libFolder += "/$arch"
         }
-        
-        val isJDK8Runtime = isJDK8(dest.absolutePath)
-        if (isJDK8Runtime) {
+
+        val isJDK8 = isJDK8(dest.absolutePath)
+        if (isJDK8) {
             libFolder = "jre/$libFolder"
         }
-        
-        // Handle freetype library
+
         val ftIn = File(dest, "$libFolder/libfreetype.so.6")
         val ftOut = File(dest, "$libFolder/libfreetype.so")
         if (ftIn.exists() && (!ftOut.exists() || ftIn.length() != ftOut.length())) {
-            ftIn.renameTo(ftOut)
+            if (!ftIn.renameTo(ftOut)) throw IOException("Failed to rename freetype")
+        }
+
+        val ft2In = File(dest, "$libFolder/libfreetype.so")
+        if (isJDK8 && ft2In.exists()) {
+            ft2In.renameTo(ftOut)
+        }
+
+        val localXawtLib = File(PathManager.DIR_NATIVE_LIB, "libawt_xawt.so")
+        val targetXawtLib = File(dest, "$libFolder/libawt_xawt.so")
+        if (localXawtLib.exists()) {
+            if (targetXawtLib.exists()) targetXawtLib.delete()
+            FileUtils.copyFile(localXawtLib, targetXawtLib)
         }
     }
 
-    /**
-     * Uncompress tar.xz archive
-     */
-    private suspend fun uncompressTarXZ(
-        inputStream: java.io.InputStream,
-        destDir: File,
-        updateProgress: (Int, Array<Any>) -> Unit
-    ) = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+    fun loadInternalRuntimeVersion(name: String): String? {
+        val versionFile = File(RUNTIME_FOLDER, name).resolve("version")
         try {
-            val xzInputStream = org.apache.commons.compress.compressors.xz.XZCompressorInputStream(inputStream)
-            val tarInputStream = org.apache.commons.compress.archivers.tar.TarArchiveInputStream(xzInputStream)
-            
-            var entry = tarInputStream.nextTarEntry
-            var processedEntries = 0
-            
-            while (entry != null) {
-                val outputFile = File(destDir, entry.name)
-                
-                if (entry.isDirectory) {
-                    outputFile.mkdirs()
-                } else {
-                    outputFile.parentFile?.mkdirs()
-                    outputFile.outputStream().use { output ->
-                        tarInputStream.copyTo(output)
-                    }
-                    
-                    // Set executable permissions if needed
-                    if (entry.mode and 0x49 != 0) { // Check if executable
-                        outputFile.setExecutable(true)
-                    }
-                }
-                
-                processedEntries++
-                if (processedEntries % 10 == 0) {
-                    updateProgress(processedEntries, arrayOf(entry.name))
-                }
-                
-                entry = tarInputStream.nextTarEntry
+            return if (versionFile.exists()) {
+                versionFile.readText()
+            } else {
+                null
             }
-            
-            tarInputStream.close()
-        } catch (e: Exception) {
-            throw RuntimeException("Failed to extract runtime archive", e)
+        } catch (_: IOException) {
+            return null
         }
+    }
+
+    @Throws(IOException::class)
+    fun removeRuntime(name: String) {
+        val dest: File = File(RUNTIME_FOLDER, name).takeIf { it.exists() } ?: return
+        FileUtils.deleteDirectory(dest)
+        cache.remove(name)
+    }
+
+    fun getRuntimeHome(name: String): File {
+        val dest = File(RUNTIME_FOLDER, name)
+        if (!dest.exists() || loadRuntime(name, forceLoad = true).versionString == null) {
+            throw RuntimeException("Selected runtime is broken!")
+        }
+        return dest
+    }
+
+    fun forceReload(name: String): Runtime {
+        cache.remove(name)
+        return loadRuntime(name)
+    }
+
+    /**
+     * Unpacks all .pack files into .jar Serves only for java 8, as java 9 brought project jigsaw
+     * @param nativeLibraryDir The native lib path, required to execute the unpack200 binary
+     * @param runtimePath The path to the runtime to walk into
+     */
+    private suspend fun unpack200(
+        nativeLibraryDir: String,
+        runtimePath: String
+    ) = withContext(Dispatchers.Default) {
+        val basePath = File(runtimePath)
+        val files: Collection<File> = FileUtils.listFiles(basePath, arrayOf("pack"), true)
+
+        if (files.isEmpty()) return@withContext
+
+        val workDir = File(nativeLibraryDir)
+        val unpack200Binary = File(workDir, "libunpack200.so")
+        
+        if (!unpack200Binary.exists()) {
+            Logger.w("RuntimesManager", "unpack200 binary not found, skipping .pack files")
+            return@withContext
+        }
+
+        val processBuilder = ProcessBuilder().directory(workDir)
+
+        files.forEach { jarFile ->
+            ensureActive()
+            runCatching {
+                val destPath = jarFile.absolutePath.replace(".pack", "")
+                processBuilder.command(
+                    "./libunpack200.so",
+                    "-r",
+                    jarFile.absolutePath,
+                    destPath
+                ).start().apply {
+                    waitFor()
+                }
+            }.onFailure { e ->
+                if (e is IOException) {
+                    Logger.e("RuntimesManager", "Failed to unpack the runtime!", e)
+                } else throw e
+            }
+        }
+    }
+
+    @Throws(IOException::class)
+    private suspend fun uncompressTarXZ(
+        inputStream: InputStream,
+        dest: File,
+        updateProgress: (Int, Array<Any>) -> Unit = { _, _ -> }
+    ) = withContext(Dispatchers.IO) {
+        dest.mkdirs()
+        val buffer = ByteArray(8192)
+
+        TarArchiveInputStream(XZCompressorInputStream(inputStream)).use { tarIn ->
+            generateSequence { tarIn.nextEntry }.forEach { tarEntry ->
+                ensureActive()
+                val tarEntryName = tarEntry.name
+                updateProgress(0, arrayOf(tarEntryName))
+
+                val destPath = File(dest, tarEntryName)
+                destPath.parentFile?.mkdirs()
+
+                when {
+                    tarEntry.isDirectory -> destPath.mkdirs()
+                    !destPath.exists() || destPath.length() != tarEntry.size ->
+                        FileOutputStream(destPath).use { os ->
+                            IOUtils.copyLarge(tarIn, os, buffer)
+                        }
+                }
+            }
+        }
+    }
+
+    fun isJDK8(runtimeDir: String): Boolean {
+        return File(runtimeDir, "jre").exists() && File(runtimeDir, "bin/javac").exists()
     }
 }

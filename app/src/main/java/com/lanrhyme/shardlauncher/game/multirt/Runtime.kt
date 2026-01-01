@@ -19,12 +19,14 @@
 
 package com.lanrhyme.shardlauncher.game.multirt
 
+import com.lanrhyme.shardlauncher.utils.device.Architecture
+
 data class Runtime(
     val name: String,
-    val versionString: String?,
-    val arch: String?,
-    val javaVersion: Int,
-    val isJDK8: Boolean
+    val versionString: String? = null,
+    val arch: String? = null,
+    val javaVersion: Int = 0,
+    val isJDK8: Boolean = false
 ) {
     constructor(name: String) : this(
         name = name,
@@ -33,4 +35,18 @@ data class Runtime(
         javaVersion = 0,
         isJDK8 = false
     )
+
+    fun isCompatible(): Boolean {
+        if (versionString == null || arch == null) return false
+        val deviceArch = Architecture.getDeviceArchitecture()
+        return deviceArch == Architecture.archAsInt(arch)
+    }
+
+    fun getDisplayName(): String {
+        return if (versionString != null) {
+            "$name (Java $javaVersion)"
+        } else {
+            name
+        }
+    }
 }

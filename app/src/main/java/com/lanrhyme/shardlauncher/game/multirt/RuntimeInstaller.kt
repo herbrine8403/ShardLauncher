@@ -6,6 +6,7 @@
 package com.lanrhyme.shardlauncher.game.multirt
 
 import android.content.Context
+import com.lanrhyme.shardlauncher.utils.device.Architecture
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.File
@@ -87,13 +88,13 @@ object RuntimeInstaller {
      * Get compatible runtimes for current device
      */
     fun getCompatibleRuntimes(): List<RuntimeDownload> {
-        val deviceArch = android.os.Build.SUPPORTED_ABIS[0]
+        val deviceArch = Architecture.getDeviceArchitecture()
         return getAvailableRuntimes().filter { runtime ->
             when (deviceArch) {
-                "arm64-v8a" -> runtime.architecture == "arm64-v8a"
-                "armeabi-v7a" -> runtime.architecture == "armeabi-v7a"
-                "x86_64" -> runtime.architecture == "x86_64"
-                "x86" -> runtime.architecture == "x86"
+                Architecture.ARCH_ARM64 -> runtime.architecture == "arm64-v8a"
+                Architecture.ARCH_ARM -> runtime.architecture == "armeabi-v7a"
+                Architecture.ARCH_X86_64 -> runtime.architecture == "x86_64"
+                Architecture.ARCH_X86 -> runtime.architecture == "x86"
                 else -> false
             }
         }

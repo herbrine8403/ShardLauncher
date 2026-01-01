@@ -62,3 +62,55 @@ fun formatFileSize(bytes: Long): String {
 fun java.io.InputStream.readString(): String {
     return this.bufferedReader(Charsets.UTF_8).use { it.readText() }
 }
+/**
+ * File utilities object with static methods
+ */
+object FileUtils {
+    /**
+     * Delete directory recursively
+     */
+    fun deleteDirectory(directory: File): Boolean {
+        if (!directory.exists()) return true
+        
+        if (directory.isDirectory) {
+            directory.listFiles()?.forEach { child ->
+                deleteDirectory(child)
+            }
+        }
+        return directory.delete()
+    }
+
+    /**
+     * Copy file from source to destination
+     */
+    fun copyFile(source: File, destination: File) {
+        if (!source.exists()) throw IllegalArgumentException("Source file does not exist: ${source.absolutePath}")
+        
+        destination.parentFile?.mkdirs()
+        source.copyTo(destination, overwrite = true)
+    }
+
+    /**
+     * List files with specific extensions recursively
+     */
+    fun listFiles(directory: File, extensions: Array<String>, recursive: Boolean): Collection<File> {
+        val result = mutableListOf<File>()
+        
+        if (!directory.exists() || !directory.isDirectory) {
+            return result
+        }
+        
+        directory.listFiles()?.forEach { file ->
+            when {
+                file.isFile && extensions.any { ext -> file.name.endsWith(".$ext") } -> {
+                    result.add(file)
+                }
+                file.isDirectory && recursive -> {
+                    result.addAll(listFiles(file, extensions, recursive))
+                }
+            }
+        }
+        
+        return result
+    }
+}

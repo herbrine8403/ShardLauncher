@@ -94,6 +94,8 @@ class VersionConfig(
     var enableTouchProxy: Boolean = false
     @SerializedName("touchVibrateDuration")
     var touchVibrateDuration: Int = 100
+    @SerializedName("lastLaunchTime")
+    var lastLaunchTime: Long = 0L
 
     constructor(
         filePath: File,
@@ -110,7 +112,8 @@ class VersionConfig(
         serverIp: String = "",
         ramAllocation: Int = -1,
         enableTouchProxy: Boolean = false,
-        touchVibrateDuration: Int = 100
+        touchVibrateDuration: Int = 100,
+        lastLaunchTime: Long = 0L
     ) : this(filePath) {
         this.isolationType = isolationType
         this.skipGameIntegrityCheck = skipGameIntegrityCheck
@@ -126,6 +129,7 @@ class VersionConfig(
         this.ramAllocation = ramAllocation
         this.enableTouchProxy = enableTouchProxy
         this.touchVibrateDuration = touchVibrateDuration
+        this.lastLaunchTime = lastLaunchTime
     }
 
     fun copy(): VersionConfig = VersionConfig(
@@ -143,7 +147,8 @@ class VersionConfig(
         getStringNotNull(serverIp),
         ramAllocation,
         enableTouchProxy,
-        touchVibrateDuration
+        touchVibrateDuration,
+        lastLaunchTime
     )
 
     fun save() {
@@ -179,6 +184,11 @@ class VersionConfig(
     // TODO: Implement settings
     fun skipGameIntegrityCheck(): Boolean = skipGameIntegrityCheck.toBoolean(com.lanrhyme.shardlauncher.settings.AllSettings.skipGameIntegrityCheck.state)
 
+    fun updateLastLaunchTime() {
+        lastLaunchTime = System.currentTimeMillis()
+        save()
+    }
+
     private fun SettingState.toBoolean(global: Boolean) = when(getSettingStateNotNull(this)) {
         SettingState.FOLLOW_GLOBAL -> global
         SettingState.ENABLE -> true
@@ -204,6 +214,7 @@ class VersionConfig(
             writeInt(ramAllocation)
             writeInt(if (enableTouchProxy) 1 else 0)
             writeInt(touchVibrateDuration)
+            writeLong(lastLaunchTime)
         }
     }
 
@@ -224,6 +235,7 @@ class VersionConfig(
             val ramAllocation = parcel.readInt()
             val enableTouchProxy = parcel.readInt() == 1
             val touchVibrateDuration = parcel.readInt()
+            val lastLaunchTime = parcel.readLong()
 
             return VersionConfig(
                 versionPath,
@@ -240,7 +252,8 @@ class VersionConfig(
                 serverIp,
                 ramAllocation,
                 enableTouchProxy,
-                touchVibrateDuration
+                touchVibrateDuration,
+                lastLaunchTime
             )
         }
 
@@ -284,7 +297,11 @@ class VersionConfig(
 enum class SettingState(val textRes: Int) {
     FOLLOW_GLOBAL(R.string.generic_follow_global),
     ENABLE(R.string.generic_enable),
-    DISABLE(R.string.generic_disable)
+    DISABLE(R.string.generic_disable);
+    
+    fun isEnabled(): Boolean {
+        return this == ENABLE
+    }
 }
 
 private fun getSettingStateNotNull(type: SettingState?) = type ?: SettingState.FOLLOW_GLOBAL

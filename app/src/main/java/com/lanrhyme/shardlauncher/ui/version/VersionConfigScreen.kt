@@ -1,390 +1,155 @@
 package com.lanrhyme.shardlauncher.ui.version
 
-import android.os.Build
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
-import androidx.compose.material3.ExposedDropdownMenuAnchorType
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.lanrhyme.shardlauncher.game.version.installed.SettingState
 import com.lanrhyme.shardlauncher.game.version.installed.Version
 import com.lanrhyme.shardlauncher.game.version.installed.VersionConfig
-import com.lanrhyme.shardlauncher.ui.components.LocalCardLayoutConfig
-import dev.chrisbanes.haze.hazeEffect
+import com.lanrhyme.shardlauncher.ui.components.*
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun VersionConfigScreen(
-        version: Version,
-        config: VersionConfig,
-        onConfigChange: (VersionConfig) -> Unit,
-        onSave: () -> Unit
+    version: Version,
+    config: VersionConfig,
+    onConfigChange: (VersionConfig) -> Unit,
+    onSave: () -> Unit,
+    onError: (String) -> Unit
 ) {
-        val (isCardBlurEnabled, cardAlpha, hazeState) = LocalCardLayoutConfig.current
-        val context = LocalContext.current
-        val cardShape = RoundedCornerShape(16.dp)
-        var currentConfig by remember(config) { mutableStateOf(config.copy()) }
+    val context = LocalContext.current
+    var showSaveDialog by remember { mutableStateOf(false) }
 
-        // Helper to update config and trigger callback
-        fun updateConfig(update: VersionConfig.() -> Unit) {
-                val newConfig = currentConfig.copy()
-                newConfig.update()
-                currentConfig = newConfig
-                onConfigChange(newConfig)
-        }
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState())
+            .padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        // 版本设置标题
+        Text(
+            text = "版本设置",
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.primary,
+            modifier = Modifier.padding(horizontal = 8.dp)
+        )
 
-        LazyColumn(
-                modifier = Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(16.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-                item {
-                        Text(
-                                text = "版本设置: ${version.getVersionName()}", // TODO: i18n
-                                style = MaterialTheme.typography.titleMedium,
-                                color = MaterialTheme.colorScheme.primary
-                        )
+        // 版本隔离
+        SwitchLayout(
+            checked = config.isolationType == com.lanrhyme.shardlauncher.game.version.installed.SettingState.ENABLE,
+            onCheckedChange = {
+                config.isolationType = if (config.isolationType == com.lanrhyme.shardlauncher.game.version.installed.SettingState.ENABLE) {
+                    com.lanrhyme.shardlauncher.game.version.installed.SettingState.DISABLE
+                } else {
+                    com.lanrhyme.shardlauncher.game.version.installed.SettingState.ENABLE
                 }
+                onConfigChange(config)
+            },
+            title = "版本隔离",
+            summary = "为此版本创建独立的游戏目录"
+        )
 
-                // Isolation
-                item {
-                        var expanded by remember { mutableStateOf(false) }
-                        Card(
-                                modifier =
-                                        Modifier.fillMaxWidth()
-                                                .then(
-                                                        if (isCardBlurEnabled &&
-                                                                        Build.VERSION.SDK_INT >=
-                                                                                Build.VERSION_CODES
-                                                                                        .S
-                                                        ) {
-                                                                Modifier.clip(cardShape)
-                                                                        .hazeEffect(
-                                                                                state = hazeState
-                                                                        )
-                                                        } else Modifier
-                                                ),
-                                shape = cardShape,
-                                colors =
-                                        CardDefaults.cardColors(
-                                                containerColor =
-                                                        MaterialTheme.colorScheme.surface.copy(
-                                                                alpha = cardAlpha
-                                                        )
-                                        )
-                        ) {
-                                Column(Modifier.fillMaxWidth().padding(16.dp)) {
-                                        Text(
-                                                "版本隔离",
-                                                style = MaterialTheme.typography.titleSmall
-                                        ) // TODO: i18n
-                                        Spacer(Modifier.height(4.dp))
-                                        ExposedDropdownMenuBox(
-                                                expanded = expanded,
-                                                onExpandedChange = { expanded = it }
-                                        ) {
-                                                OutlinedTextField(
-                                                        value =
-                                                                context.getString(
-                                                                        currentConfig
-                                                                                .isolationType
-                                                                                .textRes
-                                                                ),
-                                                        onValueChange = {},
-                                                        readOnly = true,
-                                                        trailingIcon = {
-                                                                ExposedDropdownMenuDefaults
-                                                                        .TrailingIcon(
-                                                                                expanded = expanded
-                                                                        )
-                                                        },
-                                                        modifier =
-                                                                Modifier.fillMaxWidth()
-                                                                        .menuAnchor(
-                                                                                type =
-                                                                                        ExposedDropdownMenuAnchorType
-                                                                                                .PrimaryNotEditable,
-                                                                                enabled = true
-                                                                        ),
-                                                        colors = OutlinedTextFieldDefaults.colors()
-                                                )
-                                                ExposedDropdownMenu(
-                                                        expanded = expanded,
-                                                        onDismissRequest = { expanded = false }
-                                                ) {
-                                                        SettingState.entries.forEach { state ->
-                                                                DropdownMenuItem(
-                                                                        text = {
-                                                                                Text(
-                                                                                        context.getString(
-                                                                                                state.textRes
-                                                                                        )
-                                                                                )
-                                                                        },
-                                                                        onClick = {
-                                                                                updateConfig {
-                                                                                        isolationType =
-                                                                                                state
-                                                                                }
-                                                                                expanded = false
-                                                                        }
-                                                                )
-                                                        }
-                                                }
-                                        }
-                                }
-                        }
+        // 跳过游戏完整性检查
+        SwitchLayout(
+            checked = config.skipGameIntegrityCheck == com.lanrhyme.shardlauncher.game.version.installed.SettingState.ENABLE,
+            onCheckedChange = {
+                config.skipGameIntegrityCheck = if (config.skipGameIntegrityCheck == com.lanrhyme.shardlauncher.game.version.installed.SettingState.ENABLE) {
+                    com.lanrhyme.shardlauncher.game.version.installed.SettingState.DISABLE
+                } else {
+                    com.lanrhyme.shardlauncher.game.version.installed.SettingState.ENABLE
                 }
+                onConfigChange(config)
+            },
+            title = "跳过完整性检查",
+            summary = "跳过游戏文件完整性检查"
+        )
 
-                // Game Integrity Check
-                item {
-                        var expanded by remember { mutableStateOf(false) }
-                        Card(
-                                modifier =
-                                        Modifier.fillMaxWidth()
-                                                .then(
-                                                        if (isCardBlurEnabled &&
-                                                                        Build.VERSION.SDK_INT >=
-                                                                                Build.VERSION_CODES
-                                                                                        .S
-                                                        ) {
-                                                                Modifier.clip(cardShape)
-                                                                        .hazeEffect(
-                                                                                state = hazeState
-                                                                        )
-                                                        } else Modifier
-                                                ),
-                                shape = cardShape,
-                                colors =
-                                        CardDefaults.cardColors(
-                                                containerColor =
-                                                        MaterialTheme.colorScheme.surface.copy(
-                                                                alpha = cardAlpha
-                                                        )
-                                        )
-                        ) {
-                                Column(Modifier.fillMaxWidth().padding(16.dp)) {
-                                        Text(
-                                                "跳过游戏完整性检查",
-                                                style = MaterialTheme.typography.titleSmall
-                                        ) // TODO: i18n
-                                        Spacer(Modifier.height(4.dp))
-                                        ExposedDropdownMenuBox(
-                                                expanded = expanded,
-                                                onExpandedChange = { expanded = it }
-                                        ) {
-                                                OutlinedTextField(
-                                                        value =
-                                                                context.getString(
-                                                                        currentConfig
-                                                                                .skipGameIntegrityCheck
-                                                                                .textRes
-                                                                ),
-                                                        onValueChange = {},
-                                                        readOnly = true,
-                                                        trailingIcon = {
-                                                                ExposedDropdownMenuDefaults
-                                                                        .TrailingIcon(
-                                                                                expanded = expanded
-                                                                        )
-                                                        },
-                                                        modifier =
-                                                                Modifier.fillMaxWidth()
-                                                                        .menuAnchor(
-                                                                                type =
-                                                                                        ExposedDropdownMenuAnchorType
-                                                                                                .PrimaryNotEditable,
-                                                                                enabled = true
-                                                                        ),
-                                                        colors = OutlinedTextFieldDefaults.colors()
-                                                )
-                                                ExposedDropdownMenu(
-                                                        expanded = expanded,
-                                                        onDismissRequest = { expanded = false }
-                                                ) {
-                                                        SettingState.entries.forEach { state ->
-                                                                DropdownMenuItem(
-                                                                        text = {
-                                                                                Text(
-                                                                                        context.getString(
-                                                                                                state.textRes
-                                                                                        )
-                                                                                )
-                                                                        },
-                                                                        onClick = {
-                                                                                updateConfig {
-                                                                                        skipGameIntegrityCheck =
-                                                                                                state
-                                                                                }
-                                                                                expanded = false
-                                                                        }
-                                                                )
-                                                        }
-                                                }
-                                        }
-                                }
-                        }
+        // 游戏设置标题
+        Text(
+            text = "游戏设置",
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.primary,
+            modifier = Modifier.padding(start = 8.dp, end = 8.dp, top = 8.dp)
+        )
+
+        // 内存分配
+        SliderLayout(
+            value = config.ramAllocation.toFloat(),
+            onValueChange = { value ->
+                config.ramAllocation = value.toInt()
+                onConfigChange(config)
+            },
+            title = "内存分配",
+            summary = "为游戏分配的内存大小",
+            valueRange = 512f..8192f,
+            displayValue = config.ramAllocation.toFloat(),
+            isGlowEffectEnabled = true
+        )
+
+        // JVM参数
+        TextInputLayout(
+            value = config.jvmArgs,
+            onValueChange = { value ->
+                config.jvmArgs = value
+                onConfigChange(config)
+            },
+            title = "JVM参数",
+            summary = "自定义Java虚拟机启动参数",
+            placeholder = "例如: -XX:+UseG1GC"
+        )
+
+        // 高级设置标题
+        Text(
+            text = "高级设置",
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.primary,
+            modifier = Modifier.padding(start = 8.dp, end = 8.dp, top = 8.dp)
+        )
+
+        // 服务器IP
+        TextInputLayout(
+            value = config.serverIp,
+            onValueChange = { value ->
+                config.serverIp = value
+                onConfigChange(config)
+            },
+            title = "默认服务器",
+            summary = "启动游戏时自动连接的服务器",
+            placeholder = "例如: mc.hypixel.net"
+        )
+
+        // 保存按钮
+        ButtonLayout(
+            onClick = { showSaveDialog = true },
+            title = "保存配置",
+            summary = "保存当前版本的所有配置更改",
+            buttonText = "保存"
+        )
+    }
+
+    if (showSaveDialog) {
+        SimpleAlertDialog(
+            title = "保存配置",
+            text = "确定要保存版本配置吗？",
+            onDismiss = { showSaveDialog = false },
+            onConfirm = {
+                try {
+                    onSave()
+                    showSaveDialog = false
+                } catch (e: Exception) {
+                    onError("保存配置失败: ${e.message}")
+                    showSaveDialog = false
                 }
-
-                // Memory Allocation
-                item {
-                        var memory by
-                                remember(currentConfig.ramAllocation) {
-                                        mutableFloatStateOf(
-                                                if (currentConfig.ramAllocation < 0) 0f
-                                                else currentConfig.ramAllocation.toFloat()
-                                        )
-                                }
-
-                        Card(
-                                modifier =
-                                        Modifier.fillMaxWidth()
-                                                .then(
-                                                        if (isCardBlurEnabled &&
-                                                                        Build.VERSION.SDK_INT >=
-                                                                                Build.VERSION_CODES
-                                                                                        .S
-                                                        ) {
-                                                                Modifier.clip(cardShape)
-                                                                        .hazeEffect(
-                                                                                state = hazeState
-                                                                        )
-                                                        } else Modifier
-                                                ),
-                                shape = cardShape,
-                                colors =
-                                        CardDefaults.cardColors(
-                                                containerColor =
-                                                        MaterialTheme.colorScheme.surface.copy(
-                                                                alpha = cardAlpha
-                                                        )
-                                        )
-                        ) {
-                                Column(Modifier.fillMaxWidth().padding(16.dp)) {
-                                        Text(
-                                                "内存分配 (MB)",
-                                                style = MaterialTheme.typography.titleSmall
-                                        ) // TODO: i18n
-                                        Spacer(Modifier.height(8.dp))
-                                        Slider(
-                                                value = memory,
-                                                onValueChange = {
-                                                        memory = it
-                                                        updateConfig { ramAllocation = it.toInt() }
-                                                },
-                                                valueRange = 0f..16384f,
-                                                steps = 63
-                                        )
-                                        Text(
-                                                text =
-                                                        if (memory <= 0) "跟随全局设置 (0 MB)"
-                                                        else "${memory.toInt()} MB", // TODO: i18n
-                                                style = MaterialTheme.typography.bodySmall,
-                                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                                        )
-                                }
-                        }
-                }
-
-                // Java Runtime
-                item {
-                        Card(
-                                modifier =
-                                        Modifier.fillMaxWidth()
-                                                .then(
-                                                        if (isCardBlurEnabled &&
-                                                                        Build.VERSION.SDK_INT >=
-                                                                                Build.VERSION_CODES
-                                                                                        .S
-                                                        ) {
-                                                                Modifier.clip(cardShape)
-                                                                        .hazeEffect(
-                                                                                state = hazeState
-                                                                        )
-                                                        } else Modifier
-                                                ),
-                                shape = cardShape,
-                                colors =
-                                        CardDefaults.cardColors(
-                                                containerColor =
-                                                        MaterialTheme.colorScheme.surface.copy(
-                                                                alpha = cardAlpha
-                                                        )
-                                        )
-                        ) {
-                                Column(Modifier.fillMaxWidth().padding(16.dp)) {
-                                        OutlinedTextField(
-                                                value = currentConfig.javaRuntime,
-                                                onValueChange = {
-                                                        updateConfig { javaRuntime = it }
-                                                },
-                                                label = { Text("Java 运行时路径") }, // TODO: i18n
-                                                modifier = Modifier.fillMaxWidth(),
-                                                singleLine = true,
-                                                placeholder = { Text("留空跟随全局设置") } // TODO: i18n
-                                        )
-                                }
-                        }
-                }
-
-                // JVM Args
-                item {
-                        Card(
-                                modifier =
-                                        Modifier.fillMaxWidth()
-                                                .then(
-                                                        if (isCardBlurEnabled &&
-                                                                        Build.VERSION.SDK_INT >=
-                                                                                Build.VERSION_CODES
-                                                                                        .S
-                                                        ) {
-                                                                Modifier.clip(cardShape)
-                                                                        .hazeEffect(
-                                                                                state = hazeState
-                                                                        )
-                                                        } else Modifier
-                                                ),
-                                shape = cardShape,
-                                colors =
-                                        CardDefaults.cardColors(
-                                                containerColor =
-                                                        MaterialTheme.colorScheme.surface.copy(
-                                                                alpha = cardAlpha
-                                                        )
-                                        )
-                        ) {
-                                Column(Modifier.fillMaxWidth().padding(16.dp)) {
-                                        OutlinedTextField(
-                                                value = currentConfig.jvmArgs,
-                                                onValueChange = { updateConfig { jvmArgs = it } },
-                                                label = { Text("JVM 参数") }, // TODO: i18n
-                                                modifier = Modifier.fillMaxWidth(),
-                                                minLines = 3,
-                                                maxLines = 5,
-                                                placeholder = { Text("留空跟随全局设置") } // TODO: i18n
-                                        )
-                                }
-                        }
-                }
-
-                // Action Buttons
-                item {
-                        Row(
-                                modifier = Modifier.fillMaxWidth().padding(top = 16.dp),
-                                horizontalArrangement = Arrangement.End
-                        ) {
-                                Button(onClick = onSave) {
-                                        Text("保存配置") // TODO: i18n
-                                }
-                        }
-                }
-
-                // Bottom Spacer
-                item { Spacer(modifier = Modifier.height(32.dp)) }
-        }
+            }
+        )
+    }
 }
+

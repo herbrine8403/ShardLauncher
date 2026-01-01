@@ -21,20 +21,20 @@ import dev.chrisbanes.haze.hazeEffect
 import java.io.File
 
 @Composable
-fun ModsManagementScreen(
+fun ResourcePacksManagementScreen(
     version: Version,
     onBack: () -> Unit
 ) {
     val (isCardBlurEnabled, cardAlpha, hazeState) = LocalCardLayoutConfig.current
-    val modsFolder = File(version.getVersionPath(), "mods")
-    var modFiles by remember { mutableStateOf<List<File>>(emptyList()) }
+    val resourcePacksFolder = File(version.getVersionPath(), "resourcepacks")
+    var resourcePackFiles by remember { mutableStateOf<List<File>>(emptyList()) }
     var refreshTrigger by remember { mutableIntStateOf(0) }
 
-    // 刷新模组列表
+    // 刷新资源包列表
     LaunchedEffect(refreshTrigger) {
-        modFiles = if (modsFolder.exists()) {
-            modsFolder.listFiles()?.filter { 
-                it.isFile && (it.extension == "jar" || it.extension == "zip")
+        resourcePackFiles = if (resourcePacksFolder.exists()) {
+            resourcePacksFolder.listFiles()?.filter { 
+                it.isFile && (it.extension == "zip" || it.isDirectory)
             } ?: emptyList()
         } else {
             emptyList()
@@ -68,7 +68,7 @@ fun ModsManagementScreen(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "模组管理",
+                    text = "资源包管理",
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier.weight(1f)
@@ -76,9 +76,9 @@ fun ModsManagementScreen(
                 
                 OutlinedButton(
                     onClick = { 
-                        // 创建mods文件夹
-                        if (!modsFolder.exists()) {
-                            modsFolder.mkdirs()
+                        // 创建resourcepacks文件夹
+                        if (!resourcePacksFolder.exists()) {
+                            resourcePacksFolder.mkdirs()
                         }
                         refreshTrigger++
                     }
@@ -90,18 +90,18 @@ fun ModsManagementScreen(
                 
                 Button(
                     onClick = {
-                        // TODO: 实现添加模组功能
+                        // TODO: 实现添加资源包功能
                     }
                 ) {
                     Icon(Icons.Default.Add, contentDescription = null)
                     Spacer(modifier = Modifier.width(4.dp))
-                    Text("添加模组")
+                    Text("添加资源包")
                 }
             }
         }
 
-        // 模组列表
-        if (modFiles.isEmpty()) {
+        // 资源包列表
+        if (resourcePackFiles.isEmpty()) {
             val emptyCardShape = RoundedCornerShape(16.dp)
             Card(
                 modifier = Modifier
@@ -127,18 +127,18 @@ fun ModsManagementScreen(
                         verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         Icon(
-                            imageVector = Icons.Default.Extension,
+                            imageVector = Icons.Default.Palette,
                             contentDescription = null,
                             modifier = Modifier.size(48.dp),
                             tint = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                         Text(
-                            text = "暂无模组",
+                            text = "暂无资源包",
                             style = MaterialTheme.typography.titleMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                         Text(
-                            text = "点击\"添加模组\"按钮来安装模组",
+                            text = "点击\"添加资源包\"按钮来安装资源包",
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -150,23 +150,26 @@ fun ModsManagementScreen(
                 modifier = Modifier.fillMaxWidth(),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                items(modFiles) { modFile ->
-                    ModItem(
-                        modFile = modFile,
+                items(resourcePackFiles) { resourcePackFile ->
+                    ResourcePackItem(
+                        resourcePackFile = resourcePackFile,
                         onDelete = {
-                            modFile.delete()
+                            if (resourcePackFile.isDirectory) {
+                                resourcePackFile.deleteRecursively()
+                            } else {
+                                resourcePackFile.delete()
+                            }
                             refreshTrigger++
                         },
                         onToggle = { enabled ->
-                            // TODO: 实现模组启用/禁用功能
-                            // 通常是通过重命名文件扩展名来实现
+                            // TODO: 实现资源包启用/禁用功能
                             val newName = if (enabled) {
-                                modFile.name.removeSuffix(".disabled")
+                                resourcePackFile.name.removeSuffix(".disabled")
                             } else {
-                                modFile.name + ".disabled"
+                                resourcePackFile.name + ".disabled"
                             }
-                            val newFile = File(modFile.parent, newName)
-                            modFile.renameTo(newFile)
+                            val newFile = File(resourcePackFile.parent, newName)
+                            resourcePackFile.renameTo(newFile)
                             refreshTrigger++
                         },
                         isCardBlurEnabled = isCardBlurEnabled,
@@ -180,15 +183,15 @@ fun ModsManagementScreen(
 }
 
 @Composable
-private fun ModItem(
-    modFile: File,
+private fun ResourcePackItem(
+    resourcePackFile: File,
     onDelete: () -> Unit,
     onToggle: (Boolean) -> Unit,
     isCardBlurEnabled: Boolean,
     cardAlpha: Float,
     hazeState: dev.chrisbanes.haze.HazeState
 ) {
-    val isEnabled = !modFile.name.endsWith(".disabled")
+    val isEnabled = !resourcePackFile.name.endsWith(".disabled")
     var showDeleteDialog by remember { mutableStateOf(false) }
     val itemCardShape = RoundedCornerShape(12.dp)
 
@@ -214,9 +217,9 @@ private fun ModItem(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            // 模组图标
+            // 资源包图标
             Icon(
-                imageVector = Icons.Default.Extension,
+                imageVector = Icons.Default.Palette,
                 contentDescription = null,
                 modifier = Modifier.size(32.dp),
                 tint = if (isEnabled) 
@@ -228,7 +231,7 @@ private fun ModItem(
                 modifier = Modifier.weight(1f)
             ) {
                 Text(
-                    text = modFile.nameWithoutExtension.removeSuffix(".disabled"),
+                    text = resourcePackFile.nameWithoutExtension.removeSuffix(".disabled"),
                     style = MaterialTheme.typography.bodyLarge,
                     fontWeight = FontWeight.Medium,
                     maxLines = 1,
@@ -238,7 +241,7 @@ private fun ModItem(
                     else MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 Text(
-                    text = "${(modFile.length() / 1024).toInt()} KB",
+                    text = if (resourcePackFile.isDirectory) "文件夹" else "${(resourcePackFile.length() / 1024).toInt()} KB",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -256,7 +259,7 @@ private fun ModItem(
             ) {
                 Icon(
                     imageVector = Icons.Default.Delete,
-                    contentDescription = "删除模组",
+                    contentDescription = "删除资源包",
                     tint = MaterialTheme.colorScheme.error
                 )
             }
@@ -266,8 +269,8 @@ private fun ModItem(
     if (showDeleteDialog) {
         AlertDialog(
             onDismissRequest = { showDeleteDialog = false },
-            title = { Text("删除模组") },
-            text = { Text("确定要删除模组 ${modFile.nameWithoutExtension} 吗？") },
+            title = { Text("删除资源包") },
+            text = { Text("确定要删除资源包 ${resourcePackFile.nameWithoutExtension} 吗？") },
             confirmButton = {
                 TextButton(
                     onClick = {

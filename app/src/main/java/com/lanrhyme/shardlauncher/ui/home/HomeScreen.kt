@@ -70,6 +70,7 @@ import kotlinx.coroutines.delay
 import androidx.compose.runtime.rememberCoroutineScope
 import com.lanrhyme.shardlauncher.game.launch.GameLaunchManager
 import com.lanrhyme.shardlauncher.game.version.installed.VersionsManager
+import com.lanrhyme.shardlauncher.ui.home.VersionSelector
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -90,9 +91,17 @@ fun HomeScreen(
     val cardLayoutConfig = LocalCardLayoutConfig.current
     val coroutineScope = rememberCoroutineScope()
     
-    // Get installed versions
+    // Get installed versions and current version
     val installedVersions = VersionsManager.versions
-    val selectedVersion = installedVersions.firstOrNull { it.isValid() }
+    val currentVersion by VersionsManager.currentVersion.collectAsState()
+    var selectedVersionForLaunch by remember { mutableStateOf(currentVersion) }
+    
+    // Update selected version when current version changes
+    LaunchedEffect(currentVersion) {
+        if (selectedVersionForLaunch == null) {
+            selectedVersionForLaunch = currentVersion
+        }
+    }
 
     val animatedSpeed by
             animateFloatAsState(
@@ -217,18 +226,24 @@ fun HomeScreen(
                 Spacer(modifier = Modifier.weight(1f))
 
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
-
-                    // Selected Version
-                    Text(
-                        text = "版本: ${selectedVersion?.getVersionName() ?: "未选择版本"}", 
-                        style = MaterialTheme.typography.bodyLarge
+                    // Version Selector
+                    VersionSelector(
+                        selectedVersion = selectedVersionForLaunch,
+                        versions = installedVersions,
+                        onVersionSelected = { version ->
+                            selectedVersionForLaunch = version
+                            // 可选：同时设置为当前版本
+                            VersionsManager.saveCurrentVersion(version.getVersionName())
+                        },
+                        modifier = Modifier.fillMaxWidth(0.8f)
                     )
-                    Spacer(modifier = Modifier.height(8.dp))
+                    
+                    Spacer(modifier = Modifier.height(16.dp))
 
                     // Launch Button
                     ScalingActionButton(
                         onClick = { 
-                            selectedVersion?.let { version ->
+                            selectedVersionForLaunch?.let { version ->
                                 selectedAccount?.let { account ->
                                     coroutineScope.launch {
                                         try {
@@ -249,9 +264,9 @@ fun HomeScreen(
                                 }
                             }
                         },
-                        modifier = Modifier.fillMaxWidth(),
-                        text = if (selectedVersion != null && selectedAccount != null) "启动游戏" else "无法启动",
-                        enabled = selectedVersion != null && selectedAccount != null
+                        modifier = Modifier.fillMaxWidth(0.8f),
+                        text = if (selectedVersionForLaunch != null && selectedAccount != null) "启动游戏" else "无法启动",
+                        enabled = selectedVersionForLaunch != null && selectedAccount != null
                     )
                 }
             }

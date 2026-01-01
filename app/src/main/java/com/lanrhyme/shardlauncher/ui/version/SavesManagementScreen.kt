@@ -19,23 +19,23 @@ import com.lanrhyme.shardlauncher.game.version.installed.Version
 import com.lanrhyme.shardlauncher.ui.components.LocalCardLayoutConfig
 import dev.chrisbanes.haze.hazeEffect
 import java.io.File
+import java.text.SimpleDateFormat
+import java.util.*
 
 @Composable
-fun ModsManagementScreen(
+fun SavesManagementScreen(
     version: Version,
     onBack: () -> Unit
 ) {
     val (isCardBlurEnabled, cardAlpha, hazeState) = LocalCardLayoutConfig.current
-    val modsFolder = File(version.getVersionPath(), "mods")
-    var modFiles by remember { mutableStateOf<List<File>>(emptyList()) }
+    val savesFolder = File(version.getVersionPath(), "saves")
+    var saveFiles by remember { mutableStateOf<List<File>>(emptyList()) }
     var refreshTrigger by remember { mutableIntStateOf(0) }
 
-    // 刷新模组列表
+    // 刷新存档列表
     LaunchedEffect(refreshTrigger) {
-        modFiles = if (modsFolder.exists()) {
-            modsFolder.listFiles()?.filter { 
-                it.isFile && (it.extension == "jar" || it.extension == "zip")
-            } ?: emptyList()
+        saveFiles = if (savesFolder.exists()) {
+            savesFolder.listFiles()?.filter { it.isDirectory } ?: emptyList()
         } else {
             emptyList()
         }
@@ -68,7 +68,7 @@ fun ModsManagementScreen(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "模组管理",
+                    text = "存档管理",
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier.weight(1f)
@@ -76,10 +76,6 @@ fun ModsManagementScreen(
                 
                 OutlinedButton(
                     onClick = { 
-                        // 创建mods文件夹
-                        if (!modsFolder.exists()) {
-                            modsFolder.mkdirs()
-                        }
                         refreshTrigger++
                     }
                 ) {
@@ -90,18 +86,18 @@ fun ModsManagementScreen(
                 
                 Button(
                     onClick = {
-                        // TODO: 实现添加模组功能
+                        // TODO: 实现导入存档功能
                     }
                 ) {
-                    Icon(Icons.Default.Add, contentDescription = null)
+                    Icon(Icons.Default.FileUpload, contentDescription = null)
                     Spacer(modifier = Modifier.width(4.dp))
-                    Text("添加模组")
+                    Text("导入存档")
                 }
             }
         }
 
-        // 模组列表
-        if (modFiles.isEmpty()) {
+        // 存档列表
+        if (saveFiles.isEmpty()) {
             val emptyCardShape = RoundedCornerShape(16.dp)
             Card(
                 modifier = Modifier
@@ -127,18 +123,18 @@ fun ModsManagementScreen(
                         verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         Icon(
-                            imageVector = Icons.Default.Extension,
+                            imageVector = Icons.Default.Save,
                             contentDescription = null,
                             modifier = Modifier.size(48.dp),
                             tint = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                         Text(
-                            text = "暂无模组",
+                            text = "暂无存档",
                             style = MaterialTheme.typography.titleMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                         Text(
-                            text = "点击\"添加模组\"按钮来安装模组",
+                            text = "开始游戏后会自动创建存档",
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -150,24 +146,15 @@ fun ModsManagementScreen(
                 modifier = Modifier.fillMaxWidth(),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                items(modFiles) { modFile ->
-                    ModItem(
-                        modFile = modFile,
+                items(saveFiles) { saveFile ->
+                    SaveItem(
+                        saveFile = saveFile,
                         onDelete = {
-                            modFile.delete()
+                            saveFile.deleteRecursively()
                             refreshTrigger++
                         },
-                        onToggle = { enabled ->
-                            // TODO: 实现模组启用/禁用功能
-                            // 通常是通过重命名文件扩展名来实现
-                            val newName = if (enabled) {
-                                modFile.name.removeSuffix(".disabled")
-                            } else {
-                                modFile.name + ".disabled"
-                            }
-                            val newFile = File(modFile.parent, newName)
-                            modFile.renameTo(newFile)
-                            refreshTrigger++
+                        onExport = {
+                            // TODO: 实现导出存档功能
                         },
                         isCardBlurEnabled = isCardBlurEnabled,
                         cardAlpha = cardAlpha,
@@ -180,16 +167,16 @@ fun ModsManagementScreen(
 }
 
 @Composable
-private fun ModItem(
-    modFile: File,
+private fun SaveItem(
+    saveFile: File,
     onDelete: () -> Unit,
-    onToggle: (Boolean) -> Unit,
+    onExport: () -> Unit,
     isCardBlurEnabled: Boolean,
     cardAlpha: Float,
     hazeState: dev.chrisbanes.haze.HazeState
 ) {
-    val isEnabled = !modFile.name.endsWith(".disabled")
     var showDeleteDialog by remember { mutableStateOf(false) }
+    val dateFormat = remember { SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault()) }
     val itemCardShape = RoundedCornerShape(12.dp)
 
     Card(
@@ -202,9 +189,7 @@ private fun ModItem(
             ),
         shape = itemCardShape,
         colors = CardDefaults.cardColors(
-            containerColor = if (isEnabled) 
-                MaterialTheme.colorScheme.surface.copy(alpha = cardAlpha)
-            else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = cardAlpha * 0.5f)
+            containerColor = MaterialTheme.colorScheme.surface.copy(alpha = cardAlpha)
         )
     ) {
         Row(
@@ -214,41 +199,41 @@ private fun ModItem(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            // 模组图标
+            // 存档图标
             Icon(
-                imageVector = Icons.Default.Extension,
+                imageVector = Icons.Default.Save,
                 contentDescription = null,
                 modifier = Modifier.size(32.dp),
-                tint = if (isEnabled) 
-                    MaterialTheme.colorScheme.primary 
-                else MaterialTheme.colorScheme.onSurfaceVariant
+                tint = MaterialTheme.colorScheme.primary
             )
 
             Column(
                 modifier = Modifier.weight(1f)
             ) {
                 Text(
-                    text = modFile.nameWithoutExtension.removeSuffix(".disabled"),
+                    text = saveFile.name,
                     style = MaterialTheme.typography.bodyLarge,
                     fontWeight = FontWeight.Medium,
                     maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                    color = if (isEnabled) 
-                        MaterialTheme.colorScheme.onSurface 
-                    else MaterialTheme.colorScheme.onSurfaceVariant
+                    overflow = TextOverflow.Ellipsis
                 )
                 Text(
-                    text = "${(modFile.length() / 1024).toInt()} KB",
+                    text = "修改时间: ${dateFormat.format(Date(saveFile.lastModified()))}",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
 
-            // 启用/禁用开关
-            Switch(
-                checked = isEnabled,
-                onCheckedChange = onToggle
-            )
+            // 导出按钮
+            IconButton(
+                onClick = onExport
+            ) {
+                Icon(
+                    imageVector = Icons.Default.FileDownload,
+                    contentDescription = "导出存档",
+                    tint = MaterialTheme.colorScheme.primary
+                )
+            }
 
             // 删除按钮
             IconButton(
@@ -256,7 +241,7 @@ private fun ModItem(
             ) {
                 Icon(
                     imageVector = Icons.Default.Delete,
-                    contentDescription = "删除模组",
+                    contentDescription = "删除存档",
                     tint = MaterialTheme.colorScheme.error
                 )
             }
@@ -266,8 +251,8 @@ private fun ModItem(
     if (showDeleteDialog) {
         AlertDialog(
             onDismissRequest = { showDeleteDialog = false },
-            title = { Text("删除模组") },
-            text = { Text("确定要删除模组 ${modFile.nameWithoutExtension} 吗？") },
+            title = { Text("删除存档") },
+            text = { Text("确定要删除存档 ${saveFile.name} 吗？此操作不可恢复！") },
             confirmButton = {
                 TextButton(
                     onClick = {

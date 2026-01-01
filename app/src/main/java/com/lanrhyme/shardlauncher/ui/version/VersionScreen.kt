@@ -52,11 +52,12 @@ import com.lanrhyme.shardlauncher.utils.file.PathHelper
 import dev.chrisbanes.haze.hazeEffect
 
 enum class VersionDetailPane(val title: String, val icon: ImageVector) {
-    Config("版本配置", Icons.Default.Settings), // TODO: i18n
-    Mods("模组管理", Icons.Default.Extension), // TODO: i18n
-    Saves("存档管理", Icons.Default.Save), // TODO: i18n
-    ResourcePacks("资源包管理", Icons.Default.Style), // TODO: i18n
-    ShaderPacks("光影包管理", Icons.Default.WbSunny) // TODO: i18n
+    Overview("版本概览", Icons.Default.Info),
+    Config("版本配置", Icons.Default.Settings),
+    Mods("模组管理", Icons.Default.Extension),
+    Saves("存档管理", Icons.Default.Save),
+    ResourcePacks("资源包管理", Icons.Default.Style),
+    ShaderPacks("光影包管理", Icons.Default.WbSunny)
 }
 
 @Composable
@@ -382,41 +383,48 @@ fun RightDetailContent(pane: VersionDetailPane, version: Version?, onBack: () ->
         Row(verticalAlignment = Alignment.CenterVertically) {
             IconButton(onClick = onBack) {
                 Icon(
-                        Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = "Back to version list"
-                ) // TODO: i18n
+                    Icons.AutoMirrored.Filled.ArrowBack,
+                    contentDescription = "返回版本列表"
+                )
             }
             Spacer(Modifier.width(8.dp))
             Text(
-                    text = "${pane.title} - ${version.getVersionName()}",
-                    style = MaterialTheme.typography.titleLarge
+                text = "${pane.title} - ${version.getVersionName()}",
+                style = MaterialTheme.typography.titleLarge
             )
         }
         Spacer(Modifier.height(16.dp))
 
         when (pane) {
+            VersionDetailPane.Overview -> {
+                VersionOverviewScreen(
+                    version = version,
+                    onBack = onBack,
+                    onError = { /* TODO: Handle error */ }
+                )
+            }
             VersionDetailPane.Config -> {
                 VersionConfigScreen(
-                        version = version,
-                        config = version.getVersionConfig(),
-                        onConfigChange = { /* Config updates are handled internally in VersionConfigScreen state for now */
-                        },
-                        onSave = {
-                            // In a real app, we might want to propagate changes back to a ViewModel
-                            // For now, VersionConfig is mutable and reference is shared, so we just
-                            // call save()
-                            version.getVersionConfig().save()
-                        }
+                    version = version,
+                    config = version.getVersionConfig(),
+                    onConfigChange = { /* Config updates are handled internally */ },
+                    onSave = {
+                        version.getVersionConfig().save()
+                    },
+                    onError = { /* TODO: Handle error */ }
                 )
             }
             VersionDetailPane.Mods -> {
                 ModsManagementScreen(version = version, onBack = onBack)
             }
-            else -> {
-                // Placeholder for other panes
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Text("这是 ${pane.title} 页面", fontSize = 20.sp) // TODO: i18n
-                }
+            VersionDetailPane.Saves -> {
+                SavesManagementScreen(version = version, onBack = onBack)
+            }
+            VersionDetailPane.ResourcePacks -> {
+                ResourcePacksManagementScreen(version = version, onBack = onBack)
+            }
+            VersionDetailPane.ShaderPacks -> {
+                ShaderPacksManagementScreen(version = version, onBack = onBack)
             }
         }
     }

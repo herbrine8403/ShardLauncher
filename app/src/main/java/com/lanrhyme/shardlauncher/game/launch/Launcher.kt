@@ -255,7 +255,7 @@ abstract class Launcher(
             val runtimeLibDir = File(getJavaHome(), "lib/${Build.SUPPORTED_ABIS[0]}")
             if (runtimeLibDir.exists()) {
                 runtimeLibDir.listFiles { _, name -> name.endsWith(".so") }?.forEach { file ->
-                    if (!allLibs.any { file.name.contains(it.removePrefix("lib")) })) {
+                    if (!allLibs.any { file.name.contains(it.removePrefix("lib")) }) {
                         try {
                             ZLBridge.dlopen(file.absolutePath)
                             Logger.lDebug("Loaded additional runtime library: ${file.name}")

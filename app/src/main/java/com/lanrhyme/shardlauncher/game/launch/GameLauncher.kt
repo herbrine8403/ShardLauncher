@@ -224,59 +224,91 @@ class GameLauncher(
     override fun dlopenEngine() {
         super.dlopenEngine()
         
-        try {
-            LoggerBridge.appendTitle("DLOPEN Renderer")
-        } catch (e: Exception) {
-            Logger.lInfo("DLOPEN Renderer")
-        }
+        Logger.lInfo("==================== DLOPEN Renderer ====================")
         
         // Load renderer plugin libraries
+        loadRendererPluginLibraries()
+        
+        // Load main graphics library
+        loadMainGraphicsLibrary()
+    }
+    
+    private fun loadRendererPluginLibraries() {
         RendererPluginManager.selectedRendererPlugin?.let { renderer ->
-            renderer.dlopen.forEach { lib -> 
-                // ZLBridge.dlopen("${renderer.path}/$lib")  // Temporarily disabled due to JNI issues
-                // Logger.lInfo("Skipping dlopen for renderer plugin due to JNI issues - lib: ${renderer.path}/$lib")
-                
-                // Try to restore renderer plugin library loading
+            Logger.lInfo("Loading renderer plugin: ${renderer.name}")
+            
+            renderer.dlopen.forEach { lib ->
                 try {
                     val libPath = "${renderer.path}/$lib"
                     val success = ZLBridge.dlopen(libPath)
+                    
                     if (success) {
-                        Logger.lInfo("Successfully loaded renderer plugin library: $libPath")
+                        Logger.lInfo("Loaded renderer plugin library: $lib")
                     } else {
-                        Logger.lWarning("Failed to load renderer plugin library: $libPath")
+                        Logger.lWarning("Failed to load renderer plugin library: $lib")
                     }
                 } catch (e: UnsatisfiedLinkError) {
-                    Logger.lWarning("JNI error loading renderer plugin library ${renderer.path}/$lib: ${e.message}")
+                    Logger.lError("JNI error loading renderer plugin library $lib: ${e.message}")
+                } catch (e: Exception) {
+                    Logger.lError("Unexpected error loading renderer plugin library $lib: ${e.message}")
                 }
             }
+        } ?: run {
+            Logger.lInfo("No renderer plugin selected")
         }
-
-        // Load graphics library
+    }
+    
+    private fun loadMainGraphicsLibrary() {
         val rendererLib = loadGraphicsLibrary()
         if (rendererLib != null) {
-            // if (!ZLBridge.dlopen(rendererLib) && !ZLBridge.dlopen(findInLdLibPath(rendererLib))) {
-            //     Logger.lError("Failed to load renderer $rendererLib")
-            // }
-            // Logger.lInfo("Skipping dlopen for renderer due to JNI issues - lib: $rendererLib")
+            Logger.lInfo("Loading main graphics library: $rendererLib")
             
-            // Try to restore renderer library loading - this is critical for graphics
+            var success = false
+            var loadedPath = ""
+            
             try {
-                var success = ZLBridge.dlopen(rendererLib)
+                // Try direct loading first
+                success = ZLBridge.dlopen(rendererLib)
+                loadedPath = rendererLib
+                
+                // If direct loading fails, try to find in LD_LIBRARY_PATH
                 if (!success) {
-                    // Try to find in LD_LIBRARY_PATH if direct loading fails
                     val pathLib = findInLdLibPath(rendererLib)
                     if (pathLib != null) {
                         success = ZLBridge.dlopen(pathLib)
+                        loadedPath = pathLib
                     }
                 }
                 
                 if (success) {
-                    Logger.lInfo("Successfully loaded renderer library: $rendererLib")
+                    Logger.lInfo("Successfully loaded graphics library: $loadedPath")
                 } else {
-                    Logger.lError("Failed to load renderer library: $rendererLib")
+                    Logger.lError("Failed to load graphics library: $rendererLib")
                 }
             } catch (e: UnsatisfiedLinkError) {
-                Logger.lWarning("JNI error loading renderer library $rendererLib: ${e.message}")
+                Logger.lError("JNI error loading graphics library $rendererLib: ${e.message}")
+            } catch (e: Exception) {
+                Logger.lError("Unexpected error loading graphics library $rendererLib: ${e.message}")
+            }
+        } else {
+            Logger.lWarning("No graphics library specified for current renderer")
+        }
+    }
+    
+    override fun loadGraphicsLibraries() {
+        // Load renderer-specific graphics libraries
+        val renderer = Renderers.getCurrentRenderer()
+        val rendererLibs = renderer.getRequiredLibraries()
+        
+        rendererLibs.forEach { libName ->
+            try {
+                val libPath = File(PathManager.DIR_NATIVE_LIB, libName)
+                if (libPath.exists()) {
+                    ZLBridge.dlopen(libPath.absolutePath)
+                    Logger.lDebug("Loaded renderer library: $libName")
+                }
+            } catch (e: Exception) {
+                Logger.lDebug("Skipped renderer library: $libName")
             }
         }
     }
@@ -383,32 +415,64 @@ class GameLauncher(
         val renderer = Renderers.getCurrentRenderer()
         val rendererId = renderer.getRendererId()
 
+        // Set OpenGL ES version
         if (rendererId.startsWith("opengles")) {
-            envMap["LIBGL_ES"] = if (getDetectedVersion() >= 3) "3" else "2"
+            val glEsVersion = getDetectedVersion()
+            envMap["LIBGL_ES"] = glEsVersion.toString()
+            envMap["LIBGL_GL"] = (glEsVersion + 10).toString()
         }
 
+        // Apply renderer-specific environment variables
         envMap.putAll(renderer.getRendererEnv().value)
         
+        // Set renderer identifier
         envMap["POJAV_RENDERER"] = rendererId
         
+        // Configure Mesa-based renderers
         if (!rendererId.startsWith("opengles")) {
             envMap["MESA_LOADER_DRIVER_OVERRIDE"] = "zink"
             envMap["MESA_GLSL_CACHE_DIR"] = PathManager.DIR_CACHE.absolutePath
+            envMap["MESA_GL_VERSION_OVERRIDE"] = "4.6"
+            envMap["MESA_GLSL_VERSION_OVERRIDE"] = "460"
+            envMap["force_glsl_extensions_warn"] = "true"
+            envMap["allow_higher_compat_version"] = "true"
+            envMap["allow_glsl_extension_directive_midshader"] = "true"
         }
 
-        // Apply renderer-specific settings
+        // Configure GL4ES-based renderers
+        if (rendererId.contains("gl4es")) {
+            envMap["LIBGL_MIPMAP"] = "3"
+            envMap["LIBGL_NORMALIZE"] = "1"
+            envMap["LIBGL_NOINTOVLHACK"] = "1"
+            envMap["LIBGL_NOERROR"] = "1"
+            
+            if (rendererId.contains("ng")) {
+                envMap["LIBGL_USE_MC_COLOR"] = "1"
+                envMap["DLOPEN"] = "libspirv-cross-c-shared.so"
+            }
+        }
+
+        // Apply user settings
+        applyRendererSettings(envMap)
+    }
+    
+    private fun applyRendererSettings(envMap: MutableMap<String, String>) {
+        // Shader dumping
         if (AllSettings.dumpShaders.state) {
             envMap["LIBGL_VGPU_DUMP"] = "1"
         }
         
+        // Zink driver preferences
         if (AllSettings.zinkPreferSystemDriver.state) {
             envMap["POJAV_ZINK_PREFER_SYSTEM_DRIVER"] = "1"
         }
         
+        // VSync control
         if (AllSettings.vsyncInZink.state) {
             envMap["POJAV_VSYNC_IN_ZINK"] = "1"
         }
         
+        // Performance settings
         if (AllSettings.bigCoreAffinity.state) {
             envMap["POJAV_BIG_CORE_AFFINITY"] = "1"
         }
@@ -416,6 +480,10 @@ class GameLauncher(
         if (AllSettings.sustainedPerformance.state) {
             envMap["POJAV_SUSTAINED_PERFORMANCE"] = "1"
         }
+        
+        // Memory settings
+        val ramAllocation = AllSettings.ramAllocation.getValue()
+        envMap["POJAV_MAX_RAM"] = "${ramAllocation}M"
     }
 
     private fun getDetectedVersion(): Int {

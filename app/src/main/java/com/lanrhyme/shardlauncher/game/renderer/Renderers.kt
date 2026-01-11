@@ -135,4 +135,45 @@ object Renderers {
      * 当前是否设置了渲染器
      */
     fun isCurrentRendererValid(): Boolean = isInitialized && currentRenderer != null
+    
+    /**
+     * 获取当前渲染器所需的库文件列表
+     */
+    fun getRequiredLibraries(): List<String> {
+        if (!isInitialized || currentRenderer == null) return emptyList()
+        
+        val renderer = currentRenderer!!
+        val requiredLibs = mutableListOf<String>()
+        
+        // Add renderer-specific libraries
+        when (renderer.getRendererId()) {
+            "opengles2", "opengles2_vgpu" -> {
+                requiredLibs.add("libGL.so")
+                requiredLibs.add("libEGL.so")
+            }
+            "opengles3" -> {
+                requiredLibs.add("libGL.so")
+                requiredLibs.add("libEGL.so")
+                requiredLibs.add("libGLESv3.so")
+            }
+            "gallium_virgl" -> {
+                requiredLibs.add("libvirglrenderer.so")
+                requiredLibs.add("libvulkan.so")
+            }
+            "vulkan_zink" -> {
+                requiredLibs.add("libvulkan.so")
+                requiredLibs.add("libzink.so")
+            }
+            "gallium_freedreno" -> {
+                requiredLibs.add("libfreedreno.so")
+                requiredLibs.add("libvulkan.so")
+            }
+        }
+        
+        // Add common graphics libraries
+        requiredLibs.add("libGLESv2.so")
+        requiredLibs.add("libGLESv3_CM.so")
+        
+        return requiredLibs
+    }
 }

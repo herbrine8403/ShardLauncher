@@ -63,11 +63,39 @@ abstract class Launcher(
      */
     protected open fun initEnv(): MutableMap<String, String> {
         val envMap = mutableMapOf<String, String>()
+        
+        // Basic environment
         envMap["POJAV_NATIVEDIR"] = PathManager.DIR_NATIVE_LIB
         envMap["JAVA_HOME"] = getJavaHome()
         envMap["HOME"] = PathManager.DIR_FILES_PRIVATE.absolutePath
         envMap["TMPDIR"] = PathManager.DIR_CACHE.absolutePath
-        envMap["PATH"] = System.getenv("PATH") ?: "/sbin:/vendor/bin:/system/sbin:/system/bin:/system/xbin"
+        
+        // System PATH configuration
+        val systemPath = System.getenv("PATH") ?: "/sbin:/vendor/bin:/system/sbin:/system/bin:/system/xbin"
+        val runtimeBin = "$runtimeHome/bin"
+        envMap["PATH"] = "$runtimeBin:$systemPath"
+        
+        // Library path configuration
+        val runtimeLibraryPath = getRuntimeLibraryPath()
+        envMap["LD_LIBRARY_PATH"] = runtimeLibraryPath
+        
+        // Display and graphics
+        envMap["DISPLAY"] = ":0"
+        envMap["XDG_RUNTIME_DIR"] = PathManager.DIR_CACHE.absolutePath
+        
+        // Force vsync off for better performance
+        envMap["FORCE_VSYNC"] = "false"
+        
+        // Disable software rendering
+        envMap["LIBGL_ALWAYS_SOFTWARE"] = "0"
+        
+        // Font configuration
+        envMap["FONTCONFIG_PATH"] = PathManager.DIR_FILES_PRIVATE.absolutePath
+        
+        // Locale configuration
+        envMap["LANG"] = Locale.getDefault().toString()
+        envMap["LC_ALL"] = Locale.getDefault().toString()
+        
         return envMap
     }
 
@@ -176,28 +204,69 @@ abstract class Launcher(
      * Load Java runtime libraries via dlopen
      */
     protected fun dlopenJavaRuntime() {
-        val libs = listOf(
-            "libjli.so", "libjvm.so", "libverify.so", "libjava.so",
-            "libnet.so", "libnio.so", "libawt.so", "libawt_headless.so"
+        // Critical libraries that must be loaded first
+        val criticalLibs = listOf(
+            "libjli.so",      // Java launcher interface
+            "libjvm.so"       // Java Virtual Machine
         )
-        libs.forEach { lib ->
+        
+        // Core Java libraries
+        val coreLibs = listOf(
+            "libverify.so",   // Bytecode verification
+            "libjava.so",     // Core Java library
+            "libnet.so",      // Networking
+            "libnio.so",      // New I/O
+            "libawt.so",      // Abstract Window Toolkit
+            "libawt_headless.so"  // Headless AWT
+        )
+        
+        // Additional libraries that may be needed
+        val additionalLibs = listOf(
+            "libzip.so",
+            "libjsig.so",
+            "libinstrument.so",
+            "libmanagement.so"
+        )
+        
+        val allLibs = criticalLibs + coreLibs + additionalLibs
+        
+        allLibs.forEach { lib ->
             val path = findLibInPath(lib, getRuntimeLibraryPath())
             if (path != null) {
-                // ZLBridge.dlopen(path)  // Temporarily disabled due to JNI issues
-                // Logger.lInfo("Skipping dlopen due to JNI issues - lib: $path")
-                
-                // Try to restore dlopen for Java runtime libraries - these are critical
                 try {
                     val success = ZLBridge.dlopen(path)
                     if (success) {
-                        Logger.lInfo("Successfully loaded Java runtime library: $path")
+                        Logger.lInfo("Loaded Java runtime library: $lib")
                     } else {
-                        Logger.lWarning("Failed to load Java runtime library: $path")
+                        Logger.lWarning("Failed to load Java runtime library: $lib")
                     }
                 } catch (e: UnsatisfiedLinkError) {
-                    Logger.lWarning("JNI error loading Java runtime library $path: ${e.message}")
+                    Logger.lError("JNI error loading Java runtime library $lib: ${e.message}")
+                } catch (e: Exception) {
+                    Logger.lError("Unexpected error loading Java runtime library $lib: ${e.message}")
+                }
+            } else {
+                Logger.lWarning("Java runtime library not found: $lib")
+            }
+        }
+        
+        // Load all .so files from the runtime lib directory
+        try {
+            val runtimeLibDir = File(getJavaHome(), "lib/${Build.SUPPORTED_ABIS[0]}")
+            if (runtimeLibDir.exists()) {
+                runtimeLibDir.listFiles { _, name -> name.endsWith(".so") }?.forEach { file ->
+                    if (!allLibs.any { file.name.contains(it.removePrefix("lib")) })) {
+                        try {
+                            ZLBridge.dlopen(file.absolutePath)
+                            Logger.lDebug("Loaded additional runtime library: ${file.name}")
+                        } catch (e: Exception) {
+                            Logger.lDebug("Skipped runtime library: ${file.name}")
+                        }
+                    }
                 }
             }
+        } catch (e: Exception) {
+            Logger.lWarning("Failed to load additional runtime libraries: ${e.message}")
         }
     }
 
@@ -213,22 +282,63 @@ abstract class Launcher(
      * Load engine specific libraries
      */
     protected open fun dlopenEngine() {
-        // Load OpenAL or other engine specific libs
-        val openal = File(PathManager.DIR_NATIVE_LIB, "libopenal.so")
-        if (openal.exists()) {
-            // ZLBridge.dlopen(openal.absolutePath)  // Temporarily disabled due to JNI issues
-            // Logger.lInfo("Skipping dlopen for OpenAL due to JNI issues - path: ${openal.absolutePath}")
-            
-            // Try to restore OpenAL dlopen - this is important for audio
-            try {
-                val success = ZLBridge.dlopen(openal.absolutePath)
-                if (success) {
-                    Logger.lInfo("Successfully loaded OpenAL library: ${openal.absolutePath}")
-                } else {
-                    Logger.lWarning("Failed to load OpenAL library: ${openal.absolutePath}")
+        // Load audio libraries
+        loadAudioLibraries()
+        
+        // Load graphics libraries
+        loadGraphicsLibraries()
+        
+        // Load utility libraries
+        loadUtilityLibraries()
+    }
+    
+    private fun loadAudioLibraries() {
+        val audioLibs = listOf(
+            "libopenal.so",
+            "libvorbis.so",
+            "libvorbisfile.so",
+            "libogg.so"
+        )
+        
+        audioLibs.forEach { libName ->
+            val libFile = File(PathManager.DIR_NATIVE_LIB, libName)
+            if (libFile.exists()) {
+                try {
+                    val success = ZLBridge.dlopen(libFile.absolutePath)
+                    if (success) {
+                        Logger.lInfo("Loaded audio library: $libName")
+                    } else {
+                        Logger.lWarning("Failed to load audio library: $libName")
+                    }
+                } catch (e: Exception) {
+                    Logger.lWarning("Error loading audio library $libName: ${e.message}")
                 }
-            } catch (e: UnsatisfiedLinkError) {
-                Logger.lWarning("JNI error loading OpenAL library: ${e.message}")
+            }
+        }
+    }
+    
+    protected open fun loadGraphicsLibraries() {
+        // Override in GameLauncher to load renderer-specific libraries
+        Logger.lInfo("Graphics libraries will be loaded by renderer system")
+    }
+    
+    private fun loadUtilityLibraries() {
+        val utilityLibs = listOf(
+            "libpng.so",
+            "libjpeg.so",
+            "libfreetype.so",
+            "libz.so"
+        )
+        
+        utilityLibs.forEach { libName ->
+            val libFile = File(PathManager.DIR_NATIVE_LIB, libName)
+            if (libFile.exists()) {
+                try {
+                    ZLBridge.dlopen(libFile.absolutePath)
+                    Logger.lDebug("Loaded utility library: $libName")
+                } catch (e: Exception) {
+                    Logger.lDebug("Skipped utility library: $libName")
+                }
             }
         }
     }

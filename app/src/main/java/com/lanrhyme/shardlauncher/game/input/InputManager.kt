@@ -32,45 +32,45 @@ class InputManager(private val context: Context) {
     }
     
     private fun initialize() {
-        Logger.lInfo(TAG, "Initializing input manager")
-        
+        Logger.lInfo("$TAG - Initializing input manager")
+
         // Register input device listener
         androidInputManager.registerInputDeviceListener(inputDeviceListener, null)
-        
+
         // Scan for existing input devices
         scanInputDevices()
-        
-        Logger.lInfo(TAG, "Input manager initialized")
+
+        Logger.lInfo("$TAG - Input manager initialized")
     }
-    
+
     private val inputDeviceListener = object : AndroidInputManager.InputDeviceListener {
         override fun onInputDeviceAdded(deviceId: Int) {
             val device = androidInputManager.getInputDevice(deviceId)
             if (device != null) {
-                Logger.lInfo(TAG, "Input device added: ${device.name} (ID: $deviceId)")
+                Logger.lInfo("$TAG - Input device added: ${device.name} (ID: $deviceId)")
                 addInputDevice(device)
             }
         }
-        
+
         override fun onInputDeviceRemoved(deviceId: Int) {
-            Logger.lInfo(TAG, "Input device removed (ID: $deviceId)")
+            Logger.lInfo("$TAG - Input device removed (ID: $deviceId)")
             removeInputDevice(deviceId)
         }
-        
+
         override fun onInputDeviceChanged(deviceId: Int) {
             val device = androidInputManager.getInputDevice(deviceId)
             if (device != null) {
-                Logger.lInfo(TAG, "Input device changed: ${device.name} (ID: $deviceId)")
+                Logger.lInfo("$TAG - Input device changed: ${device.name} (ID: $deviceId)")
                 updateInputDevice(device)
             }
         }
     }
-    
+
     private fun scanInputDevices() {
         val deviceIds = androidInputManager.inputDeviceIds
-        
-        Logger.lInfo(TAG, "Scanning for input devices... Found ${deviceIds.size} devices")
-        
+
+        Logger.lInfo("$TAG - Scanning for input devices... Found ${deviceIds.size} devices")
+
         deviceIds.forEach { deviceId ->
             val device = androidInputManager.getInputDevice(deviceId)
             if (device != null) {
@@ -94,22 +94,22 @@ class InputManager(private val context: Context) {
         if (device.supportsSource(InputDevice.SOURCE_KEYBOARD)) {
             if (activeKeyboard == null) {
                 activeKeyboard = deviceInfo
-                Logger.lInfo(TAG, "Active keyboard set: ${device.name}")
+                Logger.lInfo("$TAG - Active keyboard set: ${device.name}")
             }
         }
-        
+
         // Check if this is a mouse
         if (device.supportsSource(InputDevice.SOURCE_MOUSE)) {
             if (activeMouse == null) {
                 activeMouse = deviceInfo
-                Logger.lInfo(TAG, "Active mouse set: ${device.name}")
+                Logger.lInfo("$TAG - Active mouse set: ${device.name}")
             }
         }
-        
+
         // Check if this is a gamepad
-        if (device.supportsSource(InputDevice.SOURCE_GAMEPAD) || 
+        if (device.supportsSource(InputDevice.SOURCE_GAMEPAD) ||
             device.supportsSource(InputDevice.SOURCE_JOYSTICK)) {
-            Logger.lInfo(TAG, "Gamepad detected: ${device.name}")
+            Logger.lInfo("$TAG - Gamepad detected: ${device.name}")
         }
         
         notifyListeners { onInputDeviceAdded(deviceInfo) }
@@ -154,10 +154,10 @@ class InputManager(private val context: Context) {
         // Check if this is from an external keyboard
         val device = event.device
         if (device != null && device.isExternal) {
-            Logger.lDebug(TAG, "External keyboard event: ${event.keyCode}")
+            Logger.lDebug("$TAG - External keyboard event: ${event.keyCode}")
             return InputBridge.handleKeyEvent(event)
         }
-        
+
         // Also handle system keyboard events
         return InputBridge.handleKeyEvent(event)
     }
@@ -251,7 +251,7 @@ class InputManager(private val context: Context) {
             try {
                 action(listener)
             } catch (e: Exception) {
-                Logger.lError(TAG, "Error notifying input listener", e)
+                Logger.lError("$TAG - Error notifying input listener: ${e.message}", e)
             }
         }
     }
@@ -290,7 +290,7 @@ class InputManager(private val context: Context) {
         androidInputManager.unregisterInputDeviceListener(inputDeviceListener)
         inputDevices.clear()
         inputListeners.clear()
-        Logger.lInfo(TAG, "Input manager cleaned up")
+        Logger.lInfo("$TAG - Input manager cleaned up")
     }
     
     /**

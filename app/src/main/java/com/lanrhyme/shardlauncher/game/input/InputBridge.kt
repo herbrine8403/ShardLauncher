@@ -129,24 +129,24 @@ object InputBridge {
      * Initialize the input bridge
      */
     fun initialize() {
-        Logger.lInfo(TAG, "Input bridge initialized")
+        Logger.lInfo("$TAG - Input bridge initialized")
         isInputReady = true
     }
-    
+
     /**
      * Set input ready state
      */
     fun setInputReady(ready: Boolean) {
         isInputReady = ready
-        Logger.lDebug(TAG, "Input ready: $ready")
+        Logger.lDebug("$TAG - Input ready: $ready")
     }
-    
+
     /**
      * Set grabbing state (mouse capture)
      */
     fun setGrabbing(grabbing: Boolean) {
         isGrabbing = grabbing
-        Logger.lDebug(TAG, "Grabbing: $grabbing")
+        Logger.lDebug("$TAG - Grabbing: $grabbing")
     }
     
     /**

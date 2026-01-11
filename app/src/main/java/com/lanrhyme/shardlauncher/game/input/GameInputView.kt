@@ -29,17 +29,17 @@ fun GameInputSurface(
             GameInputSurfaceView(context, inputManager).apply {
                 holder.addCallback(object : SurfaceHolder.Callback {
                     override fun surfaceCreated(holder: SurfaceHolder) {
-                        Logger.lInfo("GameInputSurface", "Surface created")
+                        Logger.lInfo("GameInputSurface - Surface created")
                         onSurfaceCreated(holder)
                     }
-                    
+
                     override fun surfaceChanged(holder: SurfaceHolder, format: Int, width: Int, height: Int) {
-                        Logger.lInfo("GameInputSurface", "Surface changed: ${width}x${height}")
+                        Logger.lInfo("GameInputSurface - Surface changed: ${width}x${height}")
                         onSurfaceChanged(holder, width, height)
                     }
-                    
+
                     override fun surfaceDestroyed(holder: SurfaceHolder) {
-                        Logger.lInfo("GameInputSurface", "Surface destroyed")
+                        Logger.lInfo("GameInputSurface - Surface destroyed")
                         onSurfaceDestroyed(holder)
                     }
                 })
@@ -63,35 +63,35 @@ class GameInputSurfaceView(
     
     override fun onAttachedToWindow() {
         super.onAttachedToWindow()
-        Logger.lInfo(TAG, "Attached to window")
+        Logger.lInfo("$TAG - Attached to window")
         requestFocus()
     }
-    
+
     override fun onDetachedFromWindow() {
         super.onDetachedFromWindow()
-        Logger.lInfo(TAG, "Detached from window")
+        Logger.lInfo("$TAG - Detached from window")
     }
-    
+
     override fun onKeyDown(keyCode: Int, event: KeyEvent): Boolean {
-        Logger.lDebug(TAG, "Key down: $keyCode")
+        Logger.lDebug("$TAG - Key down: $keyCode")
         val handled = inputManager.handleKeyEvent(event)
         if (handled) {
             return true
         }
         return super.onKeyDown(keyCode, event)
     }
-    
+
     override fun onKeyUp(keyCode: Int, event: KeyEvent): Boolean {
-        Logger.lDebug(TAG, "Key up: $keyCode")
+        Logger.lDebug("$TAG - Key up: $keyCode")
         val handled = inputManager.handleKeyEvent(event)
         if (handled) {
             return true
         }
         return super.onKeyUp(keyCode, event)
     }
-    
+
     override fun onKeyMultiple(keyCode: Int, count: Int, event: KeyEvent): Boolean {
-        Logger.lDebug(TAG, "Key multiple: $keyCode (count: $count)")
+        Logger.lDebug("$TAG - Key multiple: $keyCode (count: $count)")
         val handled = inputManager.handleKeyEvent(event)
         if (handled) {
             return true

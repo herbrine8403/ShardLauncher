@@ -297,9 +297,8 @@ class GameLauncher(
     
     override fun loadGraphicsLibraries() {
         // Load renderer-specific graphics libraries
-        val renderer = Renderers.getCurrentRenderer()
-        val rendererLibs = renderer.getRequiredLibraries()
-        
+        val rendererLibs: List<String> = Renderers.getRequiredLibraries()
+
         rendererLibs.forEach { libName ->
             try {
                 val libPath = File(PathManager.DIR_NATIVE_LIB, libName)

@@ -183,7 +183,7 @@ class GameDownloadViewModel : ViewModel() {
     }
 
     private suspend fun loadFromMojang(): List<BmclapiManifest.Version> {
-        val manifest = ApiClient.mojangApiService.getVersionManifest()
+        val manifest = ApiClient.mojangMetaApiService.getVersionManifest()
         saveToCache(manifest)
         return manifest.versions.map { version ->
             BmclapiManifest.Version(

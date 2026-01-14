@@ -190,10 +190,13 @@ private fun PopupNotificationItem(
 
     LaunchedEffect(notification.id) {
         visible = true
-        delay(3000)
-        visible = false
-        delay(500) // wait for exit animation
-        onDismiss(notification.id, notification.type)
+        // Progress 类型的通知不会自动关闭
+        if (notification.type != NotificationType.Progress) {
+            delay(3000)
+            visible = false
+            delay(500) // wait for exit animation
+            onDismiss(notification.id, notification.type)
+        }
     }
 
     AnimatedVisibility(

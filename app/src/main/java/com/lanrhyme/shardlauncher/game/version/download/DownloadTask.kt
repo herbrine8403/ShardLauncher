@@ -25,7 +25,8 @@ class DownloadTask(
     fun download() {
         //若目标文件存在，验证通过或关闭完整性验证时，跳过此次下载
         if (verifySha1()) {
-            downloadedSize(FileUtils.sizeOf(targetFile))
+            val fileSize = FileUtils.sizeOf(targetFile)
+            downloadedSize(fileSize)
             downloadedFile()
             return
         }

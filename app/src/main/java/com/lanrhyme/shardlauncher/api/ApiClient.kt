@@ -12,6 +12,7 @@ object ApiClient {
     private const val QUILT_BASE_URL = "https://bmclapi2.bangbang93.com/quilt-meta/"
     private const val MICROSOFT_AUTH_BASE_URL = "https://login.microsoftonline.com/"
     private const val MOJANG_API_BASE_URL = "https://api.mojang.com/"
+    private const val MOJANG_META_BASE_URL = "https://piston-meta.mojang.com/"
     private const val RMS_API_BASE_URL = "http://api.rms.net.cn/"
 
     private val okHttpClient = OkHttpClient.Builder()
@@ -67,6 +68,10 @@ object ApiClient {
 
     val mojangApiService: MojangApiService by lazy {
         createService(MOJANG_API_BASE_URL, MojangApiService::class.java)
+    }
+
+    val mojangMetaApiService: MojangMetaApiService by lazy {
+        createService(MOJANG_META_BASE_URL, MojangMetaApiService::class.java)
     }
 
     val rmsApiService: RmsApiService by lazy {

@@ -30,7 +30,10 @@ class MinecraftDownloader(
     private val version: String,
     private val customName: String = version,
     private val verifyIntegrity: Boolean,
-    private val downloader: BaseMinecraftDownloader = BaseMinecraftDownloader(verifyIntegrity = verifyIntegrity),
+    private val downloader: BaseMinecraftDownloader = BaseMinecraftDownloader(
+        verifyIntegrity = verifyIntegrity,
+        fileDownloadSource = com.lanrhyme.shardlauncher.settings.AllSettings.fileDownloadSource.getValue()
+    ),
     private val mode: DownloadMode = DownloadMode.DOWNLOAD,
     private val onCompletion: () -> Unit = {},
     private val onError: (message: String) -> Unit = {},
@@ -245,6 +248,10 @@ class MinecraftDownloader(
                 },
                 onFileDownloaded = {
                     downloadedFileCount.incrementAndGet()
+                    // 确保文件已存在时也能正确更新进度
+                    if (!lastDownloadedSizes.containsKey(targetFile)) {
+                        lastDownloadedSizes[targetFile] = targetFile.length()
+                    }
                 }
             )
         )

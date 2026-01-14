@@ -2,7 +2,7 @@ package com.lanrhyme.shardlauncher.ui
 
 import androidx.compose.runtime.staticCompositionLocalOf
 import com.lanrhyme.shardlauncher.data.SettingsRepository
-import com.lanrhyme.shardlauncher.setting.enums.MirrorSourceType
+import com.lanrhyme.shardlauncher.settings.enums.MirrorSourceType
 
 class SettingsProvider(private val settingsRepository: SettingsRepository) {
     val fileDownloadSource: MirrorSourceType

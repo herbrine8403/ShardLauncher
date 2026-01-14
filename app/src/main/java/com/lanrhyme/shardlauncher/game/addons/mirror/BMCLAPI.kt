@@ -1,6 +1,6 @@
 package com.lanrhyme.shardlauncher.game.addons.mirror
 
-import com.lanrhyme.shardlauncher.setting.enums.MirrorSourceType
+import com.lanrhyme.shardlauncher.settings.enums.MirrorSourceType
 
 private const val ROOT = "https://bmclapi2.bangbang93.com"
 

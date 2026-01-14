@@ -9,7 +9,7 @@ import com.lanrhyme.shardlauncher.game.versioninfo.MinecraftVersions
 import com.lanrhyme.shardlauncher.game.versioninfo.models.AssetIndexJson
 import com.lanrhyme.shardlauncher.game.versioninfo.models.GameManifest
 import com.lanrhyme.shardlauncher.game.versioninfo.models.VersionManifest.Version
-import com.lanrhyme.shardlauncher.setting.enums.MirrorSourceType
+import com.lanrhyme.shardlauncher.settings.enums.MirrorSourceType
 import com.lanrhyme.shardlauncher.utils.classes.Quadruple
 import com.lanrhyme.shardlauncher.utils.file.ensureDirectory
 import com.lanrhyme.shardlauncher.utils.file.ensureParentDirectory

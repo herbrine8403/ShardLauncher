@@ -22,7 +22,12 @@ object NotificationManager {
     }
 
     fun clearAll() {
-        _notifications.update { list -> list.filter { it.type == NotificationType.Temporary } }
+        _notifications.update { list -> 
+            list.filter { 
+                it.type == NotificationType.Temporary || 
+                it.type == NotificationType.Progress 
+            } 
+        }
     }
 
     fun updateProgress(notificationId: String, progress: Float) {

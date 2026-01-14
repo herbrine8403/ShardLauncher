@@ -289,17 +289,27 @@ class VersionDetailViewModel(application: Application, private val versionId: St
                             }
                         }
                     )
-                    _downloadTask.value = minecraftDownloader.getDownloadTask()
+                    val task = minecraftDownloader.getDownloadTask()
+                    _downloadTask.value = task
 
-                    // 监听下载进度并更新通知
-                    _downloadTask.collect { task ->
-                        task?.let {
+                    // 创建一个独立的协程来监听进度更新
+                    viewModelScope.launch {
+                        // 每100毫秒检查一次进度
+                        while (task.currentProgress < 1f) {
                             downloadNotificationId?.let { id ->
                                 com.lanrhyme.shardlauncher.ui.notification.NotificationManager.updateProgress(
                                     id,
-                                    it.currentProgress
+                                    task.currentProgress
                                 )
                             }
+                            kotlinx.coroutines.delay(100)
+                        }
+                        // 确保最后一次进度更新
+                        downloadNotificationId?.let { id ->
+                            com.lanrhyme.shardlauncher.ui.notification.NotificationManager.updateProgress(
+                                id,
+                                task.currentProgress
+                            )
                         }
                     }
                 } else {

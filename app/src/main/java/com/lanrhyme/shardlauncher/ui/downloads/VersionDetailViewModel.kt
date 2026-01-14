@@ -229,27 +229,94 @@ class VersionDetailViewModel(application: Application, private val versionId: St
         )
     }
 
+    private var downloadNotificationId: String? = null
+
     fun download() {
         viewModelScope.launch {
             try {
                 val manifest = VersionManager.getVersionManifest()
                 val version = manifest.versions.find { it.id == versionId }
                 if (version != null) {
+                    // 创建下载通知
+                    downloadNotificationId = "download_${versionId}_${System.currentTimeMillis()}"
+                    com.lanrhyme.shardlauncher.ui.notification.NotificationManager.show(
+                        com.lanrhyme.shardlauncher.ui.notification.Notification(
+                            id = downloadNotificationId!!,
+                            title = "正在下载 ${_versionName.value}",
+                            message = "准备下载...",
+                            type = com.lanrhyme.shardlauncher.ui.notification.NotificationType.Progress,
+                            progress = 0f
+                        )
+                    )
+
                     val minecraftDownloader = MinecraftDownloader(
                         getApplication(),
                         version.id,
                         customName = _versionName.value,
                         verifyIntegrity = true,
                         mode = DownloadMode.DOWNLOAD,
-                        onCompletion = { _downloadTask.value = null },
-                        onError = { _downloadTask.value = null }
+                        onCompletion = {
+                            _downloadTask.value = null
+                            // 下载完成通知
+                            downloadNotificationId?.let { id ->
+                                com.lanrhyme.shardlauncher.ui.notification.NotificationManager.show(
+                                    com.lanrhyme.shardlauncher.ui.notification.Notification(
+                                        id = id,
+                                        title = "下载完成",
+                                        message = "${_versionName.value} 已成功下载",
+                                        type = com.lanrhyme.shardlauncher.ui.notification.NotificationType.Normal
+                                    )
+                                )
+                                // 3秒后自动清除
+                                kotlinx.coroutines.delay(3000)
+                                com.lanrhyme.shardlauncher.ui.notification.NotificationManager.dismiss(id)
+                            }
+                        },
+                        onError = { errorMessage ->
+                            _downloadTask.value = null
+                            // 下载失败通知
+                            downloadNotificationId?.let { id ->
+                                com.lanrhyme.shardlauncher.ui.notification.NotificationManager.show(
+                                    com.lanrhyme.shardlauncher.ui.notification.Notification(
+                                        id = id,
+                                        title = "下载失败",
+                                        message = errorMessage,
+                                        type = com.lanrhyme.shardlauncher.ui.notification.NotificationType.Error
+                                    )
+                                )
+                            }
+                        }
                     )
                     _downloadTask.value = minecraftDownloader.getDownloadTask()
+
+                    // 监听下载进度并更新通知
+                    _downloadTask.collect { task ->
+                        task?.let {
+                            downloadNotificationId?.let { id ->
+                                com.lanrhyme.shardlauncher.ui.notification.NotificationManager.updateProgress(
+                                    id,
+                                    it.currentProgress
+                                )
+                            }
+                        }
+                    }
                 } else {
-                    // Handle version not found
+                    com.lanrhyme.shardlauncher.ui.notification.NotificationManager.show(
+                        com.lanrhyme.shardlauncher.ui.notification.Notification(
+                            title = "版本未找到",
+                            message = "无法找到版本 $versionId",
+                            type = com.lanrhyme.shardlauncher.ui.notification.NotificationType.Error
+                        )
+                    )
                 }
             } catch (e: Exception) {
-                // Handle error
+                com.lanrhyme.shardlauncher.ui.notification.NotificationManager.show(
+                    com.lanrhyme.shardlauncher.ui.notification.Notification(
+                        title = "下载出错",
+                        message = e.message ?: "未知错误",
+                        type = com.lanrhyme.shardlauncher.ui.notification.NotificationType.Error
+                    )
+                )
             }
         }
     }

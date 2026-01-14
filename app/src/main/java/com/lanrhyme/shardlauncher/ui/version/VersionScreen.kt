@@ -722,11 +722,30 @@ fun VersionsOperation(
                 onDismissRequest = { updateVersionsOperation(VersionsOperation.None) },
                 onConfirm = { name: String ->
                     try {
+                        val oldName = versionsOperation.version.getVersionName()
                         VersionsManager.renameVersion(versionsOperation.version, name)
                         updateVersionsOperation(VersionsOperation.None)
+                        
+                        // 显示重命名成功通知
+                        com.lanrhyme.shardlauncher.ui.notification.NotificationManager.show(
+                            com.lanrhyme.shardlauncher.ui.notification.Notification(
+                                title = "重命名成功",
+                                message = "版本已从 $oldName 重命名为 $name",
+                                type = com.lanrhyme.shardlauncher.ui.notification.NotificationType.Normal
+                            )
+                        )
                     } catch (e: Exception) {
                         onError("重命名版本失败: ${e.message}")
                         updateVersionsOperation(VersionsOperation.None)
+                        
+                        // 显示重命名失败通知
+                        com.lanrhyme.shardlauncher.ui.notification.NotificationManager.show(
+                            com.lanrhyme.shardlauncher.ui.notification.Notification(
+                                title = "重命名失败",
+                                message = e.message ?: "未知错误",
+                                type = com.lanrhyme.shardlauncher.ui.notification.NotificationType.Error
+                            )
+                        )
                     }
                 }
             )
@@ -739,9 +758,27 @@ fun VersionsOperation(
                     try {
                         VersionsManager.copyVersion(versionsOperation.version, name, copyAll)
                         updateVersionsOperation(VersionsOperation.None)
+                        
+                        // 显示复制成功通知
+                        com.lanrhyme.shardlauncher.ui.notification.NotificationManager.show(
+                            com.lanrhyme.shardlauncher.ui.notification.Notification(
+                                title = "复制成功",
+                                message = "版本已复制为 $name",
+                                type = com.lanrhyme.shardlauncher.ui.notification.NotificationType.Normal
+                            )
+                        )
                     } catch (e: Exception) {
                         onError("复制版本失败: ${e.message}")
                         updateVersionsOperation(VersionsOperation.None)
+                        
+                        // 显示复制失败通知
+                        com.lanrhyme.shardlauncher.ui.notification.NotificationManager.show(
+                            com.lanrhyme.shardlauncher.ui.notification.Notification(
+                                title = "复制失败",
+                                message = e.message ?: "未知错误",
+                                type = com.lanrhyme.shardlauncher.ui.notification.NotificationType.Error
+                            )
+                        )
                     }
                 }
             )
@@ -761,11 +798,30 @@ fun VersionsOperation(
                 onDismissRequest = { updateVersionsOperation(VersionsOperation.None) },
                 onConfirm = {
                     try {
+                        val versionName = versionsOperation.version.getVersionName()
                         VersionsManager.deleteVersion(versionsOperation.version)
                         updateVersionsOperation(VersionsOperation.None)
+                        
+                        // 显示删除成功通知
+                        com.lanrhyme.shardlauncher.ui.notification.NotificationManager.show(
+                            com.lanrhyme.shardlauncher.ui.notification.Notification(
+                                title = "删除成功",
+                                message = "版本 $versionName 已删除",
+                                type = com.lanrhyme.shardlauncher.ui.notification.NotificationType.Normal
+                            )
+                        )
                     } catch (e: Exception) {
                         onError("删除版本失败: ${e.message}")
                         updateVersionsOperation(VersionsOperation.None)
+                        
+                        // 显示删除失败通知
+                        com.lanrhyme.shardlauncher.ui.notification.NotificationManager.show(
+                            com.lanrhyme.shardlauncher.ui.notification.Notification(
+                                title = "删除失败",
+                                message = e.message ?: "未知错误",
+                                type = com.lanrhyme.shardlauncher.ui.notification.NotificationType.Error
+                            )
+                        )
                     }
                 }
             )

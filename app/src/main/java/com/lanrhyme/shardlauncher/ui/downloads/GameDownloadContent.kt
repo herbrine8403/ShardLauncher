@@ -67,12 +67,34 @@ fun GameDownloadContent(navController: NavController) {
     val selectedVersionTypes by viewModel.selectedVersionTypes.collectAsState()
     val searchQuery by viewModel.searchQuery.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
+    val errorMessage by viewModel.errorMessage.collectAsState()
 
     LaunchedEffect(Unit) { viewModel.loadVersions() }
 
     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
         if (isLoading && versions.isEmpty()) {
             CircularProgressIndicator()
+        } else if (errorMessage != null && versions.isEmpty()) {
+            Column(
+                modifier = Modifier.padding(16.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Text(
+                    text = "加载失败",
+                    style = MaterialTheme.typography.titleLarge
+                )
+                Text(
+                    text = errorMessage!!,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.error
+                )
+                androidx.compose.material3.Button(
+                    onClick = { viewModel.loadVersions(forceRefresh = true) }
+                ) {
+                    Text("重试")
+                }
+            }
         } else {
             LazyColumn(
                     modifier = Modifier.fillMaxSize().padding(horizontal = 12.dp, vertical = 8.dp),
@@ -136,6 +158,25 @@ fun LazyItemScope.VersionItem(version: BmclapiManifest.Version, onClick: () -> U
                     label = "scale"
             )
 
+    // Determine version type and icon
+    val (versionType, versionTypeTitle, iconRes) = when (version.type) {
+        "release" -> Triple(VersionType.Release, VersionType.Release.title, R.drawable.img_minecraft)
+        "snapshot" -> Triple(VersionType.Snapshot, VersionType.Snapshot.title, R.drawable.img_command_block)
+        "old_alpha" -> Triple(VersionType.Ancient, "远古Alpha", R.drawable.img_old_grass_block)
+        "old_beta" -> Triple(VersionType.Ancient, "远古Beta", R.drawable.img_old_cobblestone)
+        else -> {
+            // Check if it's April Fools version
+            val isAprilFools = version.id.startsWith("2.0") ||
+                               version.id.startsWith("15w14a") ||
+                               version.id.startsWith("1.RV-Pre1")
+            if (isAprilFools) {
+                Triple(VersionType.AprilFools, VersionType.AprilFools.title, R.drawable.img_diamond_block)
+            } else {
+                Triple(VersionType.Release, version.type, R.drawable.img_minecraft)
+            }
+        }
+    }
+
     val shape = RoundedCornerShape(22.dp)
     val cardModifier =
             if (isCardBlurEnabled && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
@@ -171,21 +212,14 @@ fun LazyItemScope.VersionItem(version: BmclapiManifest.Version, onClick: () -> U
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             Image(
-                    painter = painterResource(id = R.drawable.img_minecraft),
+                    painter = painterResource(id = iconRes),
                     contentDescription = "Minecraft",
                     modifier = Modifier.size(32.dp)
             )
             Column(modifier = Modifier.weight(1f)) {
                 Text(text = "Minecraft ${version.id}", style = MaterialTheme.typography.bodyLarge)
-                val versionTypeString =
-                        when (version.type) {
-                            "release" -> VersionType.Release.title
-                            "snapshot" -> VersionType.Snapshot.title
-                            "old_alpha", "old_beta" -> VersionType.Ancient.title
-                            else -> version.type
-                        }
                 Text(
-                        text = "$versionTypeString - ${version.releaseTime.substringBefore('T')}",
+                        text = "$versionTypeTitle - ${version.releaseTime.substringBefore('T')}",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                 )

@@ -93,37 +93,39 @@ class GameDownloadViewModel : ViewModel() {
             return
         }
 
-        // Try to load from cache file first
-        if (!forceRefresh && cacheFile.exists() && cacheFile.isFile) {
-            val isCacheValid = cacheFile.lastModified() + cacheValidityDuration > System.currentTimeMillis()
-            if (isCacheValid) {
-                try {
-                    val cachedManifest = withContext(Dispatchers.IO) {
-                        cacheFile.readText()
-                    }
-                    val manifest = com.google.gson.Gson().fromJson(cachedManifest, VersionManifest::class.java)
-                    val versions = manifest.versions.map { version ->
-                        BmclapiManifest.Version(
-                            id = version.id,
-                            type = version.type,
-                            url = version.url,
-                            time = version.time,
-                            releaseTime = version.releaseTime
-                        )
-                    }
-                    _versions.value = versions
-                    cachedVersions = versions
-                    lastSourceWasBmclapi = useBmclapi
-                    return
-                } catch (e: Exception) {
-                    Logger.e("GameDownloadViewModel", "Failed to load version manifest from cache", e)
-                }
-            }
-        }
-
         viewModelScope.launch {
             _isLoading.value = true
             _errorMessage.value = null
+
+            // Try to load from cache file first
+            if (!forceRefresh && cacheFile.exists() && cacheFile.isFile) {
+                val isCacheValid = cacheFile.lastModified() + cacheValidityDuration > System.currentTimeMillis()
+                if (isCacheValid) {
+                    try {
+                        val cachedManifest = withContext(Dispatchers.IO) {
+                            cacheFile.readText()
+                        }
+                        val manifest = com.google.gson.Gson().fromJson(cachedManifest, VersionManifest::class.java)
+                        val versions = manifest.versions.map { version ->
+                            BmclapiManifest.Version(
+                                id = version.id,
+                                type = version.type,
+                                url = version.url,
+                                time = version.time,
+                                releaseTime = version.releaseTime
+                            )
+                        }
+                        _versions.value = versions
+                        cachedVersions = versions
+                        lastSourceWasBmclapi = useBmclapi
+                        _isLoading.value = false
+                        return@launch
+                    } catch (e: Exception) {
+                        Logger.e("GameDownloadViewModel", "Failed to load version manifest from cache", e)
+                    }
+                }
+            }
+
             try {
                 val versionsFromApi = if (useBmclapi) {
                     loadFromBmclapi()
@@ -195,6 +197,17 @@ class GameDownloadViewModel : ViewModel() {
     }
 
     private suspend fun saveToCache(manifest: VersionManifest) {
+        withContext(Dispatchers.IO) {
+            try {
+                cacheFile.parentFile?.mkdirs()
+                cacheFile.writeText(com.google.gson.Gson().toJson(manifest))
+            } catch (e: Exception) {
+                Logger.e("GameDownloadViewModel", "Failed to save version manifest to cache", e)
+            }
+        }
+    }
+
+    private suspend fun saveToCache(manifest: BmclapiManifest) {
         withContext(Dispatchers.IO) {
             try {
                 cacheFile.parentFile?.mkdirs()

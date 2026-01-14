@@ -268,8 +268,10 @@ class VersionDetailViewModel(application: Application, private val versionId: St
                                     )
                                 )
                                 // 3秒后自动清除
-                                kotlinx.coroutines.delay(3000)
-                                com.lanrhyme.shardlauncher.ui.notification.NotificationManager.dismiss(id)
+                                viewModelScope.launch {
+                                    kotlinx.coroutines.delay(3000)
+                                    com.lanrhyme.shardlauncher.ui.notification.NotificationManager.dismiss(id)
+                                }
                             }
                         },
                         onError = { errorMessage ->

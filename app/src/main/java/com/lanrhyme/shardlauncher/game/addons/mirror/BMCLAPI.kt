@@ -32,7 +32,10 @@ private val REPLACE_MIRROR_HOLDERS = mapOf(
     Pair("https://meta.fabricmc.net", BMCLAPI.BASE_URL.url + "/fabric-meta"),
     Pair("https://maven.fabricmc.net", BMCLAPI.MAVEN.url),
     Pair("https://authlib-injector.yushi.moe", BMCLAPI.BASE_URL.url + "/mirrors/authlib-injector"),
-    Pair("https://repo1.maven.org/maven2", "https://mirrors.cloud.tencent.com/nexus/repository/maven-public")
+    Pair("https://repo1.maven.org/maven2", "https://mirrors.cloud.tencent.com/nexus/repository/maven-public"),
+    Pair("https://launchermeta.mojang.com/v1/products/java-runtime", BMCLAPI.BASE_URL.url + "/v1/products/java-runtime"),
+    Pair("https://meta.quiltmc.org", BMCLAPI.BASE_URL.url + "/quilt-meta"),
+    Pair("https://maven.quiltmc.org/repository/release", BMCLAPI.MAVEN.url)
 )
 
 /**

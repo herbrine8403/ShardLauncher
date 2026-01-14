@@ -5,6 +5,7 @@ import android.content.Context
 import com.lanrhyme.shardlauncher.R
 import com.lanrhyme.shardlauncher.coroutine.Task
 import com.lanrhyme.shardlauncher.game.versioninfo.models.GameManifest
+import com.lanrhyme.shardlauncher.setting.enums.MirrorSourceType
 import com.lanrhyme.shardlauncher.utils.file.formatFileSize
 import com.lanrhyme.shardlauncher.utils.logging.Logger.lError
 import com.lanrhyme.shardlauncher.utils.logging.Logger.lInfo
@@ -32,7 +33,7 @@ class MinecraftDownloader(
     private val verifyIntegrity: Boolean,
     private val downloader: BaseMinecraftDownloader = BaseMinecraftDownloader(
         verifyIntegrity = verifyIntegrity,
-        fileDownloadSource = com.lanrhyme.shardlauncher.settings.AllSettings.fileDownloadSource.getValue()
+        fileDownloadSource = com.lanrhyme.shardlauncher.setting.AllSettings.fileDownloadSource.getValue()
     ),
     private val mode: DownloadMode = DownloadMode.DOWNLOAD,
     private val onCompletion: () -> Unit = {},

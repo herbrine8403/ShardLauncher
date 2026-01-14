@@ -9,6 +9,7 @@ import com.lanrhyme.shardlauncher.game.versioninfo.MinecraftVersions
 import com.lanrhyme.shardlauncher.game.versioninfo.models.AssetIndexJson
 import com.lanrhyme.shardlauncher.game.versioninfo.models.GameManifest
 import com.lanrhyme.shardlauncher.game.versioninfo.models.VersionManifest.Version
+import com.lanrhyme.shardlauncher.setting.enums.MirrorSourceType
 import com.lanrhyme.shardlauncher.utils.classes.Quadruple
 import com.lanrhyme.shardlauncher.utils.file.ensureDirectory
 import com.lanrhyme.shardlauncher.utils.file.ensureParentDirectory
@@ -23,7 +24,8 @@ const val MINECRAFT_RES: String = "https://resources.download.minecraft.net/"
  * 设计为通用化 Minecraft 原版完整下载
  */
 class BaseMinecraftDownloader(
-    private val verifyIntegrity: Boolean
+    private val verifyIntegrity: Boolean,
+    private val fileDownloadSource: MirrorSourceType = MirrorSourceType.OFFICIAL_FIRST
 ) {
     //Dir
     val assetsTarget = File(getAssetsHome()).ensureDirectory()
@@ -98,7 +100,7 @@ class BaseMinecraftDownloader(
         val clientFile = getVersionJarPath(clientName, mcFolder)
         scheduleCopy?.invoke(clientFile)
         gameManifest.downloads?.client?.let { client ->
-            scheduleDownload(client.url.mapMirrorableUrls(), client.sha1, clientFile, client.size)
+            scheduleDownload(client.url.mapMirrorableUrls(fileDownloadSource), client.sha1, clientFile, client.size)
         }
     }
 
@@ -117,7 +119,7 @@ class BaseMinecraftDownloader(
             } else {
                 File(targetPath, "objects/${hashedPath}".replace("/", File.separator))
             }
-            scheduleDownload("$MINECRAFT_RES$hashedPath".mapMirrorableUrls(), objectInfo.hash, targetFile, objectInfo.size)
+            scheduleDownload("$MINECRAFT_RES$hashedPath".mapMirrorableUrls(fileDownloadSource), objectInfo.hash, targetFile, objectInfo.size)
         }
     }
 
@@ -132,7 +134,7 @@ class BaseMinecraftDownloader(
             // processLibraries(libraries) // Commented out due to type mismatch
             libraries.forEach { library ->
                 if (library.name.startsWith("org.lwjgl")) return@forEach
-                
+
                 // Add library replacement logic
                 getLibraryReplacement(library.name, versionParts)?.let { replacement ->
                     library.name = replacement.newName
@@ -166,7 +168,7 @@ class BaseMinecraftDownloader(
                     Quadruple(library.sha1, url, library.size, isDownloadable)
                 }
 
-                scheduleDownload(url.mapMirrorableUrls(), sha1, File(targetDir, artifactPath), size, isDownloadable)
+                scheduleDownload(url.mapMirrorableUrls(fileDownloadSource), sha1, File(targetDir, artifactPath), size, isDownloadable)
             }
         }
     }

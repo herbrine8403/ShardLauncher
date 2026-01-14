@@ -62,6 +62,7 @@ fun NotificationItem(
                     )
                 }
             }
+            // Progress 类型的通知不允许手动关闭
             if (onDismiss != null && notification.type != NotificationType.Temporary && notification.type != NotificationType.Progress) {
                 IconButton(onClick = { onDismiss(notification.id) }) {
                     Icon(Icons.Default.Close, contentDescription = "Remove Notification")

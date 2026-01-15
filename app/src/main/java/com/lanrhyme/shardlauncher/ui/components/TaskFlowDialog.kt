@@ -25,6 +25,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.lanrhyme.shardlauncher.R
 import com.lanrhyme.shardlauncher.coroutine.Task
@@ -153,11 +154,12 @@ private fun TaskItem(
                 // 任务消息
                 task.currentMessageRes?.let { messageRes ->
                     val args = task.currentMessageArgs
+                    val context = androidx.compose.ui.platform.LocalContext.current
                     Text(
                         text = if (args != null) {
-                            android.content.res.Resources.getSystem().getString(messageRes, *args)
+                            context.getString(messageRes, *args)
                         } else {
-                            android.content.res.Resources.getSystem().getString(messageRes)
+                            context.getString(messageRes)
                         },
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant

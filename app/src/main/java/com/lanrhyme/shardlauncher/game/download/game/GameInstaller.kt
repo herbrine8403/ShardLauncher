@@ -17,14 +17,12 @@ import com.lanrhyme.shardlauncher.game.version.installed.VersionsManager
 import com.lanrhyme.shardlauncher.game.versioninfo.models.GameManifest
 import com.lanrhyme.shardlauncher.path.PathManager
 import com.lanrhyme.shardlauncher.utils.GSON
-import com.lanrhyme.shardlauncher.utils.file.copyDirectoryContents
 import com.lanrhyme.shardlauncher.utils.logging.Logger
 import com.lanrhyme.shardlauncher.utils.network.fetchStringFromUrls
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import org.apache.commons.io.FileUtils
 import java.io.File
 
@@ -148,22 +146,23 @@ class GameInstaller(
     /**
      * 获取安装 Minecraft 游戏的任务流阶段
      */
-    private suspend fun getTaskPhase() = withContext(Dispatchers.IO) {
+    private fun getTaskPhase(): List<TaskFlowExecutor.TaskPhase> {
         val pathConfig = createPathConfig(checkTargetVersion = true)
 
-        listOf(
+        return listOf(
             buildPhase {
                 //开始之前，应该先清理一次临时游戏目录，否则可能会影响安装结果
                 addTask(
                     id = "Download.Game.ClearTemp",
                     title = context.getString(R.string.download_install_clear_temp),
                     icon = Icons.Outlined.CleaningServices,
-                ) {
-                    clearTempGameDir()
-                    //清理完成缓存目录后，创建新的缓存目录
-                    pathConfig.tempClientDir.createDirAndLog()
-                    pathConfig.fabricDir?.createDirAndLog()
-                }
+                    task = Task.runTask("Download.Game.ClearTemp") {
+                        clearTempGameDir()
+                        //清理完成缓存目录后，创建新的缓存目录
+                        pathConfig.tempClientDir.createDirAndLog()
+                        pathConfig.fabricDir?.createDirAndLog()
+                    }
+                )
 
                 //下载安装原版
                 addTask(
@@ -224,7 +223,7 @@ class GameInstaller(
     /**
      * 清除临时游戏目录
      */
-    private suspend fun clearTempGameDir() = withContext(Dispatchers.IO) {
+    private fun clearTempGameDir() {
         PathManager.DIR_CACHE_GAME_DOWNLOADER.takeIf { it.exists() }?.let { folder ->
             FileUtils.deleteQuietly(folder)
             Logger.lInfo("Temporary game directory cleared.")
@@ -305,7 +304,7 @@ class GameInstaller(
                 val gameManifest = GSON.fromJson(fabricJson, GameManifest::class.java)
                 
                 // 使用 BaseMinecraftDownloader 下载所需的库
-                downloader.loadLibraryDownloads(gameManifest) {
+                downloader.loadLibraryDownloads(gameManifest, downloader.librariesTarget) {
                     urls, hash, targetFile, size, isDownloadable ->
                     // 这里可以直接添加到下载任务列表
                     // 但由于我们在 Task 内部，需要另一种方式处理
@@ -327,9 +326,9 @@ class GameInstaller(
     ) = Task.runTask(
         id = GAME_JSON_MERGER_ID,
         dispatcher = Dispatchers.IO,
-        task = { task ->
+        task = {
             //合并版本 Json
-            task.updateProgress(0.1f)
+            updateProgress(0.1f)
             mergeGameJson(
                 info = info,
                 outputFolder = targetClientDir,
@@ -338,13 +337,11 @@ class GameInstaller(
             )
 
             //迁移游戏文件
-            copyDirectoryContents(
-                File(tempMinecraftDir, "libraries"),
-                File(targetMinecraftDir, "libraries"),
-                onProgress = {
-                    task.updateProgress(it)
-                }
-            )
+            val sourceLibraries = File(tempMinecraftDir, "libraries")
+            val targetLibraries = File(targetMinecraftDir, "libraries")
+            if (sourceLibraries.exists()) {
+                FileUtils.copyDirectory(sourceLibraries, targetLibraries)
+            }
 
             //复制客户端文件
             copyVanillaFiles(
@@ -355,7 +352,7 @@ class GameInstaller(
             )
 
             //清除临时游戏目录
-            task.updateProgress(-1f, R.string.download_install_clear_temp)
+            updateProgress(-1f, R.string.download_install_clear_temp)
             clearTempGameDir()
         }
     )
@@ -368,7 +365,7 @@ class GameInstaller(
     ): Task {
         return Task.runTask(
             id = "VanillaFilesCopy",
-            task = { task ->
+            task = {
                 //复制客户端文件
                 copyVanillaFiles(
                     sourceGameFolder = tempMinecraftDir,
@@ -378,7 +375,7 @@ class GameInstaller(
                 )
 
                 //清除临时游戏目录
-                task.updateProgress(-1f, R.string.download_install_clear_temp)
+                updateProgress(-1f, R.string.download_install_clear_temp)
                 clearTempGameDir()
             }
         )
@@ -398,16 +395,22 @@ class GameInstaller(
 /**
  * 合并游戏版本Json
  */
-private suspend fun mergeGameJson(
+private fun mergeGameJson(
     info: GameDownloadInfo,
     outputFolder: File,
     clientFolder: File,
     fabricFolder: File?
 ) {
-    // 简化的版本合并逻辑，仅复制原版JSON
+    //合并版本 Json
     val vanillaJson = File(clientFolder, "${info.gameVersion}.json")
+    val fabricJson = fabricFolder?.let { File(it, "${it.name}.json") }
     val outputJson = File(outputFolder, "${info.customVersionName}.json")
-    vanillaJson.copyTo(outputJson, overwrite = true)
+    
+    // 如果有 Fabric，使用 Fabric 配置，否则使用原版配置
+    val finalJson = fabricJson?.takeIf { it.exists() } ?: vanillaJson
+    
+    // 复制并保存最终配置
+    finalJson.copyTo(outputJson, overwrite = true)
     Logger.lInfo("Merged game JSON files")
 }
 

@@ -144,7 +144,7 @@ class TaskFlowExecutor(
                     Logger.d("TaskFlowExecutor", "The current task flow has been cancelled.")
                     onCancel()
                 } else {
-                    Logger.w("TaskFlowExecutor", "An exception occurred while executing the task flow.", th)
+                    Logger.w("TaskFlowExecutor", "An exception occurred while executing the task flow.")
                     onError(th)
                 }
                 return@withContext

@@ -76,13 +76,30 @@ class GameDownloadViewModel : ViewModel() {
                     try {
                         ApiClient.bmclapiService.getGameVersionManifest().versions
                     } catch (e: Exception) {
-                        // fallback to default api
-                        val latest = ApiClient.versionApiService.getLatestVersions().release
-                        listOf(BmclapiManifest.Version(latest.versionId, latest.versionType, "", "", ""))
+                        // fallback to official api
+                        val manifest = com.lanrhyme.shardlauncher.model.version.VersionManager.getVersionManifest(force = forceRefresh)
+                        manifest.versions.map { version ->
+                            BmclapiManifest.Version(
+                                id = version.id,
+                                type = version.type,
+                                url = version.url,
+                                time = version.releaseTime,
+                                releaseTime = version.releaseTime
+                            )
+                        }
                     }
                 } else {
-                    val latest = ApiClient.versionApiService.getLatestVersions().release
-                    listOf(BmclapiManifest.Version(latest.versionId, latest.versionType, "", "", ""))
+                    // 使用官方API获取完整版本列表
+                    val manifest = com.lanrhyme.shardlauncher.model.version.VersionManager.getVersionManifest(force = forceRefresh)
+                    manifest.versions.map { version ->
+                        BmclapiManifest.Version(
+                            id = version.id,
+                            type = version.type,
+                            url = version.url,
+                            time = version.releaseTime,
+                            releaseTime = version.releaseTime
+                        )
+                    }
                 }
                 _versions.value = versionsFromApi
                 // Update cache

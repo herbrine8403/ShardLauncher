@@ -539,11 +539,13 @@ class GameInstaller(
         
         /**
          * 获取 Forge 版本 JSON URL
+         * 使用 BMCLAPI 提供的 Forge 版本 JSON
          */
         fun getForgeVersionJsonUrl(mcVersion: String, forgeVersion: String): String? {
-            // Forge 版本 JSON 通常包含在安装器中，这里返回 null 表示需要运行安装器
-            // 实际实现中应该运行安装器提取版本 JSON
-            return null
+            // Forge 版本格式：1.19.3-41.2.8
+            // BMCLAPI 提供版本 JSON：https://bmclapi2.bangbang93.com/maven/net/minecraftforge/forge/{version}/forge-{version}.json
+            val fullVersion = "$mcVersion-$forgeVersion"
+            return "$FORGE_MAVEN_URL/$fullVersion/forge-$fullVersion.json"
         }
         
         /**
@@ -557,11 +559,13 @@ class GameInstaller(
         
         /**
          * 获取 NeoForge 版本 JSON URL
+         * 使用 BMCLAPI 提供的 NeoForge 版本 JSON
          */
         fun getNeoForgeVersionJsonUrl(mcVersion: String, neoForgeVersion: String): String? {
-            // NeoForge 版本 JSON 通常包含在安装器中，这里返回 null 表示需要运行安装器
-            // 实际实现中应该运行安装器提取版本 JSON
-            return null
+            // NeoForge 版本格式：1.20.1-47.1.76
+            // BMCLAPI 提供版本 JSON：https://bmclapi2.bangbang93.com/maven/net/neoforged/neoforge/{version}/neoforge-{version}.json
+            val fullVersion = "$mcVersion-$neoForgeVersion"
+            return "$NEOFORGE_MAVEN_URL/neoforge/$fullVersion/neoforge-$fullVersion.json"
         }
     }
 }

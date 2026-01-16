@@ -35,16 +35,23 @@ fun <T> LoaderVersionDropdown(
 ) {
     var expanded by remember { mutableStateOf(false) }
 
-    val selectedVersionText = when (selectedVersion) {
-        is FabricLoaderVersion -> selectedVersion.version
-        is LoaderVersion -> selectedVersion.version
-        is String -> selectedVersion
-        else -> ""
+    // 如果选中版本为null且列表不为空，自动选择第一个
+    val actualSelectedVersion = selectedVersion ?: versions.firstOrNull()
+    
+    val selectedVersionText = when (actualSelectedVersion) {
+        is FabricLoaderVersion -> actualSelectedVersion.version
+        is LoaderVersion -> actualSelectedVersion.version
+        is String -> actualSelectedVersion
+        else -> "请选择版本"
     }
 
     ExposedDropdownMenuBox(
         expanded = expanded,
-        onExpandedChange = { expanded = !expanded }
+        onExpandedChange = { 
+            if (versions.isNotEmpty()) {
+                expanded = !expanded 
+            }
+        }
     ) {
         CustomTextField(
             value = selectedVersionText,
@@ -52,22 +59,28 @@ fun <T> LoaderVersionDropdown(
             readOnly = true,
             label = "版本",
             trailingIcon = {
-                ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded)
+                if (versions.isNotEmpty()) {
+                    ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded)
+                }
             },
             modifier = Modifier.fillMaxWidth().menuAnchor()
         )
-        ExposedDropdownMenu(
-            expanded = expanded,
-            onDismissRequest = { expanded = false }
-        ) {
-            versions.forEach { version ->
-                DropdownMenuItem(
-                    text = { VersionDropdownItem(version = version) },
-                    onClick = {
-                        onVersionSelected(version)
-                        expanded = false
-                    }
-                )
+        
+        // 只在有版本数据时显示下拉菜单
+        if (versions.isNotEmpty()) {
+            ExposedDropdownMenu(
+                expanded = expanded,
+                onDismissRequest = { expanded = false }
+            ) {
+                versions.forEach { version ->
+                    DropdownMenuItem(
+                        text = { VersionDropdownItem(version = version) },
+                        onClick = {
+                            onVersionSelected(version)
+                            expanded = false
+                        }
+                    )
+                }
             }
         }
     }

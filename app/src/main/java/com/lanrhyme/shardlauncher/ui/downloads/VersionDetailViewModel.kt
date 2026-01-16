@@ -111,7 +111,10 @@ class VersionDetailViewModel(application: Application, private val versionId: St
                 _optifineVersions.value = mappedOptiFineVersions
                 _selectedOptifineVersion.value = mappedOptiFineVersions.firstOrNull()
 
-            } catch (e: Exception) { /* Handle error */ }
+            } catch (e: Exception) { 
+                // 记录错误，但继续执行，让UI可以显示其他可用的Mod Loader
+                e.printStackTrace()
+            }
 
             // Placeholders
             _fabricApiVersions.value = listOf("0.100.0+1.21", "0.99.3+1.21", "0.96.4+1.20.6")

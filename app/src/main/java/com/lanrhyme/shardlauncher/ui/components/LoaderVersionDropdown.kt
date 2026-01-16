@@ -42,7 +42,7 @@ fun <T> LoaderVersionDropdown(
         is FabricLoaderVersion -> actualSelectedVersion.version
         is LoaderVersion -> actualSelectedVersion.version
         is String -> actualSelectedVersion
-        else -> "请选择版本"
+        else -> ""
     }
 
     ExposedDropdownMenuBox(

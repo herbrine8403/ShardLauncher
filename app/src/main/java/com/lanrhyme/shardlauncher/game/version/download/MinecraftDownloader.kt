@@ -185,7 +185,7 @@ class MinecraftDownloader(
         clientName: String,
         clientVersionsDir: File
     ) {
-        val assetsIndex = downloader.createAssetIndex(downloader.assetIndexTarget, gameManifest)
+        val assetsIndex = downloader.createAssetIndex(gameManifest)
 
         downloader.loadClientJarDownload(
             gameManifest, 

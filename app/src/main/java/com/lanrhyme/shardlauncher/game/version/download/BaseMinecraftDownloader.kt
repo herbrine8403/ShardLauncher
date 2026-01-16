@@ -26,19 +26,19 @@ class BaseMinecraftDownloader(
     val verifyIntegrity: Boolean
 ) {
     // 动态获取当前路径，确保路径切换后能正确下载
-    private val assetsTarget: File
+    internal val assetsTarget: File
         get() = File(getAssetsHome()).ensureDirectory()
     
-    private val resourcesTarget: File
+    internal val resourcesTarget: File
         get() = File(getResourcesHome()).ensureDirectory()
     
-    private val versionsTarget: File
+    internal val versionsTarget: File
         get() = File(getVersionsHome()).ensureDirectory()
     
-    private val librariesTarget: File
+    internal val librariesTarget: File
         get() = File(getLibrariesHome()).ensureDirectory()
     
-    private val assetIndexTarget: File
+    internal val assetIndexTarget: File
         get() = File(assetsTarget, "indexes").ensureDirectory()
 
     suspend fun findVersion(version: String): Version? {

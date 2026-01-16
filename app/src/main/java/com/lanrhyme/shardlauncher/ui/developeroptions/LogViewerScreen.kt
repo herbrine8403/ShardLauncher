@@ -269,7 +269,7 @@ private fun LogItem(log: LogCollector.LogEntry) {
             lineHeight = 16.sp
         )
         
-        log.throwback?.let { throwable ->
+        log.throwable?.let { throwable ->
             Spacer(modifier = Modifier.height(4.dp))
             Text(
                 text = throwable.stackTraceToString(),

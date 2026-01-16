@@ -237,7 +237,7 @@ class VersionDetailViewModel(application: Application, private val versionId: St
                 val manifest = VersionManager.getVersionManifest()
                 val version = manifest.versions.find { it.id == versionId }
                 if (version != null) {
-                    // 创建游戏下载信息
+                    // 根据选择的 Mod Loader 创建相应的版本信息
                     val fabricVersion = selectedFabricVersion.value?.let {
                         com.lanrhyme.shardlauncher.game.download.game.FabricVersion(
                             version = it.version,
@@ -245,10 +245,34 @@ class VersionDetailViewModel(application: Application, private val versionId: St
                         )
                     }
                     
+                    val forgeVersion = selectedForgeVersion.value?.let {
+                        com.lanrhyme.shardlauncher.game.download.game.ForgeVersion(
+                            version = it.version,
+                            loaderName = "Forge"
+                        )
+                    }
+                    
+                    val neoForgeVersion = selectedNeoForgeVersion.value?.let {
+                        com.lanrhyme.shardlauncher.game.download.game.NeoForgeVersion(
+                            version = it.version,
+                            loaderName = "NeoForge"
+                        )
+                    }
+                    
+                    val quiltVersion = selectedQuiltVersion.value?.let {
+                        com.lanrhyme.shardlauncher.game.download.game.QuiltVersion(
+                            version = it.version,
+                            loaderName = "Quilt"
+                        )
+                    }
+                    
                     val downloadInfo = com.lanrhyme.shardlauncher.game.download.game.GameDownloadInfo(
                         gameVersion = version.id,
                         customVersionName = _versionName.value,
-                        fabric = fabricVersion
+                        fabric = fabricVersion,
+                        forge = forgeVersion,
+                        neoForge = neoForgeVersion,
+                        quilt = quiltVersion
                     )
                     
                     // 创建游戏安装器

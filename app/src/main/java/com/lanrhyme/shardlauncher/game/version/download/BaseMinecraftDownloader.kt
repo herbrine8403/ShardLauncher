@@ -23,25 +23,34 @@ const val MINECRAFT_RES: String = "https://resources.download.minecraft.net/"
  * 设计为通用化 Minecraft 原版完整下载
  */
 class BaseMinecraftDownloader(
-    private val verifyIntegrity: Boolean
+    val verifyIntegrity: Boolean
 ) {
-    //Dir
-    val assetsTarget = File(getAssetsHome()).ensureDirectory()
-    val resourcesTarget = File(getResourcesHome()).ensureDirectory()
-    val versionsTarget = File(getVersionsHome()).ensureDirectory()
-    val librariesTarget = File(getLibrariesHome()).ensureDirectory()
-    val assetIndexTarget = File(assetsTarget, "indexes").ensureDirectory()
+    // 动态获取当前路径，确保路径切换后能正确下载
+    internal val assetsTarget: File
+        get() = File(getAssetsHome()).ensureDirectory()
+    
+    internal val resourcesTarget: File
+        get() = File(getResourcesHome()).ensureDirectory()
+    
+    internal val versionsTarget: File
+        get() = File(getVersionsHome()).ensureDirectory()
+    
+    internal val librariesTarget: File
+        get() = File(getLibrariesHome()).ensureDirectory()
+    
+    internal val assetIndexTarget: File
+        get() = File(assetsTarget, "indexes").ensureDirectory()
 
     suspend fun findVersion(version: String): Version? {
         val versionManifest = MinecraftVersions.getVersionManifest()
         return versionManifest.versions.find { it.id == version }
     }
 
-    fun getVersionJsonPath(version: String, mcFolder: File = versionsTarget) =
-        File(mcFolder, "$version/$version.json".replace("/", File.separator)).ensureParentDirectory()
+    fun getVersionJsonPath(version: String, mcFolder: File? = null) =
+        File(mcFolder ?: versionsTarget, "$version/$version.json".replace("/", File.separator)).ensureParentDirectory()
 
-    fun getVersionJarPath(version: String, mcFolder: File = versionsTarget) =
-        File(mcFolder, "$version/$version.jar".replace("/", File.separator)).ensureParentDirectory()
+    fun getVersionJarPath(version: String, mcFolder: File? = null) =
+        File(mcFolder ?: versionsTarget, "$version/$version.jar".replace("/", File.separator)).ensureParentDirectory()
 
     /**
      * 创建版本 Json
@@ -57,7 +66,7 @@ class BaseMinecraftDownloader(
     fun createVersionJson(
         version: Version,
         targetVersion: String,
-        mcFolder: File = versionsTarget
+        mcFolder: File? = null
     ): GameManifest {
         return downloadAndParseJson<GameManifest>(
             url = version.url,
@@ -72,7 +81,6 @@ class BaseMinecraftDownloader(
      * 创建 assets 索引 Json
      */
     fun createAssetIndex(
-        assetIndexTarget: File,
         gameManifest: GameManifest
     ): AssetIndexJson? {
         val indexFile = File(assetIndexTarget, "${gameManifest.assets}.json")

@@ -74,9 +74,11 @@ class VersionDetailViewModel(application: Application, private val versionId: St
 
     private val _downloadTask = MutableStateFlow<Task?>(null)
     val downloadTask = _downloadTask.asStateFlow()
+    
+    // GameInstaller 实例
+    private var installer: com.lanrhyme.shardlauncher.game.download.game.GameInstaller? = null
 
     init {
-        VersionManager.init(application)
         loadAllLoaderVersions()
     }
 
@@ -109,7 +111,10 @@ class VersionDetailViewModel(application: Application, private val versionId: St
                 _optifineVersions.value = mappedOptiFineVersions
                 _selectedOptifineVersion.value = mappedOptiFineVersions.firstOrNull()
 
-            } catch (e: Exception) { /* Handle error */ }
+            } catch (e: Exception) { 
+                // 记录错误，但继续执行，让UI可以显示其他可用的Mod Loader
+                e.printStackTrace()
+            }
 
             // Placeholders
             _fabricApiVersions.value = listOf("0.100.0+1.21", "0.99.3+1.21", "0.96.4+1.20.6")
@@ -232,25 +237,146 @@ class VersionDetailViewModel(application: Application, private val versionId: St
     fun download() {
         viewModelScope.launch {
             try {
+                com.lanrhyme.shardlauncher.utils.logging.Logger.lInfo("Starting download for version: $versionId")
+                
                 val manifest = VersionManager.getVersionManifest()
                 val version = manifest.versions.find { it.id == versionId }
                 if (version != null) {
-                    val minecraftDownloader = MinecraftDownloader(
-                        getApplication(),
-                        version.id,
-                        customName = _versionName.value,
-                        verifyIntegrity = true,
-                        mode = DownloadMode.DOWNLOAD,
-                        onCompletion = { _downloadTask.value = null },
-                        onError = { _downloadTask.value = null }
+                    com.lanrhyme.shardlauncher.utils.logging.Logger.lInfo("Found version manifest: ${version.id}")
+                    
+                    // 根据选择的 Mod Loader 创建相应的版本信息
+                    val fabricVersion = selectedFabricVersion.value?.let {
+                        com.lanrhyme.shardlauncher.utils.logging.Logger.lInfo("Selected Fabric version: ${it.version}")
+                        com.lanrhyme.shardlauncher.game.download.game.FabricVersion(
+                            version = it.version,
+                            loaderName = "Fabric"
+                        )
+                    }
+                    
+                    val forgeVersion = selectedForgeVersion.value?.let {
+                        com.lanrhyme.shardlauncher.utils.logging.Logger.lInfo("Selected Forge version: ${it.version}")
+                        com.lanrhyme.shardlauncher.game.download.game.ForgeVersion(
+                            version = it.version,
+                            loaderName = "Forge"
+                        )
+                    }
+                    
+                    val neoForgeVersion = selectedNeoForgeVersion.value?.let {
+                        com.lanrhyme.shardlauncher.utils.logging.Logger.lInfo("Selected NeoForge version: ${it.version}")
+                        com.lanrhyme.shardlauncher.game.download.game.NeoForgeVersion(
+                            version = it.version,
+                            loaderName = "NeoForge"
+                        )
+                    }
+                    
+                    val quiltVersion = selectedQuiltVersion.value?.let {
+                        com.lanrhyme.shardlauncher.utils.logging.Logger.lInfo("Selected Quilt version: ${it.version}")
+                        com.lanrhyme.shardlauncher.game.download.game.QuiltVersion(
+                            version = it.version,
+                            loaderName = "Quilt"
+                        )
+                    }
+                    
+                    val downloadInfo = com.lanrhyme.shardlauncher.game.download.game.GameDownloadInfo(
+                        gameVersion = version.id,
+                        customVersionName = _versionName.value,
+                        fabric = fabricVersion,
+                        forge = forgeVersion,
+                        neoForge = neoForgeVersion,
+                        quilt = quiltVersion
                     )
-                    _downloadTask.value = minecraftDownloader.getDownloadTask()
+                    
+                    com.lanrhyme.shardlauncher.utils.logging.Logger.lInfo("Creating game installer for: ${downloadInfo.customVersionName}")
+                    
+                    // 创建游戏安装器
+                    installer = com.lanrhyme.shardlauncher.game.download.game.GameInstaller(
+                        context = getApplication(),
+                        info = downloadInfo,
+                        scope = viewModelScope
+                    )
+                    
+                    // 创建一个虚拟的Task来跟踪下载状态
+                    val downloadTask = com.lanrhyme.shardlauncher.coroutine.Task.runTask(
+                        id = "game_download_${versionId}",
+                        task = { task ->
+                            task.taskState = com.lanrhyme.shardlauncher.coroutine.TaskState.RUNNING
+                            // 这里不执行实际任务，实际任务由GameInstaller处理
+                            // 我们只是用这个Task来跟踪UI状态
+                        },
+                        onError = { error ->
+                            com.lanrhyme.shardlauncher.utils.logging.Logger.lError("Download task error: ${error.message}", error)
+                            _downloadTask.value = null
+                        },
+                        onFinally = {
+                            // 延迟清理任务状态，让用户看到完成状态
+                            viewModelScope.launch {
+                                kotlinx.coroutines.delay(500)
+                                _downloadTask.value = null
+                            }
+                        }
+                    )
+                    
+                    // 设置下载任务状态
+                    _downloadTask.value = downloadTask
+                    
+                    // 执行安装
+                    installer?.installGame(
+                        isRunning = { 
+                            com.lanrhyme.shardlauncher.utils.logging.Logger.lWarning("Installation already in progress")
+                            // 已在安装中，取消虚拟任务
+                            downloadTask.taskState = com.lanrhyme.shardlauncher.coroutine.TaskState.COMPLETED
+                        },
+                        onInstalled = { installedVersion ->
+                            com.lanrhyme.shardlauncher.utils.logging.Logger.lInfo("Game installed successfully: $installedVersion")
+                            downloadTask.taskState = com.lanrhyme.shardlauncher.coroutine.TaskState.COMPLETED
+                            // 刷新版本列表，让新安装的版本被检测到
+                            com.lanrhyme.shardlauncher.game.version.installed.VersionsManager.refresh(
+                                tag = "VersionDetailViewModel.download",
+                                trySetVersion = installedVersion
+                            )
+                        },
+                        onError = { error ->
+                            com.lanrhyme.shardlauncher.utils.logging.Logger.lError("Game installation failed: ${error.message}", error)
+                            downloadTask.taskState = com.lanrhyme.shardlauncher.coroutine.TaskState.COMPLETED
+                        },
+                        onGameAlreadyInstalled = {
+                            com.lanrhyme.shardlauncher.utils.logging.Logger.lWarning("Game already installed: ${_versionName.value}")
+                            downloadTask.taskState = com.lanrhyme.shardlauncher.coroutine.TaskState.COMPLETED
+                        }
+                    )
                 } else {
+                    com.lanrhyme.shardlauncher.utils.logging.Logger.lError("Version not found: $versionId")
                     // Handle version not found
                 }
             } catch (e: Exception) {
+                com.lanrhyme.shardlauncher.utils.logging.Logger.lError("Download initialization failed: ${e.message}", e)
                 // Handle error
+                _downloadTask.value = null
             }
         }
+    }
+    
+    /**
+     * 获取游戏安装器的任务流
+     */
+    fun getTasksFlow(): kotlinx.coroutines.flow.StateFlow<List<com.lanrhyme.shardlauncher.coroutine.TitledTask>> {
+        return installer?.tasksFlow ?: kotlinx.coroutines.flow.MutableStateFlow(emptyList())
+    }
+    
+    /**
+     * 取消安装
+     */
+    fun cancelInstall() {
+        com.lanrhyme.shardlauncher.utils.logging.Logger.lInfo("Cancelling installation for version: $versionId")
+        installer?.cancelInstall()
+        _downloadTask.value = null
+        com.lanrhyme.shardlauncher.utils.logging.Logger.lInfo("Installation cancelled")
+    }
+
+    /**
+     * 完成下载
+     */
+    fun completeDownload() {
+        _downloadTask.value = null
     }
 }

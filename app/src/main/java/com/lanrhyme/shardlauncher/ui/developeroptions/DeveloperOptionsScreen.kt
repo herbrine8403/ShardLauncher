@@ -12,6 +12,8 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.Text
@@ -66,6 +68,20 @@ fun DeveloperOptionsScreen(navController: NavController) {
         item {
             Card(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(22.dp)) {
                 TestNotificationSender()
+            }
+        }
+        item {
+            Card(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(22.dp)) {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    TitleAndSummary(title = "实时日志", summary = "查看应用运行日志，用于调试")
+                    Spacer(modifier = Modifier.height(16.dp))
+                    ScalingActionButton(
+                            onClick = { navController.navigate("log_viewer") },
+                            modifier = Modifier.fillMaxWidth(),
+                            text = "打开日志查看器",
+                            icon = Icons.Default.List
+                    )
+                }
             }
         }
         item {

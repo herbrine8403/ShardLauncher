@@ -15,7 +15,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.outlined.Download
 import androidx.compose.material.icons.outlined.Schedule
 import androidx.compose.material3.Icon
@@ -25,9 +24,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import com.lanrhyme.shardlauncher.R
 import com.lanrhyme.shardlauncher.coroutine.Task
 import com.lanrhyme.shardlauncher.coroutine.TaskState
 import com.lanrhyme.shardlauncher.coroutine.TitledTask
@@ -52,9 +49,11 @@ fun TaskFlowDialog(
     isCompleted: Boolean = false,
     onComplete: () -> Unit = {}
 ) {
-    CustomDialog(
+    ShardDialog(
         visible = visible,
         onDismissRequest = onDismiss,
+        width = 350.dp,
+        height = 310.dp,
         modifier = Modifier.padding(16.dp)
     ) {
         Column(

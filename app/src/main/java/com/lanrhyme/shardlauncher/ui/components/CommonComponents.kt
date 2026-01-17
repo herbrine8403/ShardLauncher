@@ -620,41 +620,35 @@ fun SearchTextField(
  */
 @Composable
 fun BackgroundTextTag(
-        title: String,
-        icon: ImageVector? = null,
-        backgroundColor: Color = MaterialTheme.colorScheme.primary,
-        modifier: Modifier = Modifier
+    title: String,
+    icon: ImageVector? = null,
+    backgroundColor: Color = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
+    modifier: Modifier = Modifier
 ) {
-        Row(
-                modifier =
-                        modifier
-                            .clip(RoundedCornerShape(16.dp))
-                            .background(backgroundColor)
-                            .padding(horizontal = 12.dp, vertical = 6.dp),
-                verticalAlignment = Alignment.CenterVertically
-        ) {
-                if (icon != null) {
-                        Icon(
-                                imageVector = icon,
-                                contentDescription = null,
-                                modifier = Modifier.size(16.dp),
-                                tint =
-                                        if (backgroundColor == MaterialTheme.colorScheme.primary)
-                                                MaterialTheme.colorScheme.onPrimary
-                                        else MaterialTheme.colorScheme.onSurface
-                        )
-                        Spacer(modifier = Modifier.width(6.dp))
-                }
-                Text(
-                        text = title,
-                        style = MaterialTheme.typography.labelMedium,
-                        color =
-                                if (backgroundColor == MaterialTheme.colorScheme.primary)
-                                        MaterialTheme.colorScheme.onPrimary
-                                else MaterialTheme.colorScheme.onSurface,
-                        fontWeight = FontWeight.Medium
-                )
+    Row(
+        modifier =
+            modifier
+                .clip(RoundedCornerShape(6.dp))
+                .background(backgroundColor)
+                .padding(horizontal = 10.dp, vertical = 6.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        if (icon != null) {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                modifier = Modifier.size(14.dp),
+                tint = MaterialTheme.colorScheme.primary
+            )
+            Spacer(modifier = Modifier.width(2.dp))
         }
+        Text(
+            text = title,
+            style = MaterialTheme.typography.labelMedium,
+            color =MaterialTheme.colorScheme.primary,
+            fontWeight = FontWeight.Medium
+        )
+    }
 }
 
 /**
@@ -685,99 +679,108 @@ fun TitledDivider(title: String, modifier: Modifier = Modifier) {
 }
 
 /**
- * 一个弹出式的容器卡片
+ * 一个弹出式的容器卡片组件
  *
- * @param visible 是否可见
- * @param onDismissRequest 关闭请求回调
- * @param modifier 修饰符
- * @param alignment 对齐方式
- * @param content 卡片内容
+ * 该组件提供了一个可动画的弹出式卡片，支持模糊效果（如果 [LocalCardLayoutConfig.isCardBlurEnabled] 为 true 且 Android 版本 >= S），
+ * 并且在显示/隐藏时带有弹簧动画效果
+ *
+ * @param visible 控制弹出卡片的可见性
+ * @param onDismissRequest 当用户请求关闭弹出卡片时调用的回调
+ * @param modifier 应用于弹出卡片内容的修饰符
+ * @param alignment 弹出卡片在屏幕上的对齐方式
+ * @param content 弹出卡片内部显示的内容
  */
 @Composable
 fun PopupContainer(
-        visible: Boolean,
-        onDismissRequest: () -> Unit,
-        modifier: Modifier = Modifier.width(500.dp),
-        alignment: Alignment = Alignment.Center,
-        content: @Composable () -> Unit
+    visible: Boolean,
+    onDismissRequest: () -> Unit,
+    modifier: Modifier = Modifier,
+    width: Dp = 300.dp,
+    height: Dp = 300.dp,
+    alignment: Alignment = Alignment.Center,
+    content: @Composable () -> Unit
 ) {
-        val (isCardBlurEnabled, cardAlpha, hazeState) = LocalCardLayoutConfig.current
-        val visibleState = remember { MutableTransitionState(false) }
+    val (isCardBlurEnabled, cardAlpha, hazeState) = LocalCardLayoutConfig.current
+    val visibleState = remember { MutableTransitionState(false) }
 
-        LaunchedEffect(visible) { visibleState.targetState = visible }
+    LaunchedEffect(visible) { visibleState.targetState = visible }
 
-        if (visibleState.currentState || visibleState.targetState) {
-                Popup(
-                        onDismissRequest = onDismissRequest,
-                        properties = PopupProperties(focusable = true),
-                        alignment = alignment
-                ) {
-                        AnimatedVisibility(
-                                visibleState = visibleState,
-                                enter =
-                                        fadeIn(
-                                                animationSpec =
-                                                        spring(
-                                                                stiffness =
-                                                                        Spring.StiffnessMediumLow
-                                                        )
-                                        ) +
-                                                scaleIn(
-                                                        animationSpec =
-                                                                spring(
-                                                                        dampingRatio =
-                                                                                Spring.DampingRatioMediumBouncy,
-                                                                        stiffness =
-                                                                                Spring.StiffnessLow
-                                                                ),
-                                                        initialScale = 0.8f
-                                                ),
-                                exit =
-                                        fadeOut(
-                                                animationSpec =
-                                                        spring(
-                                                                stiffness =
-                                                                        Spring.StiffnessMediumLow
-                                                        )
-                                        ) +
-                                                scaleOut(
-                                                        animationSpec =
-                                                                spring(
-                                                                        stiffness =
-                                                                                Spring.StiffnessMediumLow
-                                                                ),
-                                                        targetScale = 0.8f
-                                                )
-                        ) {
-                                val popupShape = RoundedCornerShape(16.dp)
-                                Card(
-                                        modifier =
-                                                modifier.then(
-                                                                if (isCardBlurEnabled &&
-                                                                                Build.VERSION
-                                                                                        .SDK_INT >=
-                                                                                        Build.VERSION_CODES
-                                                                                                .S
-                                                                ) {
-                                                                        Modifier
-                                                                            .clip(popupShape)
-                                                                            .hazeEffect(
-                                                                                state =
-                                                                                    hazeState
-                                                                            )
-                                                                } else Modifier
-                                                        ),
-                                        shape = popupShape,
-                                        colors =
-                                                CardDefaults.cardColors(
-                                                        containerColor =
-                                                                MaterialTheme.colorScheme.surface
-                                                                        .copy(alpha = cardAlpha)
-                                                )
-                                ) { content() }
-                        }
-                }
+    if (visibleState.currentState || visibleState.targetState) {
+        Popup(
+            onDismissRequest = onDismissRequest,
+            properties = PopupProperties(focusable = true),
+            alignment = alignment
+        ) {
+            AnimatedVisibility(
+                visibleState = visibleState,
+                enter =
+                    fadeIn(
+                        animationSpec =
+                            spring(
+                                stiffness =
+                                    Spring.StiffnessMediumLow
+                            )
+                    ) +
+                            scaleIn(
+                                animationSpec =
+                                    spring(
+                                        dampingRatio =
+                                            Spring.DampingRatioMediumBouncy,
+                                        stiffness =
+                                            Spring.StiffnessLow
+                                    ),
+                                initialScale = 0.8f
+                            ),
+                exit =
+                    fadeOut(
+                        animationSpec =
+                            spring(
+                                stiffness =
+                                    Spring.StiffnessMediumLow
+                            )
+                    ) +
+                            scaleOut(
+                                animationSpec =
+                                    spring(
+                                        stiffness =
+                                            Spring.StiffnessMediumLow
+                                    ),
+                                targetScale = 0.8f
+                            )
+            ) {
+                val popupShape = RoundedCornerShape(16.dp)
+                Card(
+                    modifier =
+                        modifier.width(width).height(height)
+                            .then(
+                            if (isCardBlurEnabled &&
+                                Build.VERSION
+                                    .SDK_INT >=
+                                Build.VERSION_CODES
+                                    .S
+                            ) {
+                                Modifier
+                                    .clip(popupShape)
+                                    .hazeEffect(
+                                        state =
+                                            hazeState
+                                    )
+                            } else Modifier
+                        ),
+                    shape = popupShape,
+                    colors =
+                        CardDefaults.cardColors(
+                            containerColor = if (isCardBlurEnabled) {
+                                MaterialTheme.colorScheme.surface
+                                    .copy(alpha = 0.8f)
+                            } else {
+                                MaterialTheme.colorScheme.surface
+                            }
+                        )
+                ) { content() }
+            }
         }
+    }
 }
 
 /**

@@ -67,7 +67,7 @@ fun VersionConfigScreen(
         )
         val selectedIsolationOption = isolationOptions.find { it.first == isolationType }?.second ?: "跟随全局设置"
         
-        com.lanrhyme.shardlauncher.ui.components.SimpleListLayout(
+        com.lanrhyme.shardlauncher.ui.components.SimpleListLayoutCard(
             title = "版本隔离",
             summary = "为此版本创建独立的游戏目录",
             items = isolationOptions.map { it.second },
@@ -88,7 +88,7 @@ fun VersionConfigScreen(
         )
         val selectedIntegrityCheckOption = integrityCheckOptions.find { it.first == skipGameIntegrityCheck }?.second ?: "跟随全局设置"
         
-        com.lanrhyme.shardlauncher.ui.components.SimpleListLayout(
+        com.lanrhyme.shardlauncher.ui.components.SimpleListLayoutCard(
             title = "游戏完整性检查",
             summary = "跳过游戏文件完整性检查",
             items = integrityCheckOptions.map { it.second },
@@ -111,7 +111,7 @@ fun VersionConfigScreen(
         )
 
         // 内存分配
-        SliderLayout(
+        SliderLayoutCard(
             value = ramAllocation.toFloat(),
             onValueChange = { value ->
                 ramAllocation = value.toInt()
@@ -125,7 +125,7 @@ fun VersionConfigScreen(
         )
 
         // JVM参数
-        TextInputLayout(
+        TextInputLayoutCard(
             value = jvmArgs,
             onValueChange = { value ->
                 jvmArgs = value
@@ -141,7 +141,7 @@ fun VersionConfigScreen(
         val runtimeNames = listOf("跟随全局配置") + runtimes.map { it.name }
         val selectedRuntime = if (javaRuntime.isEmpty()) "跟随全局配置" else javaRuntime
         
-        com.lanrhyme.shardlauncher.ui.components.SimpleListLayout(
+        com.lanrhyme.shardlauncher.ui.components.SimpleListLayoutCard(
             title = "Java运行时",
             summary = "选择用于启动游戏的Java运行时环境",
             items = runtimeNames,
@@ -162,7 +162,7 @@ fun VersionConfigScreen(
             renderers.find { it.getUniqueIdentifier() == renderer }?.getRendererName() ?: renderer
         }
         
-        com.lanrhyme.shardlauncher.ui.components.SimpleListLayout(
+        com.lanrhyme.shardlauncher.ui.components.SimpleListLayoutCard(
             title = "渲染器",
             summary = "选择游戏使用的渲染器",
             items = rendererNames,
@@ -188,7 +188,7 @@ fun VersionConfigScreen(
         )
 
         // 服务器IP
-        TextInputLayout(
+        TextInputLayoutCard(
             value = serverIp,
             onValueChange = { value ->
                 serverIp = value
@@ -200,7 +200,7 @@ fun VersionConfigScreen(
         )
 
         // 自定义路径
-        TextInputLayout(
+        TextInputLayoutCard(
             value = customPath,
             onValueChange = { value ->
                 customPath = value
@@ -212,7 +212,7 @@ fun VersionConfigScreen(
         )
 
         // 自定义信息
-        TextInputLayout(
+        TextInputLayoutCard(
             value = customInfo,
             onValueChange = { value ->
                 customInfo = value
@@ -233,7 +233,7 @@ fun VersionConfigScreen(
         )
 
         // 启用触控代理
-        SwitchLayout(
+        SwitchLayoutCard(
             checked = enableTouchProxy,
             onCheckedChange = {
                 enableTouchProxy = !enableTouchProxy
@@ -244,7 +244,7 @@ fun VersionConfigScreen(
         )
 
         // 触控震动时长
-        SliderLayout(
+        SliderLayoutCard(
             value = touchVibrateDuration.toFloat(),
             onValueChange = { value ->
                 touchVibrateDuration = value.toInt()
@@ -258,7 +258,7 @@ fun VersionConfigScreen(
         )
 
         // 保存按钮
-        ButtonLayout(
+        ButtonLayoutCard(
             onClick = { showSaveDialog = true },
             title = "保存配置",
             summary = "保存当前版本的所有配置更改",

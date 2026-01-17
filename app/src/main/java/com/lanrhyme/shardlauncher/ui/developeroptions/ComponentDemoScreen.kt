@@ -33,7 +33,7 @@ import com.lanrhyme.shardlauncher.ui.components.BackgroundTextTag
 import com.lanrhyme.shardlauncher.ui.components.CombinedCard
 import com.lanrhyme.shardlauncher.ui.components.CustomButton
 import com.lanrhyme.shardlauncher.ui.components.CustomCard
-import com.lanrhyme.shardlauncher.ui.components.CustomDialog
+import com.lanrhyme.shardlauncher.ui.components.ShardDialog
 import com.lanrhyme.shardlauncher.ui.components.CustomTextField
 import com.lanrhyme.shardlauncher.ui.components.FluidFab
 import com.lanrhyme.shardlauncher.ui.components.FluidFabDirection
@@ -42,10 +42,10 @@ import com.lanrhyme.shardlauncher.ui.components.LocalCardLayoutConfig
 import com.lanrhyme.shardlauncher.ui.components.PopupContainer
 import com.lanrhyme.shardlauncher.ui.components.ScalingActionButton
 import com.lanrhyme.shardlauncher.ui.components.SegmentedNavigationBar
-import com.lanrhyme.shardlauncher.ui.components.SimpleListLayout
-import com.lanrhyme.shardlauncher.ui.components.SliderLayout
+import com.lanrhyme.shardlauncher.ui.components.SimpleListLayoutCard
+import com.lanrhyme.shardlauncher.ui.components.SliderLayoutCard
 import com.lanrhyme.shardlauncher.ui.components.StyledFilterChip
-import com.lanrhyme.shardlauncher.ui.components.SwitchLayout
+import com.lanrhyme.shardlauncher.ui.components.SwitchLayoutCard
 import com.lanrhyme.shardlauncher.ui.components.TitleAndSummary
 import com.lanrhyme.shardlauncher.ui.components.TitledDivider
 
@@ -71,7 +71,7 @@ fun ComponentDemoScreen() {
         item {
             var showDialog by remember { mutableStateOf(false) }
             CustomButton(onClick = { showDialog = true }) { Text("Show CustomDialog") }
-            CustomDialog(visible = showDialog, onDismissRequest = { showDialog = false }) {
+            ShardDialog(visible = showDialog, onDismissRequest = { showDialog = false }) {
                 CustomCard(modifier = Modifier.padding(16.dp)) {
                     Text(
                             "This is a custom dialog with custom content.",
@@ -102,7 +102,7 @@ fun ComponentDemoScreen() {
         }
 
         item {
-            SwitchLayout(
+            SwitchLayoutCard(
                     checked = switchState,
                     onCheckedChange = { switchState = !switchState },
                     title = "Switch Layout"
@@ -110,7 +110,7 @@ fun ComponentDemoScreen() {
         }
 
         item {
-            SliderLayout(
+            SliderLayoutCard(
                     value = sliderState,
                     onValueChange = { sliderState = it },
                     title = "Slider Layout",
@@ -119,7 +119,7 @@ fun ComponentDemoScreen() {
         }
 
         item {
-            SimpleListLayout(
+            SimpleListLayoutCard(
                     title = "Simple List Layout",
                     items = SidebarPosition.entries,
                     selectedItem = selectedListPage,

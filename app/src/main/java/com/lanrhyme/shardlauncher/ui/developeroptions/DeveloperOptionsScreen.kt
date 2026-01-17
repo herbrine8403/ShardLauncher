@@ -28,7 +28,7 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.lanrhyme.shardlauncher.ui.components.LocalCardLayoutConfig
 import com.lanrhyme.shardlauncher.ui.components.ScalingActionButton
-import com.lanrhyme.shardlauncher.ui.components.SliderLayout
+import com.lanrhyme.shardlauncher.ui.components.SliderLayoutCard
 import com.lanrhyme.shardlauncher.ui.components.SubPageNavigationBar
 import com.lanrhyme.shardlauncher.ui.components.TitleAndSummary
 import com.lanrhyme.shardlauncher.ui.notification.Notification
@@ -216,7 +216,7 @@ private fun TestNotificationSender() {
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        SliderLayout(
+        SliderLayoutCard(
                 value = progress,
                 onValueChange = {
                     progress = it

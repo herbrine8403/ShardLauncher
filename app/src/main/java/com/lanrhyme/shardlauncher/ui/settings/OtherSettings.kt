@@ -14,7 +14,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.lanrhyme.shardlauncher.ui.components.LocalCardLayoutConfig
-import com.lanrhyme.shardlauncher.ui.components.SimpleListLayout
+import com.lanrhyme.shardlauncher.ui.components.SimpleListLayoutCard
 import com.lanrhyme.shardlauncher.ui.navigation.Screen
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -45,7 +45,7 @@ internal fun OtherSettingsContent(navController: NavController) {
             )
         }
         item {
-            SimpleListLayout(
+            SimpleListLayoutCard(
                     title = "开发者选项",
                     items = listOf(Unit),
                     selectedItem = Unit,

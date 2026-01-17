@@ -22,4 +22,5 @@ dependencyResolutionManagement {
 rootProject.name = "ShardLauncher"
 include(":app")
 include(":NG-GL4ES")
+project(":NG-GL4ES").projectDir = file("gradle/modules/NG-GL4ES")
  

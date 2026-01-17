@@ -94,7 +94,7 @@ import kotlinx.coroutines.launch
 fun MusicPlayerDialog(onDismissRequest: () -> Unit, musicPlayerViewModel: MusicPlayerViewModel) {
     var selectedTab by remember { mutableStateOf(MusicPlayerTab.MusicList) }
 
-    CustomDialog(visible = true, onDismissRequest = onDismissRequest) {
+    ShardDialog(visible = true, onDismissRequest = onDismissRequest) {
         Column {
             Row(modifier = Modifier.weight(1f)) {
                 NavigationRail(
@@ -326,7 +326,7 @@ fun MusicPlayerSettingsPage(musicPlayerViewModel: MusicPlayerViewModel) {
             contentPadding = PaddingValues(vertical = 8.dp)
     ) {
         item {
-            SwitchLayout(
+            SwitchLayoutCard(
                     checked = autoPlay,
                     onCheckedChange = {
                         val newCheckedState = !autoPlay
@@ -338,7 +338,7 @@ fun MusicPlayerSettingsPage(musicPlayerViewModel: MusicPlayerViewModel) {
         }
 
         item {
-            SliderLayout(
+            SliderLayoutCard(
                     value = volume,
                     onValueChange = { newValue ->
                         volume = newValue

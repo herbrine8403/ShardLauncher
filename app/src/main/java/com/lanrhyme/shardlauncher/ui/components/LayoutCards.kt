@@ -1,6 +1,5 @@
 package com.lanrhyme.shardlauncher.ui.components
 
-import android.os.Build
 import androidx.compose.animation.*
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.clickable
@@ -16,8 +15,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
@@ -28,10 +25,9 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
-import dev.chrisbanes.haze.hazeEffect
 
 @Composable
-fun SwitchLayout(
+fun SwitchLayoutCard(
         checked: Boolean,
         onCheckedChange: () -> Unit,
         modifier: Modifier = Modifier,
@@ -40,31 +36,17 @@ fun SwitchLayout(
         enabled: Boolean = true,
         shape: Shape = RoundedCornerShape(16.dp)
 ) {
-        val (isCardBlurEnabled, cardAlpha, hazeState) = LocalCardLayoutConfig.current
         val interactionSource = remember { MutableInteractionSource() }
-        val cardModifier =
-                if (isCardBlurEnabled && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                        modifier.fillMaxWidth()
-                                .alpha(if (enabled) 1f else 0.5f)
-                                .clip(shape)
-                                .hazeEffect(state = hazeState)
-                } else {
-                        modifier.fillMaxWidth().alpha(if (enabled) 1f else 0.5f)
-                }
-        Card(
+        ShardCard(
                 modifier =
-                        cardModifier.clickable(
+                        modifier.clickable(
                                 interactionSource = interactionSource,
                                 indication = null,
                                 enabled = enabled,
                                 onClick = onCheckedChange
                         ),
+                enabled = enabled,
                 shape = shape,
-                colors =
-                        CardDefaults.cardColors(
-                                containerColor =
-                                        MaterialTheme.colorScheme.surface.copy(alpha = cardAlpha)
-                        ),
         ) {
                 Row(
                         modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
@@ -103,7 +85,7 @@ fun SwitchLayout(
 }
 
 @Composable
-fun IconSwitchLayout(
+fun IconSwitchLayoutCard(
         checked: Boolean,
         onCheckedChange: () -> Unit,
         onIconClick: () -> Unit,
@@ -114,31 +96,17 @@ fun IconSwitchLayout(
         enabled: Boolean = true,
         shape: Shape = RoundedCornerShape(16.dp)
 ) {
-        val (isCardBlurEnabled, cardAlpha, hazeState) = LocalCardLayoutConfig.current
         val interactionSource = remember { MutableInteractionSource() }
-        val cardModifier =
-                if (isCardBlurEnabled && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                        modifier.fillMaxWidth()
-                                .alpha(if (enabled) 1f else 0.5f)
-                                .clip(shape)
-                                .hazeEffect(state = hazeState)
-                } else {
-                        modifier.fillMaxWidth().alpha(if (enabled) 1f else 0.5f)
-                }
-        Card(
+        ShardCard(
                 modifier =
-                        cardModifier.clickable(
+                        modifier.clickable(
                                 interactionSource = interactionSource,
                                 indication = null,
                                 enabled = enabled,
                                 onClick = onCheckedChange
                         ),
+                enabled = enabled,
                 shape = shape,
-                colors =
-                        CardDefaults.cardColors(
-                                containerColor =
-                                        MaterialTheme.colorScheme.surface.copy(alpha = cardAlpha)
-                        ),
         ) {
                 Row(
                         modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
@@ -179,7 +147,7 @@ fun IconSwitchLayout(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun <E> SimpleListLayout(
+fun <E> SimpleListLayoutCard(
         modifier: Modifier = Modifier,
         items: List<E>,
         selectedItem: E,
@@ -192,26 +160,12 @@ fun <E> SimpleListLayout(
         autoCollapse: Boolean = true,
         shape: Shape = RoundedCornerShape(16.dp)
 ) {
-        val (isCardBlurEnabled, cardAlpha, hazeState) = LocalCardLayoutConfig.current
         var expanded by remember { mutableStateOf(false) }
-        val cardModifier =
-                if (isCardBlurEnabled && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                        modifier.fillMaxWidth()
-                                .alpha(if (enabled) 1f else 0.5f)
-                                .clip(shape)
-                                .hazeEffect(state = hazeState)
-                } else {
-                        modifier.fillMaxWidth().alpha(if (enabled) 1f else 0.5f)
-                }
 
-        Card(
-                modifier = cardModifier,
+        ShardCard(
+                modifier = modifier,
+                enabled = enabled,
                 shape = shape,
-                colors =
-                        CardDefaults.cardColors(
-                                containerColor =
-                                        MaterialTheme.colorScheme.surface.copy(alpha = cardAlpha)
-                        ),
         ) {
                 Column {
                         Row(
@@ -301,7 +255,7 @@ fun <E> SimpleListLayout(
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class)
 @Composable
-fun SliderLayout(
+fun SliderLayoutCard(
         value: Float,
         onValueChange: (Float) -> Unit,
         modifier: Modifier = Modifier,
@@ -314,24 +268,10 @@ fun SliderLayout(
         displayValue: Float = value,
         isGlowEffectEnabled: Boolean
 ) {
-        val (isCardBlurEnabled, cardAlpha, hazeState) = LocalCardLayoutConfig.current
-        val cardModifier =
-                if (isCardBlurEnabled && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                        modifier.fillMaxWidth()
-                                .alpha(if (enabled) 1f else 0.5f)
-                                .clip(shape)
-                                .hazeEffect(state = hazeState)
-                } else {
-                        modifier.fillMaxWidth().alpha(if (enabled) 1f else 0.5f)
-                }
-        Card(
-                modifier = cardModifier,
+        ShardCard(
+                modifier = modifier,
+                enabled = enabled,
                 shape = shape,
-                colors =
-                        CardDefaults.cardColors(
-                                containerColor =
-                                        MaterialTheme.colorScheme.surface.copy(alpha = cardAlpha)
-                        ),
         ) {
                 Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)) {
                         TitleAndSummary(title = title, summary = summary)
@@ -472,7 +412,7 @@ fun SliderLayout(
 }
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
-fun TextInputLayout(
+fun TextInputLayoutCard(
     value: String,
     onValueChange: (String) -> Unit,
     modifier: Modifier = Modifier,
@@ -482,48 +422,31 @@ fun TextInputLayout(
     enabled: Boolean = true,
     shape: Shape = RoundedCornerShape(16.dp)
 ) {
-    val (isCardBlurEnabled, cardAlpha, hazeState) = LocalCardLayoutConfig.current
-    val cardModifier =
-        if (isCardBlurEnabled && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            modifier.fillMaxWidth()
-                .alpha(if (enabled) 1f else 0.5f)
-                .clip(shape)
-                .hazeEffect(state = hazeState)
-        } else {
-            modifier.fillMaxWidth().alpha(if (enabled) 1f else 0.5f)
-        }
-
-    Card(
-        modifier = cardModifier,
+    ShardCard(
+        modifier = modifier,
+        enabled = enabled,
         shape = shape,
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface.copy(alpha = cardAlpha)
-        ),
     ) {
         Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)) {
             TitleAndSummary(title = title, summary = summary)
             
             Spacer(modifier = Modifier.height(8.dp))
-            
-            OutlinedTextField(
+
+            ShardInputField(
                 value = value,
                 onValueChange = onValueChange,
                 modifier = Modifier.fillMaxWidth(),
-                placeholder = placeholder?.let { { Text(it) } },
+                placeholder = placeholder,
                 enabled = enabled,
                 singleLine = true,
                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = MaterialTheme.colorScheme.primary,
-                    unfocusedBorderColor = MaterialTheme.colorScheme.outline
-                )
             )
         }
     }
 }
 
 @Composable
-fun ButtonLayout(
+fun ButtonLayoutCard(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     title: String,
@@ -532,23 +455,10 @@ fun ButtonLayout(
     enabled: Boolean = true,
     shape: Shape = RoundedCornerShape(16.dp)
 ) {
-    val (isCardBlurEnabled, cardAlpha, hazeState) = LocalCardLayoutConfig.current
-    val cardModifier =
-        if (isCardBlurEnabled && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            modifier.fillMaxWidth()
-                .alpha(if (enabled) 1f else 0.5f)
-                .clip(shape)
-                .hazeEffect(state = hazeState)
-        } else {
-            modifier.fillMaxWidth().alpha(if (enabled) 1f else 0.5f)
-        }
-
-    Card(
-        modifier = cardModifier,
+    ShardCard(
+        modifier = modifier,
+        enabled = enabled,
         shape = shape,
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface.copy(alpha = cardAlpha)
-        ),
     ) {
         Row(
             modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),

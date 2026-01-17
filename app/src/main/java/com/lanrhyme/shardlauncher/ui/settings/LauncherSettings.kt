@@ -75,15 +75,15 @@ import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import com.lanrhyme.shardlauncher.common.SidebarPosition
 import com.lanrhyme.shardlauncher.ui.components.CollapsibleCard
-import com.lanrhyme.shardlauncher.ui.components.CustomDialog
-import com.lanrhyme.shardlauncher.ui.components.IconSwitchLayout
+import com.lanrhyme.shardlauncher.ui.components.ShardDialog
+import com.lanrhyme.shardlauncher.ui.components.IconSwitchLayoutCard
 import com.lanrhyme.shardlauncher.ui.components.LocalCardLayoutConfig
 import com.lanrhyme.shardlauncher.ui.components.MusicPlayerDialog
 import com.lanrhyme.shardlauncher.ui.components.PopupContainer
 import com.lanrhyme.shardlauncher.ui.components.ScrollIndicator
-import com.lanrhyme.shardlauncher.ui.components.SimpleListLayout
-import com.lanrhyme.shardlauncher.ui.components.SliderLayout
-import com.lanrhyme.shardlauncher.ui.components.SwitchLayout
+import com.lanrhyme.shardlauncher.ui.components.SimpleListLayoutCard
+import com.lanrhyme.shardlauncher.ui.components.SliderLayoutCard
+import com.lanrhyme.shardlauncher.ui.components.SwitchLayoutCard
 import com.lanrhyme.shardlauncher.ui.components.TitleAndSummary
 import com.lanrhyme.shardlauncher.ui.components.animatedAppearance
 import com.lanrhyme.shardlauncher.ui.composables.HsvColorPicker
@@ -321,7 +321,7 @@ internal fun LauncherSettingsContent(
                     }
             )
 
-    CustomDialog(
+    ShardDialog(
             visible = showBackgroundDialog,
             onDismissRequest = { showBackgroundDialog = false }
     ) {
@@ -487,7 +487,7 @@ internal fun LauncherSettingsContent(
                     Spacer(modifier = Modifier.height(16.dp))
                     Text("背景设置", style = MaterialTheme.typography.titleMedium)
                     Spacer(modifier = Modifier.height(8.dp))
-                    SliderLayout(
+                    SliderLayoutCard(
                             value = tempBlur,
                             onValueChange = { tempBlur = it },
                             valueRange = 0f..25f,
@@ -497,7 +497,7 @@ internal fun LauncherSettingsContent(
                             isGlowEffectEnabled = isGlowEffectEnabled
                     )
                     Spacer(modifier = Modifier.height(4.dp))
-                    SliderLayout(
+                    SliderLayoutCard(
                             value = tempBrightness,
                             onValueChange = { tempBrightness = it },
                             valueRange = -100f..100f,
@@ -511,18 +511,18 @@ internal fun LauncherSettingsContent(
                     Spacer(modifier = Modifier.height(10.dp))
                     Text("全局配置", style = MaterialTheme.typography.titleMedium)
                     Spacer(modifier = Modifier.height(4.dp))
-                    SwitchLayout(
+                    SwitchLayoutCard(
                             checked = randomBackground,
                             onCheckedChange = { randomBackground = !randomBackground },
                             title = "启动时随机选择背景"
                     )
-                    SwitchLayout(
+                    SwitchLayoutCard(
                             checked = tempEnableParallax,
                             onCheckedChange = { tempEnableParallax = !tempEnableParallax },
                             title = "启用背景视差效果"
                     )
                     if (tempEnableParallax) {
-                        SliderLayout(
+                        SliderLayoutCard(
                                 value = tempParallaxMagnitude,
                                 onValueChange = { tempParallaxMagnitude = it },
                                 valueRange = 1f..40f,
@@ -687,7 +687,7 @@ internal fun LauncherSettingsContent(
             )
         }
         item {
-            SwitchLayout(
+            SwitchLayoutCard(
                     modifier = Modifier.animatedAppearance(1, animationSpeed),
                     title = "深色模式",
                     summary = if (isDarkTheme) "已开启" else "已关闭",
@@ -696,7 +696,7 @@ internal fun LauncherSettingsContent(
             )
         }
         item {
-            SwitchLayout(
+            SwitchLayoutCard(
                     modifier = Modifier.animatedAppearance(2, animationSpeed),
                     title = "获取Minecraft最新更新信息",
                     summary = "来源于news.bugjump.net",
@@ -705,7 +705,7 @@ internal fun LauncherSettingsContent(
             )
         }
         item {
-            SimpleListLayout(
+            SimpleListLayoutCard(
                     modifier = Modifier.animatedAppearance(3, animationSpeed),
                     title = "侧边栏位置",
                     items = SidebarPosition.entries,
@@ -720,7 +720,7 @@ internal fun LauncherSettingsContent(
             )
         }
         item {
-            SimpleListLayout(
+            SimpleListLayoutCard(
                     modifier = Modifier.animatedAppearance(4, animationSpeed),
                     title = "主题颜色",
                     items = ThemeColor.entries.toList(),
@@ -738,7 +738,7 @@ internal fun LauncherSettingsContent(
             )
         }
         item {
-            IconSwitchLayout(
+            IconSwitchLayoutCard(
                     modifier = Modifier.animatedAppearance(6, animationSpeed),
                     checked = launcherBackgroundUri != null,
                     onCheckedChange = {
@@ -764,7 +764,7 @@ internal fun LauncherSettingsContent(
             )
         }
         item {
-            IconSwitchLayout(
+            IconSwitchLayoutCard(
                     modifier = Modifier.animatedAppearance(7, animationSpeed),
                     checked = isMusicPlayerEnabled,
                     onCheckedChange = { onIsMusicPlayerEnabledChange() },
@@ -783,7 +783,7 @@ internal fun LauncherSettingsContent(
             )
         }
         item {
-            SwitchLayout(
+            SwitchLayoutCard(
                     modifier = Modifier.animatedAppearance(5, animationSpeed),
                     title = "UI发光效果",
                     summary = "为部分文字和图标添加发光效果",
@@ -792,7 +792,7 @@ internal fun LauncherSettingsContent(
             )
         }
         item {
-            SwitchLayout(
+            SwitchLayoutCard(
                     modifier = Modifier.animatedAppearance(6, animationSpeed),
                     title = "卡片背景启用毛玻璃效果",
                     summary = "对卡片背景启用毛玻璃效果(Android 12+)",
@@ -802,7 +802,7 @@ internal fun LauncherSettingsContent(
             )
         }
         item {
-            SliderLayout(
+            SliderLayoutCard(
                     modifier = Modifier.animatedAppearance(7, animationSpeed),
                     value = cardAlpha,
                     onValueChange = onCardAlphaChange,
@@ -821,13 +821,13 @@ internal fun LauncherSettingsContent(
                     summary = if (enableBackgroundLightEffect) "已开启" else "已关闭",
                     animationSpeed = animationSpeed
             ) {
-                SwitchLayout(
+                SwitchLayoutCard(
                         checked = enableBackgroundLightEffect,
                         onCheckedChange = { onEnableBackgroundLightEffectChange() },
                         title = "启用背景光效"
                 )
                 Spacer(modifier = Modifier.height(16.dp))
-                SliderLayout(
+                SliderLayoutCard(
                         value = lightEffectAnimationSpeed,
                         onValueChange = onLightEffectAnimationSpeedChange,
                         valueRange = 0.5f..2f,
@@ -839,7 +839,7 @@ internal fun LauncherSettingsContent(
                         isGlowEffectEnabled = isGlowEffectEnabled
                 )
                 Spacer(modifier = Modifier.height(16.dp))
-                SwitchLayout(
+                SwitchLayoutCard(
                         checked = enableBackgroundLightEffectCustomColor,
                         onCheckedChange = { onEnableBackgroundLightEffectCustomColorChange() },
                         title = "自定义光效颜色",
@@ -920,7 +920,7 @@ internal fun LauncherSettingsContent(
             }
         }
         item {
-            SliderLayout(
+            SliderLayoutCard(
                     modifier = Modifier.animatedAppearance(9, animationSpeed),
                     value = animationSpeed,
                     onValueChange = onAnimationSpeedChange,
@@ -933,7 +933,7 @@ internal fun LauncherSettingsContent(
             )
         }
         item {
-            SliderLayout(
+            SliderLayoutCard(
                     modifier = Modifier.animatedAppearance(10, animationSpeed),
                     value = uiScale,
                     onValueChange = onUiScaleChange,

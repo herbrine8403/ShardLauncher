@@ -44,6 +44,8 @@ fun fetchStringFromUrl(url: String): String {
         connection.requestMethod = "GET"
         connection.connectTimeout = 10000
         connection.readTimeout = 30000
+        // 启用自动跟随重定向
+        connection.instanceFollowRedirects = true
         
         if (connection.responseCode == HttpURLConnection.HTTP_OK) {
             connection.inputStream.bufferedReader().use { it.readText() }
@@ -92,6 +94,8 @@ fun downloadFromMirrorList(
             connection.requestMethod = "GET"
             connection.connectTimeout = 10000
             connection.readTimeout = 60000
+            // 启用自动跟随重定向
+            connection.instanceFollowRedirects = true
             
             if (connection.responseCode == HttpURLConnection.HTTP_OK) {
                 outputFile.parentFile?.mkdirs()
@@ -140,6 +144,8 @@ suspend fun downloadFromUrl(url: String): ByteArray {
         connection.requestMethod = "GET"
         connection.connectTimeout = 10000
         connection.readTimeout = 60000
+        // 启用自动跟随重定向
+        connection.instanceFollowRedirects = true
         
         if (connection.responseCode == HttpURLConnection.HTTP_OK) {
             connection.inputStream.use { it.readBytes() }

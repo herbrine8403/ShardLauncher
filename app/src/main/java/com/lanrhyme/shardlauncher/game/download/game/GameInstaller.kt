@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Build
 import androidx.compose.material.icons.outlined.CleaningServices
+import com.google.gson.JsonObject
 import com.lanrhyme.shardlauncher.R
 import com.lanrhyme.shardlauncher.coroutine.Task
 import com.lanrhyme.shardlauncher.coroutine.TaskFlowExecutor
@@ -16,8 +17,8 @@ import com.lanrhyme.shardlauncher.game.download.game.forge.getForgeLikeDownloadT
 import com.lanrhyme.shardlauncher.game.download.game.forge.getForgeLikeInstallTask
 import com.lanrhyme.shardlauncher.game.download.game.fabric.getFabricLikeCompleterTask
 import com.lanrhyme.shardlauncher.game.download.game.fabric.getFabricLikeDownloadTask
-import com.lanrhyme.shardlauncher.game.modloader.forgelike.forge.ForgeVersion
-import com.lanrhyme.shardlauncher.game.modloader.forgelike.forge.NeoForgeVersion
+import com.lanrhyme.shardlauncher.game.modloader.forgelike.ForgeVersion
+import com.lanrhyme.shardlauncher.game.modloader.forgelike.NeoForgeVersion
 import com.lanrhyme.shardlauncher.game.path.getGameHome
 import com.lanrhyme.shardlauncher.game.version.download.BaseMinecraftDownloader
 import com.lanrhyme.shardlauncher.game.version.download.GameLibDownloader
@@ -614,4 +615,38 @@ private fun copyVanillaFiles(
     sourceJar.copyTo(destJar, overwrite = true)
     
     Logger.lInfo("Copied vanilla files from $sourceClientFolder to $destClientFolder")
+}
+
+/**
+ * 根据 Maven 坐标获取库文件路径
+ * 例如: "com.google.guava:guava:28.2" -> "com/google/guava/guava/28.2/guava-28.2.jar"
+ */
+fun getLibraryPath(path: String): String {
+    val parts = path.split(":")
+    return when (parts.size) {
+        3 -> {
+            val (group, artifact, version) = parts
+            val groupPath = group.replace(".", "/")
+            "$groupPath/$artifact/$version/$artifact-$version.jar"
+        }
+        4 -> {
+            val (group, artifact, version, classifier) = parts
+            val groupPath = group.replace(".", "/")
+            "$groupPath/$artifact/$version/$artifact-$version-$classifier.jar"
+        }
+        else -> throw IllegalArgumentException("Invalid library path format: $path")
+    }
+}
+
+/**
+ * 根据 artifact 信息获取库文件路径
+ */
+fun getLibraryPath(artifact: JsonObject, baseFolder: String): String {
+    val path = artifact.get("path")?.asString
+    if (path != null) return path
+    
+    val name = artifact.get("name")?.asString
+        ?: throw IllegalArgumentException("Artifact must have 'name' or 'path' property")
+    
+    return getLibraryPath(name)
 }

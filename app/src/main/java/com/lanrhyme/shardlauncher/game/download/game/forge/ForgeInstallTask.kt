@@ -4,13 +4,13 @@ import com.google.gson.JsonObject
 import com.google.gson.reflect.TypeToken
 import com.lanrhyme.shardlauncher.R
 import com.lanrhyme.shardlauncher.coroutine.Task
-import com.lanrhyme.shardlauncher.game.download.game.GameLibDownloader
+import com.lanrhyme.shardlauncher.game.version.download.GameLibDownloader
 import com.lanrhyme.shardlauncher.game.download.game.copyVanillaFiles
 import com.lanrhyme.shardlauncher.game.download.game.getLibraryPath
 import com.lanrhyme.shardlauncher.game.download.game.models.ForgeLikeInstallProcessor
 import com.lanrhyme.shardlauncher.game.modloader.forgelike.ForgeLikeVersion
-import com.lanrhyme.shardlauncher.game.modloader.forgelike.forge.ForgeVersion
-import com.lanrhyme.shardlauncher.game.modloader.forgelike.forge.NeoForgeVersion
+import com.lanrhyme.shardlauncher.game.modloader.forgelike.ForgeVersion
+import com.lanrhyme.shardlauncher.game.modloader.forgelike.NeoForgeVersion
 import com.lanrhyme.shardlauncher.game.version.download.BaseMinecraftDownloader
 import com.lanrhyme.shardlauncher.game.versioninfo.MinecraftVersions
 import com.lanrhyme.shardlauncher.game.versioninfo.models.GameManifest

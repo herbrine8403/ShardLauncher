@@ -1,6 +1,6 @@
 package com.lanrhyme.shardlauncher.game.modloader.forgelike
 
-import com.lanrhyme.shardlauncher.game.modloader.ModLoader
+import com.lanrhyme.shardlauncher.game.addons.modloader.ModLoader
 
 /**
  * ForgeLike版本基类（Forge和NeoForge的父类）

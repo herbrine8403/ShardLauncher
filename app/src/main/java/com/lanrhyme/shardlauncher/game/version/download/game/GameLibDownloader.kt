@@ -8,6 +8,7 @@ package com.lanrhyme.shardlauncher.game.version.download.game
 import com.lanrhyme.shardlauncher.R
 import com.lanrhyme.shardlauncher.coroutine.Task
 import com.lanrhyme.shardlauncher.game.version.download.BaseMinecraftDownloader
+import com.lanrhyme.shardlauncher.utils.GSON
 import com.lanrhyme.shardlauncher.game.version.download.DownloadFailedException
 import com.lanrhyme.shardlauncher.game.version.download.DownloadTask
 import com.lanrhyme.shardlauncher.game.versioninfo.models.GameManifest
@@ -50,7 +51,17 @@ class GameLibDownloader(
     /**
      * Schedule all libraries from manifest
      */
-    fun schedule(targetDir: File = downloader.librariesTarget) {
+    suspend fun schedule(
+        task: Task,
+        targetDir: File = downloader.librariesTarget,
+        updateProgress: Boolean = true
+    ) {
+        val gameJson = GSON.toJson(gameManifest)
+
+        if (updateProgress) {
+            task.updateProgress(-1f, R.string.minecraft_download_stat_download_task)
+        }
+
         downloader.loadLibraryDownloads(gameManifest, targetDir) { urls, hash, targetFile, size, isDownloadable ->
             scheduleDownload(urls, hash, targetFile, size, isDownloadable)
         }

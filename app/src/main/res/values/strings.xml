@@ -46,5 +46,7 @@
     <string name="download_install_clear_temp">清理临时文件</string>
     <string name="download_game_install_vanilla">安装原版 Minecraft %1$s</string>
     <string name="download_game_install_game_files_progress">安装游戏文件</string>
+    <string name="download_game_install_base_installing">正在前台安装 %s</string>
     <string name="download_game_install_fabric">安装 Fabric %1$s</string>
+    <string name="download_game_install_forgelike_preparing_mapping_file">准备 %s 映射文件中</string>
 </resources>

@@ -351,18 +351,21 @@ class VersionDetailViewModel(application: Application, private val versionId: St
                             // 不需要修改 downloadTask 的状态，保持为 RUNNING 状态
                         },
                         onInstalled = { installedVersion ->
-                            downloadTask.taskState = com.lanrhyme.shardlauncher.coroutine.TaskState.COMPLETED
                             // 刷新版本列表，让新安装的版本被检测到
                             com.lanrhyme.shardlauncher.game.version.installed.VersionsManager.refresh(
                                 tag = "VersionDetailViewModel.download",
                                 trySetVersion = installedVersion
                             )
+                            // 监听任务流，当所有任务完成时才设置 downloadTask.taskState 为 COMPLETED
+                            monitorTaskCompletion()
                         },
                         onError = { error ->
-                            downloadTask.taskState = com.lanrhyme.shardlauncher.coroutine.TaskState.COMPLETED
+                            // 监听任务流，当所有任务完成时才设置 downloadTask.taskState 为 COMPLETED
+                            monitorTaskCompletion()
                         },
                         onGameAlreadyInstalled = {
-                            downloadTask.taskState = com.lanrhyme.shardlauncher.coroutine.TaskState.COMPLETED
+                            // 监听任务流，当所有任务完成时才设置 downloadTask.taskState 为 COMPLETED
+                            monitorTaskCompletion()
                         }
                     )
                 } else {
@@ -380,6 +383,21 @@ class VersionDetailViewModel(application: Application, private val versionId: St
      */
     fun getTasksFlow(): kotlinx.coroutines.flow.StateFlow<List<com.lanrhyme.shardlauncher.coroutine.TitledTask>> {
         return installer?.tasksFlow ?: kotlinx.coroutines.flow.MutableStateFlow(emptyList())
+    }
+
+    /**
+     * 监听任务完成状态，当所有任务都完成时才设置 downloadTask.taskState 为 COMPLETED
+     */
+    private fun monitorTaskCompletion() {
+        viewModelScope.launch {
+            installer?.tasksFlow?.collect { tasks ->
+                // 检查所有任务是否都已完成
+                val allCompleted = tasks.isNotEmpty() && tasks.all { it.task.taskState == com.lanrhyme.shardlauncher.coroutine.TaskState.COMPLETED }
+                if (allCompleted) {
+                    downloadTask?.taskState = com.lanrhyme.shardlauncher.coroutine.TaskState.COMPLETED
+                }
+            }
+        }
     }
     
     /**

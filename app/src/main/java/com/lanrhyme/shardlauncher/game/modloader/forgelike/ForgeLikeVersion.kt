@@ -48,9 +48,9 @@ data class ForgeVersion(
  * NeoForge版本实现
  */
 data class NeoForgeVersion(
-    val versionName: String,
-    val inherit: String,
-    val isLegacy: Boolean = false
+    override val versionName: String,
+    override val inherit: String,
+    override val isLegacy: Boolean = false
 ) : ForgeLikeVersion(
     loaderName = ModLoader.NEOFORGE.displayName,
     forgeBuildVersion = ForgeBuildVersion.parse(versionName),

@@ -1,7 +1,7 @@
 package com.lanrhyme.shardlauncher.game.download.game.fabric
 
 import com.lanrhyme.shardlauncher.coroutine.Task
-import com.lanrhyme.shardlauncher.game.download.game.GameLibDownloader
+import com.lanrhyme.shardlauncher.game.version.download.GameLibDownloader
 import com.lanrhyme.shardlauncher.game.version.download.BaseMinecraftDownloader
 import com.lanrhyme.shardlauncher.utils.file.ensureParentDirectory
 import com.lanrhyme.shardlauncher.utils.network.fetchStringFromUrls

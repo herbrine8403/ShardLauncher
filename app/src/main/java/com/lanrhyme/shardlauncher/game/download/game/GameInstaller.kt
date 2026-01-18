@@ -380,22 +380,22 @@ class GameInstaller(
         val forgeLikeVersion = when (loaderName) {
             "Forge" -> {
                 val forgeVersion = loaderVersion as ForgeVersion
-                com.lanrhyme.shardlauncher.game.modloader.forgelike.forge.ForgeVersion(
-                    versionName = forgeVersion.version,
+                ForgeVersion(
+                    versionName = forgeVersion.versionName,
                     branch = null,
                     inherit = info.gameVersion,
                     releaseTime = "",
                     hash = null,
                     isRecommended = forgeVersion.isRecommended,
                     category = "installer",
-                    fileVersion = "${info.gameVersion}-${forgeVersion.version}",
+                    fileVersion = "${info.gameVersion}-${forgeVersion.versionName}",
                     isLegacy = false // 可以根据版本号判断
                 )
             }
             "NeoForge" -> {
                 val neoForgeVersion = loaderVersion as NeoForgeVersion
-                com.lanrhyme.shardlauncher.game.modloader.forgelike.forge.NeoForgeVersion(
-                    versionName = neoForgeVersion.version,
+                NeoForgeVersion(
+                    versionName = neoForgeVersion.versionName,
                     inherit = info.gameVersion,
                     isLegacy = false
                 )
@@ -591,7 +591,7 @@ private fun mergeGameJson(
 /**
  * 复制原版游戏文件
  */
-private fun copyVanillaFiles(
+internal fun copyVanillaFiles(
     sourceGameFolder: File,
     sourceVersion: String,
     destinationGameFolder: File,

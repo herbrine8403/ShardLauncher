@@ -101,7 +101,9 @@ class VersionDetailViewModel(application: Application, private val versionId: St
                         version = forgeVersion.versionName,
                         releaseTime = forgeVersion.releaseTime,
                         isRecommended = forgeVersion.isRecommended,
-                        status = if (forgeVersion.isRecommended) "Recommended" else null
+                        status = if (forgeVersion.isRecommended) "Recommended" else null,
+                        branch = forgeVersion.branch,
+                        fileVersion = forgeVersion.fileVersion
                     )
                 } ?: emptyList()
                 _forgeVersions.value = mappedForgeVersions
@@ -394,7 +396,7 @@ class VersionDetailViewModel(application: Application, private val versionId: St
                 // 检查所有任务是否都已完成
                 val allCompleted = tasks.isNotEmpty() && tasks.all { it.task.taskState == com.lanrhyme.shardlauncher.coroutine.TaskState.COMPLETED }
                 if (allCompleted) {
-                    downloadTask?.taskState = com.lanrhyme.shardlauncher.coroutine.TaskState.COMPLETED
+                    downloadTask.value?.taskState = com.lanrhyme.shardlauncher.coroutine.TaskState.COMPLETED
                 }
             }
         }

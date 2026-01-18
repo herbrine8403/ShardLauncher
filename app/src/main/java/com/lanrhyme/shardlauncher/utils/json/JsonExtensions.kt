@@ -11,7 +11,7 @@ import java.lang.reflect.Type
  * JSON解析工具扩展
  */
 
-internal val GSON = Gson()
+val GSON = Gson()
 
 /**
  * 将字符串解析为JsonObject

@@ -21,9 +21,9 @@ abstract class ForgeLikeVersion(
  * Forge版本实现
  */
 data class ForgeVersion(
-    val versionName: String,
+    override val versionName: String,
     val branch: String?,
-    val inherit: String,
+    override val inherit: String,
     /** 发布时间，格式为"yyyy/MM/dd HH:mm" */
     val releaseTime: String,
     /** 文件的 MD5 或 SHA1 */
@@ -34,7 +34,7 @@ data class ForgeVersion(
     val category: String,
     /** 用于下载的文件版本名 */
     val fileVersion: String,
-    val isLegacy: Boolean = false
+    override val isLegacy: Boolean = false
 ) : ForgeLikeVersion(
     loaderName = ModLoader.FORGE.displayName,
     forgeBuildVersion = parseForgeVersion(versionName, branch, inherit),

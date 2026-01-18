@@ -563,7 +563,7 @@ private suspend fun runProcessors(
 
         if (outputs.isNotEmpty() && !anyMissing) return@mapNotNull null
 
-        val jarPath = tempMinecraftDir.toPath().resolve("libraries").resolve(processor.getJar().toPath())
+        val jarPath = tempMinecraftDir.toPath().resolve("libraries").resolve(Paths.get(processor.getJar()))
         require(Files.isRegularFile(jarPath)) { "Game processor file not found: $jarPath" }
 
         val mainClass = JarFile(jarPath.toFile()).use {
@@ -572,7 +572,7 @@ private suspend fun runProcessors(
             ?: throw Exception("Game processor jar missing Main-Class: $jarPath")
 
         val classpath = processor.getClasspath().map { lib ->
-            tempMinecraftDir.toPath().resolve("libraries").resolve(lib.toPath()).also { path ->
+            tempMinecraftDir.toPath().resolve("libraries").resolve(Paths.get(lib)).also { path ->
                 require(Files.isRegularFile(path)) { "Missing dependency: $path" }
             }.toString()
         } + jarPath.toString()

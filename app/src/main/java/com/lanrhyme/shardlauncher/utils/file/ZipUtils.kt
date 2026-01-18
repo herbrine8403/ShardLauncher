@@ -22,6 +22,19 @@ fun ZipFile.extractEntryToFile(entryName: String, destFile: File) {
 }
 
 /**
+ * 从ZIP文件中提取条目到目标文件（重载版本，接受 ZipEntry）
+ */
+fun ZipFile.extractEntryToFile(entry: java.util.zip.ZipEntry, destFile: File) {
+    require(!entry.isDirectory) { "Cannot extract directory to file: ${entry.name}" }
+    destFile.parentFile?.mkdirs()
+    getInputStream(entry).use { input ->
+        destFile.outputStream().use { output ->
+            input.copyTo(output)
+        }
+    }
+}
+
+/**
  * 从ZIP文件中读取文本内容
  */
 fun ZipFile.readText(entryName: String): String {

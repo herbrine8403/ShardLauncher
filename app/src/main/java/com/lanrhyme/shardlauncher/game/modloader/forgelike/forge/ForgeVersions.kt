@@ -74,9 +74,9 @@ object ForgeVersions {
      */
     private suspend fun fetchFromBMCLAPI(mcVersion: String): List<ForgeVersion>? = withContext(Dispatchers.IO) {
         Logger.lInfo("从BMCLAPI获取Forge列表: $mcVersion")
-        
-        val url = "https://bmclapi2.bangbang93.com/forge/minecraft/${mcVersion.replace("-", "_")}"
-        
+
+        val url = "https://bmclapi2.bangbang93.com/forge/minecraft/$mcVersion"
+
         val tokens: List<ForgeVersionToken> = withRetry("$TAG-BMCLAPI", maxRetries = 2) {
             downloadAndParseJson(
                 url = url,

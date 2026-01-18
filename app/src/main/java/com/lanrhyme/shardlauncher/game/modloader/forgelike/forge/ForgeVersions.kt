@@ -117,9 +117,10 @@ object ForgeVersions {
      */
     private suspend fun fetchFromOfficial(mcVersion: String): List<ForgeVersion>? = withContext(Dispatchers.IO) {
         Logger.lInfo("从官方源获取Forge列表: $mcVersion")
-        
-        val url = "$FORGE_MAVEN_URL/index_${mcVersion.replace("-", "_")}.html"
-        
+
+        // 官方源使用点号分隔版本号（如 index_1.7.10.html），而不是下划线
+        val url = "$FORGE_MAVEN_URL/index_$mcVersion.html"
+
         val html = withRetry("$TAG-Official", maxRetries = 2) {
             fetchStringFromUrls(listOf(url))
         }

@@ -303,7 +303,7 @@ private suspend fun parseProcessors(
             val manifest = withRetry(FORGE_LIKE_ANALYSE_ID, maxRetries = 1) {
                 fetchStringFromUrls(
                     vanilla.url.mapMirrorableUrls()
-                ).parseTo(GameManifest::class.java)
+                ).parseTo<GameManifest>()
             }
             manifest.downloads?.clientMappings?.let { mappings ->
                 schedule(mappings.url.mapMirrorableUrls(), mappings.sha1, File(output), mappings.size)
@@ -475,8 +475,8 @@ private suspend fun installOldForge(
             null
         } else {
             Logger.lInfo("Starting the Forge installation, Legacy method B")
-            val artifact = installProfile["install"].asJsonObject["path"].asString
-            val jarPath = getLibraryPath(artifact, baseFolder = tempMinecraftDir.absolutePath)
+            val artifact = installProfile["install"].asJsonObject["path"]
+            val jarPath = getLibraryPath(artifact.asJsonObject, baseFolder = tempMinecraftDir.absolutePath)
 
             val jarFile = File(jarPath)
             if (jarFile.exists()) jarFile.delete()

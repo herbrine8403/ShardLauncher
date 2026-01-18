@@ -245,7 +245,10 @@ object ForgeVersions {
      */
     fun getDownloadUrl(version: ForgeVersion): String {
         val baseUrl = "$FORGE_MAVEN_URL/${version.inherit}-${version.fileVersion}"
-        return "$baseUrl/forge-${version.inherit}-${version.fileVersion}-${version.category}.${version.fileExtension}"
+        val url = "$baseUrl/forge-${version.inherit}-${version.fileVersion}-${version.category}.${version.fileExtension}"
+        Logger.lInfo("Forge下载URL: inherit=${version.inherit}, fileVersion=${version.fileVersion}, versionName=${version.versionName}, branch=${version.branch}")
+        Logger.lInfo("完整URL: $url")
+        return url
     }
 
     /**

@@ -280,7 +280,9 @@ class VersionDetailViewModel(application: Application, private val versionId: St
                         if (it.version != null) {
                             com.lanrhyme.shardlauncher.game.download.game.ForgeVersion(
                                 version = it.version,
-                                loaderName = "Forge"
+                                loaderName = "Forge",
+                                branch = it.branch,
+                                fileVersion = it.fileVersion
                             )
                         } else null
                     }

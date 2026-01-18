@@ -46,7 +46,9 @@ data class FabricVersion(
 data class ForgeVersion(
     override val version: String,
     override val loaderName: String = "Forge",
-    val installerPath: String? = null
+    val installerPath: String? = null,
+    val branch: String? = null,
+    val fileVersion: String? = null
 ) : ModLoaderVersion(version, loaderName)
 
 /**

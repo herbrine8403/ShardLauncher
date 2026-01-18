@@ -384,13 +384,13 @@ class GameInstaller(
                 val forgeVersion = loaderVersion as DownloadForgeVersion
                 ForgeVersion(
                     versionName = forgeVersion.version,
-                    branch = null,
+                    branch = forgeVersion.branch,
                     inherit = info.gameVersion,
                     releaseTime = "",
                     hash = null,
                     isRecommended = false, // DownloadForgeVersion 没有 isRecommended 字段，使用默认值
                     category = "installer",
-                    fileVersion = "${info.gameVersion}-${forgeVersion.version}",
+                    fileVersion = forgeVersion.fileVersion ?: "${info.gameVersion}-${forgeVersion.version}",
                     isLegacy = false // 可以根据版本号判断
                 )
             }

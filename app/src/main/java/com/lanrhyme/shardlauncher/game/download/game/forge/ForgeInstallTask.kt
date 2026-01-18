@@ -70,8 +70,10 @@ fun getForgeLikeDownloadTask(
                 else -> throw IllegalArgumentException("Unsupported ForgeLike version type")
             }
 
+            // 使用镜像源列表进行下载
+            val urls = url.mapMirrorableUrls()
             com.lanrhyme.shardlauncher.utils.network.downloadFromMirrorListSuspend(
-                urls = listOf(url),
+                urls = urls,
                 targetFile = targetTempInstaller
             )
         }

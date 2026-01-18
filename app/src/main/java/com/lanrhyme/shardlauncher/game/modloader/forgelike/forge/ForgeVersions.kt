@@ -246,8 +246,6 @@ object ForgeVersions {
     fun getDownloadUrl(version: ForgeVersion): String {
         val baseUrl = "$FORGE_MAVEN_URL/${version.inherit}-${version.fileVersion}"
         return "$baseUrl/forge-${version.inherit}-${version.fileVersion}-${version.category}.${version.fileExtension}"
-            .mapMirrorableUrls()
-            .first()
     }
 
     /**
@@ -256,7 +254,5 @@ object ForgeVersions {
     fun getNeoForgeDownloadUrl(neoForgeVersion: NeoForgeVersion): String {
         val baseUrl = "https://maven.neoforged.net/releases/net/neoforged/neoforge"
         return "$baseUrl/${neoForgeVersion.inherit}-${neoForgeVersion.versionName}/neoforge-${neoForgeVersion.inherit}-${neoForgeVersion.versionName}-installer.jar"
-            .mapMirrorableUrls()
-            .first()
     }
 }

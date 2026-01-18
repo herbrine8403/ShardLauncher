@@ -88,15 +88,25 @@ object ForgeVersions {
             val (hash, category) = selectPreferredFile(token.files)
             val formattedDate = formatDate(token.modified)
 
+            // token.version 是 Forge 版本号（如 10.13.4.1614）
+            // fileVersion 格式：{mcversion}-{version}{-{branch}}
+            // 参考 BMCLAPI 文档：https://bmclapidoc.bangbang93.com
+            val versionName = token.version
+            val fileVersion = if (token.branch != null) {
+                "$mcVersion-$versionName-${token.branch}"
+            } else {
+                "$mcVersion-$versionName"
+            }
+
             ForgeVersion(
-                versionName = token.version,
+                versionName = versionName,
                 branch = token.branch,
                 inherit = mcVersion,
                 releaseTime = formattedDate,
                 hash = hash,
                 isRecommended = false,
                 category = category,
-                fileVersion = token.branch?.let { "${token.version}-$it" } ?: token.version
+                fileVersion = fileVersion
             )
         }
     }
@@ -165,7 +175,11 @@ object ForgeVersions {
                 hash = hash,
                 isRecommended = isRecommended,
                 category = category,
-                fileVersion = "$versionName${branch?.let { "-$it" } ?: ""}"
+                fileVersion = if (branch != null) {
+                    "$mcVersion-$versionName-$branch"
+                } else {
+                    "$mcVersion-$versionName"
+                }
             )
         } catch (e: Exception) {
             Logger.lWarning("解析Forge版本失败: ${e.message}")
@@ -244,8 +258,10 @@ object ForgeVersions {
      * 获取Forge下载URL
      */
     fun getDownloadUrl(version: ForgeVersion): String {
-        val baseUrl = "$FORGE_MAVEN_URL/${version.inherit}-${version.fileVersion}"
-        val url = "$baseUrl/forge-${version.inherit}-${version.fileVersion}-${version.category}.${version.fileExtension}"
+        // fileVersion 已经包含完整的版本信息（如 1.7.10-10.13.4.1614）
+        // 不需要再拼接 inherit，否则会导致重复
+        val baseUrl = "$FORGE_MAVEN_URL/${version.fileVersion}"
+        val url = "$baseUrl/forge-${version.fileVersion}-${version.category}.${version.fileExtension}"
         Logger.lInfo("Forge下载URL: inherit=${version.inherit}, fileVersion=${version.fileVersion}, versionName=${version.versionName}, branch=${version.branch}")
         Logger.lInfo("完整URL: $url")
         return url

@@ -11,7 +11,7 @@
           <set>
             <option value="$PROJECT_DIR$" />
             <option value="$PROJECT_DIR$/SL-GameCore" />
-            <option value="$PROJECT_DIR$/app" />
+            <option value="$PROJECT_DIR$/ShardLauncher" />
             <option value="$PROJECT_DIR$/gradle/modules/NG-GL4ES" />
           </set>
         </option>

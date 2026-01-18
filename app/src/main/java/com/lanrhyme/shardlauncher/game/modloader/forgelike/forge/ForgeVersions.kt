@@ -3,6 +3,7 @@ package com.lanrhyme.shardlauncher.game.modloader.forgelike.forge
 import com.lanrhyme.shardlauncher.game.addons.mirror.mapMirrorableUrls
 import com.lanrhyme.shardlauncher.game.modloader.forgelike.ForgeVersion
 import com.lanrhyme.shardlauncher.game.modloader.forgelike.NeoForgeVersion
+import com.lanrhyme.shardlauncher.game.modloader.forgelike.forge.ForgeVersionToken
 import com.lanrhyme.shardlauncher.game.modloader.forgelike.forge.ForgeVersionToken.ForgeFile
 import com.lanrhyme.shardlauncher.settings.AllSettings
 import com.lanrhyme.shardlauncher.settings.enums.MirrorSourceType

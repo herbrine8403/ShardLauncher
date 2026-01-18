@@ -84,12 +84,17 @@ class VersionDetailViewModel(application: Application, private val versionId: St
 
     private fun loadAllLoaderVersions() {
         viewModelScope.launch {
+            // Fabric
             try {
                 val fabricVersions = ApiClient.fabricApiService.getLoaderVersions(versionId)
                 _fabricVersions.value = fabricVersions
                 _selectedFabricVersion.value = fabricVersions.firstOrNull { it.stable == true }
+            } catch (e: Exception) {
+                com.lanrhyme.shardlauncher.utils.logging.Logger.lWarning("加载Fabric版本失败: $versionId", e)
+            }
 
-                // 使用新的ForgeVersions对象获取Forge列表（支持官方源+BMCLAPI双源）
+            // Forge
+            try {
                 val forgeVersions = com.lanrhyme.shardlauncher.game.modloader.forgelike.forge.ForgeVersions.fetchForgeList(versionId)
                 val mappedForgeVersions = forgeVersions?.map { forgeVersion ->
                     LoaderVersion(
@@ -101,27 +106,40 @@ class VersionDetailViewModel(application: Application, private val versionId: St
                 } ?: emptyList()
                 _forgeVersions.value = mappedForgeVersions
                 _selectedForgeVersion.value = mappedForgeVersions.firstOrNull { it.isRecommended } ?: mappedForgeVersions.firstOrNull()
+            } catch (e: Exception) {
+                com.lanrhyme.shardlauncher.utils.logging.Logger.lWarning("加载Forge版本失败: $versionId", e)
+            }
 
+            // NeoForge
+            try {
                 val neoForgeVersionStrings = ApiClient.neoForgeApiService.getNeoForgeVersions(versionId)
                 val neoForgeVersions = neoForgeVersionStrings.map { LoaderVersion(version = it) }
                 _neoForgeVersions.value = neoForgeVersions
                 _selectedNeoForgeVersion.value = neoForgeVersions.firstOrNull()
+            } catch (e: Exception) {
+                com.lanrhyme.shardlauncher.utils.logging.Logger.lWarning("加载NeoForge版本失败: $versionId", e)
+            }
 
+            // Quilt
+            try {
                 val quiltVersions = ApiClient.quiltApiService.getQuiltVersions(versionId)
                 val mappedQuiltVersions = quiltVersions.map { it.toLoaderVersion() }
                 _quiltVersions.value = mappedQuiltVersions
                 _selectedQuiltVersion.value = mappedQuiltVersions.firstOrNull { it.status == "Stable" }
+            } catch (e: Exception) {
+                com.lanrhyme.shardlauncher.utils.logging.Logger.lWarning("加载Quilt版本失败: $versionId", e)
+            }
 
+            // OptiFine
+            try {
                 val optiFineVersionTokens = ApiClient.optiFineApiService.getOptiFineVersions()
                 val mappedOptiFineVersions = optiFineVersionTokens
                     .filter { it.mcVersion == versionId }
                     .map { it.toLoaderVersion() }
                 _optifineVersions.value = mappedOptiFineVersions
                 _selectedOptifineVersion.value = mappedOptiFineVersions.firstOrNull()
-
-            } catch (e: Exception) { 
-                // 记录错误，但继续执行，让UI可以显示其他可用的Mod Loader
-                com.lanrhyme.shardlauncher.utils.logging.Logger.lError("加载Mod Loader版本失败", e)
+            } catch (e: Exception) {
+                com.lanrhyme.shardlauncher.utils.logging.Logger.lWarning("加载OptiFine版本失败: $versionId", e)
             }
 
             // Placeholders

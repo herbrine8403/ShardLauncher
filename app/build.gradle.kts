@@ -89,10 +89,19 @@ android {
 
     signingConfigs {
         create("shardLauncherDebug") {
-            storeFile = file(rootProject.file("debug.keystore"))
-            storePassword = "shardlauncher_debug"
-            keyAlias = "shardlauncher_debug"
-            keyPassword = "shardlauncher_debug"
+            val keystoreFile = rootProject.file("debug.keystore")
+            if (keystoreFile.exists()) {
+                storeFile = keystoreFile
+                storePassword = "shardlauncher_debug"
+                keyAlias = "shardlauncher_debug"
+                keyPassword = "shardlauncher_debug"
+            } else {
+                // 如果 keystore 文件不存在，使用默认的 debug 签名
+                storeFile = null
+                storePassword = "android"
+                keyAlias = "androiddebugkey"
+                keyPassword = "android"
+            }
         }
     }
 

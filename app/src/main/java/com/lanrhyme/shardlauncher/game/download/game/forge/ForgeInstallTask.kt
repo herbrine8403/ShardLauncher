@@ -21,9 +21,11 @@ import com.lanrhyme.shardlauncher.utils.file.extractDirectory
 import com.lanrhyme.shardlauncher.utils.file.readText
 import com.lanrhyme.shardlauncher.utils.json.merge
 import com.lanrhyme.shardlauncher.utils.json.parseToJson
+import com.lanrhyme.shardlauncher.utils.json.parseTo
 import com.lanrhyme.shardlauncher.utils.logging.Logger
 import com.lanrhyme.shardlauncher.utils.network.fetchStringFromUrls
 import com.lanrhyme.shardlauncher.utils.network.withRetry
+import com.lanrhyme.shardlauncher.game.addons.mirror.mapMirrorableUrls
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.jackhuang.hmcl.util.DigestUtils

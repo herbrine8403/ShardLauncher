@@ -346,9 +346,9 @@ class VersionDetailViewModel(application: Application, private val versionId: St
                     
                     // 执行安装
                     installer?.installGame(
-                        isRunning = { 
-                            // 已在安装中，取消虚拟任务
-                            downloadTask.taskState = com.lanrhyme.shardlauncher.coroutine.TaskState.COMPLETED
+                        isRunning = {
+                            // 已在安装中，阻止这次安装请求
+                            // 不需要修改 downloadTask 的状态，保持为 RUNNING 状态
                         },
                         onInstalled = { installedVersion ->
                             downloadTask.taskState = com.lanrhyme.shardlauncher.coroutine.TaskState.COMPLETED

@@ -88,7 +88,7 @@ android {
     }
 
     signingConfigs {
-        create("debug") {
+        create("shardLauncherDebug") {
             storeFile = file(rootProject.file("debug.keystore"))
             storePassword = "shardlauncher_debug"
             keyAlias = "shardlauncher_debug"
@@ -112,7 +112,7 @@ android {
         }
         debug {
             applicationIdSuffix = ".debug"
-            signingConfig = signingConfigs.getByName("debug")
+            signingConfig = signingConfigs.getByName("shardLauncherDebug")
         }
     }
     compileOptions {

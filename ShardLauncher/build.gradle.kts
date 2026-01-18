@@ -169,7 +169,6 @@ dependencies {
 
     // Native libraries
     // Bytehook is now provided by SL-GameCore
-    implementation(project(":NG-GL4ES"))
 
 
     testImplementation(libs.junit)

@@ -115,7 +115,7 @@ object AllSettings : SettingsRegistry() {
     /**
      * Mirror source for mod loaders
      */
-    val fetchModLoaderSource = enumSetting("fetchModLoaderSource", com.lanrhyme.shardlauncher.settings.enums.MirrorSourceType.OFFICIAL_FIRST)
+    val fetchModLoaderSource = enumSetting("fetchModLoaderSource", com.lanrhyme.shardlauncher.settings.enums.MirrorSourceType.MIRROR_FIRST)
 
     /**
      * Mirror source for game files

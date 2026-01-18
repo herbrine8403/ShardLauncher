@@ -87,6 +87,15 @@ android {
 
     }
 
+    signingConfigs {
+        create("debug") {
+            storeFile = file(rootProject.file("debug.keystore"))
+            storePassword = "shardlauncher_debug"
+            keyAlias = "shardlauncher_debug"
+            keyPassword = "shardlauncher_debug"
+        }
+    }
+
     buildFeatures {
         buildConfig = true
         compose = true
@@ -103,6 +112,7 @@ android {
         }
         debug {
             applicationIdSuffix = ".debug"
+            signingConfig = signingConfigs.getByName("debug")
         }
     }
     compileOptions {

@@ -5,6 +5,9 @@
 
 package com.lanrhyme.shardlauncher.ui.developeroptions
 
+import android.content.Context
+import android.content.Intent
+import android.net.Uri
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -19,6 +22,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -27,6 +31,9 @@ import androidx.navigation.NavController
 import com.lanrhyme.shardlauncher.ui.components.*
 import com.lanrhyme.shardlauncher.utils.logging.LogCollector
 import kotlinx.coroutines.delay
+import java.io.File
+import java.text.SimpleDateFormat
+import java.util.*
 
 @Composable
 fun LogViewerScreen(navController: NavController) {
@@ -34,15 +41,50 @@ fun LogViewerScreen(navController: NavController) {
     val isCardBlurEnabled = cardLayoutConfig.isCardBlurEnabled
     val cardAlpha = cardLayoutConfig.cardAlpha
     val hazeState = cardLayoutConfig.hazeState
-    
+    val context = LocalContext.current
+
     // 日志级别过滤
     var selectedLevel by remember { mutableStateOf<LogCollector.LogLevel?>(null) }
-    
+
     // 自动刷新日志
     var autoRefresh by remember { mutableStateOf(true) }
-    
+
     // 日志列表
     var logs by remember { mutableStateOf(emptyList<LogCollector.LogEntry>()) }
+
+    // 导出日志
+    fun exportLogs() {
+        try {
+            val logContent = LogCollector.exportLogs()
+            val timestamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
+            val fileName = "shardlauncher_log_$timestamp.txt"
+
+            // 保存到应用缓存目录
+            val cacheDir = context.cacheDir
+            val logFile = File(cacheDir, fileName)
+            logFile.writeText(logContent, Charsets.UTF_8)
+
+            // 使用 Intent 分享文件
+            val uri = androidx.core.content.FileProvider.getUriForFile(
+                context,
+                "${context.packageName}.provider",
+                logFile
+            )
+
+            val intent = Intent(Intent.ACTION_SEND).apply {
+                type = "text/plain"
+                putExtra(Intent.EXTRA_STREAM, uri)
+                putExtra(Intent.EXTRA_SUBJECT, "ShardLauncher 日志")
+                putExtra(Intent.EXTRA_TEXT, "以下是 ShardLauncher 的日志信息：")
+                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            }
+
+            context.startActivity(Intent.createChooser(intent, "分享日志"))
+        } catch (e: Exception) {
+            e.printStackTrace()
+            // 如果分享失败，可以显示一个提示（这里简化处理）
+        }
+    }
     
     // 自动刷新日志
     LaunchedEffect(autoRefresh) {
@@ -160,8 +202,8 @@ fun LogViewerScreen(navController: NavController) {
                     
                     // 导出日志
                     ScalingActionButton(
-                        onClick = { 
-                            // TODO: 实现导出到文件
+                        onClick = {
+                            exportLogs()
                         },
                         modifier = Modifier.weight(1f),
                         text = "导出日志",

@@ -21,12 +21,9 @@ if (localPropertiesFile.exists()) {
 
 fun gitBranch(): String {
     return try {
-        val byteOut = ByteArrayOutputStream()
-        project.exec {
+        providers.exec {
             commandLine("git", "rev-parse", "--abbrev-ref", "HEAD")
-            standardOutput = byteOut
-        }
-        String(byteOut.toByteArray()).trim()
+        }.standardOutput.asText.get().trim()
     } catch (e: Exception) {
         "unknown"
     }
@@ -34,12 +31,9 @@ fun gitBranch(): String {
 
 fun gitHash(): String {
     return try {
-        val byteOut = ByteArrayOutputStream()
-        project.exec {
+        providers.exec {
             commandLine("git", "rev-parse", "--short", "HEAD")
-            standardOutput = byteOut
-        }
-        String(byteOut.toByteArray()).trim()
+        }.standardOutput.asText.get().trim()
     } catch (e: Exception) {
         "unknown"
     }
@@ -47,12 +41,9 @@ fun gitHash(): String {
 
 fun gitCommitDate(): String {
     return try {
-        val byteOut = ByteArrayOutputStream()
-        project.exec {
+        providers.exec {
             commandLine("git", "log", "-1", "--format=%ai")
-            standardOutput = byteOut
-        }
-        String(byteOut.toByteArray()).trim()
+        }.standardOutput.asText.get().trim()
     } catch (e: Exception) {
         "unknown"
     }
@@ -116,29 +107,13 @@ android {
         compose = true
     }
 
-    ndkVersion = "25.2.9519653"
-
-    externalNativeBuild {
-        ndkBuild {
-            path = file("src/main/jni/Android.mk")
-        }
-    }
-
-    splits {
-        abi {
-            isEnable = true
-            reset()
-            include("x86", "x86_64", "armeabi-v7a", "arm64-v8a")
-            isUniversalApk = true
-        }
-    }
     packaging {
+        resources {
+            excludes += "/META-INF/{AL2.0,LGPL2.1}"
+        }
         jniLibs {
             useLegacyPackaging = true
             pickFirsts += listOf("**/libbytehook.so")
-        }
-        resources {
-            excludes += "/META-INF/{AL2.0,LGPL2.1}"
         }
     }
 }
@@ -180,7 +155,7 @@ dependencies {
     implementation(libs.androidx.compose.ui.text)
 
     // Native libraries
-    implementation("com.bytedance:bytehook:1.0.9")
+    // Bytehook is now provided by SL-GameCore
     implementation(project(":NG-GL4ES"))
 
 
@@ -212,4 +187,5 @@ dependencies {
 
     // OkHttp (already used via retrofit, but making explicit)
     implementation(libs.okhttp)
+    implementation(project(":SL-GameCore"))
 }

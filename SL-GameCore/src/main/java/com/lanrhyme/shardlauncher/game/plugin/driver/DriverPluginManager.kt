@@ -7,11 +7,6 @@ package com.lanrhyme.shardlauncher.game.plugin.driver
 
 import android.content.Context
 import android.content.pm.ApplicationInfo
-import com.lanrhyme.shardlauncher.settings.AllSettings
-
-/**
- * Driver plugin manager for handling GPU drivers
- */
 object DriverPluginManager {
     private val driverList: MutableList<Driver> = mutableListOf()
 
@@ -19,6 +14,10 @@ object DriverPluginManager {
     fun getDriverList(): List<Driver> = driverList.toList()
 
     private lateinit var currentDriver: Driver
+    private var preferredDriverId: String = "default"
+
+    @JvmStatic
+    fun getDriver(): Driver = currentDriver
 
     @JvmStatic
     fun setDriverById(driverId: String) {
@@ -26,7 +25,12 @@ object DriverPluginManager {
     }
 
     @JvmStatic
-    fun getDriver(): Driver = currentDriver
+    fun setPreferredDriverId(driverId: String) {
+        preferredDriverId = driverId
+        if (::currentDriver.isInitialized) {
+            setDriverById(driverId)
+        }
+    }
 
     /**
      * Initialize drivers
@@ -37,13 +41,13 @@ object DriverPluginManager {
         val applicationInfo = context.applicationInfo
         driverList.add(
             Driver(
-                id = AllSettings.vulkanDriver.defaultValue,
+                id = "default",
                 name = "Turnip",
                 path = applicationInfo.nativeLibraryDir
             )
         )
         
-        setDriverById(AllSettings.vulkanDriver.getValue())
+        setDriverById(preferredDriverId)
     }
 
     /**

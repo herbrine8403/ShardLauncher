@@ -352,9 +352,10 @@ private fun RuntimeItem(
                     color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
                 )
                 
-                if (runtime.versionString != null) {
+                val verStr = runtime.versionString
+                if (verStr != null) {
                     Text(
-                        text = runtime.versionString,
+                        text = verStr,
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
                     )

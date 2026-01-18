@@ -62,7 +62,8 @@ fun getFabricLikeCompleterTask(
             // 提交下载计划
             libDownloader.schedule(
                 task = task,
-                targetDir = File(tempMinecraftDir, "libraries")
+                targetDir = File(tempMinecraftDir, "libraries"),
+                ensureDir = true
             )
             
             // 下载所有库文件

@@ -174,7 +174,7 @@ private suspend fun analyseNewForge(
         downloader = downloader,
         gameManifest = GSON.fromJson(installProfileString, GameManifest::class.java)
     )
-    libDownloader.schedule(task, File(tempMinecraftFolder, "libraries").ensureDirectory(), false)
+    libDownloader.schedule(task, File(tempMinecraftFolder, "libraries").ensureDirectory(), ensureDir = false)
 
     //添加 Mojang Mappings 下载信息
     task.updateProgress(0.4f)
@@ -304,7 +304,7 @@ private suspend fun parseProcessors(
                 ).parseTo(GameManifest::class.java)
             }
             manifest.downloads?.clientMappings?.let { mappings ->
-                schedule(mappings.url.mapMirrorableUrls(), mappings.sha1, File(output), mappings.size)
+                libDownloader.scheduleDownload(mappings.url.mapMirrorableUrls(), mappings.sha1, File(output), mappings.size)
                 Logger.lInfo("Mappings: ${mappings.url} (SHA1: ${mappings.sha1})")
             } ?: throw Exception("client_mappings download info not found")
         }
@@ -484,7 +484,17 @@ private suspend fun installOldForge(
             task.updateProgress(0.9f)
 
             //建立 Json 文件
-            val versionInfo = installProfile["versionInfo"].asJsonObject
+            val versionInfo = when (val versionInfoElement = installProfile["versionInfo"]) {
+                is com.google.gson.JsonPrimitive -> {
+                    // versionInfo 是字符串路径，需要从 zip 中读取
+                    zip.readText(versionInfoElement.asString.trimStart('/')).parseToJson()
+                }
+                is com.google.gson.JsonObject -> {
+                    // versionInfo 已经是 JsonObject
+                    versionInfoElement
+                }
+                else -> throw IllegalArgumentException("Invalid versionInfo type in install_profile.json")
+            }
             if (!versionInfo.has("inheritsFrom")) {
                 versionInfo.addProperty("inheritsFrom", inherit)
             }
@@ -513,7 +523,8 @@ private suspend fun installOldForge(
         )
         libDownloader.schedule(
             task = task,
-            targetDir = librariesFolder
+            targetDir = librariesFolder,
+            ensureDir = true
         )
         //开始补全 Forge 支持库
         libDownloader.download(task)

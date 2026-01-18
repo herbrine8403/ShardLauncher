@@ -28,28 +28,62 @@ class GameLibDownloader(
     // 信号量控制并发
     private val semaphore = Semaphore(maxDownloadThreads)
     
+    // 下载任务列表
+    private val _downloadTasks = mutableListOf<LibraryDownloadTask>()
+    val downloads: List<LibraryDownloadTask> get() = _downloadTasks
+    
+    /**
+     * 计划所有库文件下载
+     */
+    fun schedule(task: Task, targetDir: File, ensureDir: Boolean = true) {
+        if (ensureDir) {
+            targetDir.mkdirs()
+        }
+        
+        downloader.loadLibraryDownloads(gameManifest, targetDir) { 
+            urls, hash, targetFile, size, isDownloadable ->
+            if (isDownloadable) {
+                _downloadTasks.add(
+                    LibraryDownloadTask(
+                        urls = urls,
+                        hash = hash,
+                        targetFile = targetFile,
+                        size = size,
+                        verifyIntegrity = downloader.verifyIntegrity
+                    )
+                )
+            }
+        }
+    }
+    
+    /**
+     * 添加单个下载任务
+     */
+    fun scheduleDownload(urls: List<String>, sha1: String?, targetFile: File, size: Long) {
+        _downloadTasks.add(
+            LibraryDownloadTask(
+                urls = urls,
+                hash = sha1,
+                targetFile = targetFile,
+                size = size,
+                verifyIntegrity = downloader.verifyIntegrity
+            )
+        )
+    }
+    
+    /**
+     * 移除下载任务
+     */
+    fun removeDownload(predicate: (LibraryDownloadTask) -> Boolean) {
+        _downloadTasks.removeAll(predicate)
+    }
+    
     /**
      * 下载所有库文件
      */
     suspend fun download(task: Task) {
         withContext(Dispatchers.IO) {
-            // 收集所有下载任务
-            val downloadTasks = mutableListOf<LibraryDownloadTask>()
-            
-            downloader.loadLibraryDownloads(gameManifest, downloader.librariesTarget) { 
-                urls, hash, targetFile, size, isDownloadable ->
-                if (isDownloadable) {
-                    downloadTasks.add(
-                        LibraryDownloadTask(
-                            urls = urls,
-                            hash = hash,
-                            targetFile = targetFile,
-                            size = size,
-                            verifyIntegrity = downloader.verifyIntegrity
-                        )
-                    )
-                }
-            }
+            val downloadTasks = _downloadTasks.toList()
             
             val totalFiles = downloadTasks.size
             val totalSize = downloadTasks.sumOf { it.size }
@@ -72,7 +106,7 @@ class GameLibDownloader(
                             
                             // 更新计数器
                             val count = downloadedFileCount.incrementAndGet()
-                            val sizeDownloaded = downloadedFileSize.addAndGet(downloadTask.size)
+                            downloadedFileSize.addAndGet(downloadTask.size)
                             
                             // 更新进度
                             val progress = count.toFloat() / totalFiles
@@ -97,7 +131,7 @@ class GameLibDownloader(
     /**
      * 库文件下载任务
      */
-    private data class LibraryDownloadTask(
+    data class LibraryDownloadTask(
         val urls: List<String>,
         val hash: String?,
         val targetFile: File,

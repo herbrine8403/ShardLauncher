@@ -93,11 +93,15 @@ object ForgeVersions {
             // fileVersion 格式：{mcversion}-{version}{-{branch}}
             // 参考 BMCLAPI 文档：https://bmclapidoc.bangbang93.com
             val versionName = token.version
+            Logger.lInfo("BMCLAPI Token: version=$versionName, mcversion=$mcVersion, branch=${token.branch}, branchType=${token.branch?.javaClass?.simpleName}")
+
             val fileVersion = if (token.branch != null) {
                 "$mcVersion-$versionName-${token.branch}"
             } else {
                 "$mcVersion-$versionName"
             }
+
+            Logger.lInfo("ForgeVersion: versionName=$versionName, branch=${token.branch}, fileVersion=$fileVersion")
 
             ForgeVersion(
                 versionName = versionName,

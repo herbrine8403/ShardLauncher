@@ -304,7 +304,7 @@ private suspend fun parseProcessors(
                 ).parseTo(GameManifest::class.java)
             }
             manifest.downloads?.clientMappings?.let { mappings ->
-                libDownloader.scheduleDownload(mappings.url.mapMirrorableUrls(), mappings.sha1, File(output), mappings.size)
+                schedule(mappings.url.mapMirrorableUrls(), mappings.sha1, File(output), mappings.size)
                 Logger.lInfo("Mappings: ${mappings.url} (SHA1: ${mappings.sha1})")
             } ?: throw Exception("client_mappings download info not found")
         }

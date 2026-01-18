@@ -121,7 +121,7 @@ class VersionDetailViewModel(application: Application, private val versionId: St
 
             } catch (e: Exception) { 
                 // 记录错误，但继续执行，让UI可以显示其他可用的Mod Loader
-                e.printStackTrace()
+                com.lanrhyme.shardlauncher.utils.logging.Logger.lError("加载Mod Loader版本失败", e)
             }
 
             // Placeholders

@@ -19,6 +19,8 @@ import com.lanrhyme.shardlauncher.game.download.game.fabric.getFabricLikeComplet
 import com.lanrhyme.shardlauncher.game.download.game.fabric.getFabricLikeDownloadTask
 import com.lanrhyme.shardlauncher.game.modloader.forgelike.ForgeVersion
 import com.lanrhyme.shardlauncher.game.modloader.forgelike.NeoForgeVersion
+import com.lanrhyme.shardlauncher.game.download.game.ForgeVersion as DownloadForgeVersion
+import com.lanrhyme.shardlauncher.game.download.game.NeoForgeVersion as DownloadNeoForgeVersion
 import com.lanrhyme.shardlauncher.game.path.getGameHome
 import com.lanrhyme.shardlauncher.game.version.download.BaseMinecraftDownloader
 import com.lanrhyme.shardlauncher.game.version.download.GameLibDownloader
@@ -379,23 +381,23 @@ class GameInstaller(
         // 创建ForgeLikeVersion对象
         val forgeLikeVersion = when (loaderName) {
             "Forge" -> {
-                val forgeVersion = loaderVersion as ForgeVersion
+                val forgeVersion = loaderVersion as DownloadForgeVersion
                 ForgeVersion(
-                    versionName = forgeVersion.versionName,
+                    versionName = forgeVersion.version,
                     branch = null,
                     inherit = info.gameVersion,
                     releaseTime = "",
                     hash = null,
-                    isRecommended = forgeVersion.isRecommended,
+                    isRecommended = false, // DownloadForgeVersion 没有 isRecommended 字段，使用默认值
                     category = "installer",
-                    fileVersion = "${info.gameVersion}-${forgeVersion.versionName}",
+                    fileVersion = "${info.gameVersion}-${forgeVersion.version}",
                     isLegacy = false // 可以根据版本号判断
                 )
             }
             "NeoForge" -> {
-                val neoForgeVersion = loaderVersion as NeoForgeVersion
+                val neoForgeVersion = loaderVersion as DownloadNeoForgeVersion
                 NeoForgeVersion(
-                    versionName = neoForgeVersion.versionName,
+                    versionName = neoForgeVersion.version,
                     inherit = info.gameVersion,
                     isLegacy = false
                 )

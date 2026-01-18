@@ -190,26 +190,26 @@ class VersionDetailViewModel(application: Application, private val versionId: St
             when (selectedModLoader.value) {
                 ModLoader.Fabric -> {
                     append("-Fabric")
-                    selectedFabricVersion.value?.let { append("-${it.version}") }
+                    selectedFabricVersion.value?.let { append("-${it.version ?: ""}") }
                 }
                 ModLoader.Forge -> {
                     append("-Forge")
-                    selectedForgeVersion.value?.let { append("-${it.version}") }
+                    selectedForgeVersion.value?.let { append("-${it.version ?: ""}") }
                 }
                 ModLoader.NeoForge -> {
                     append("-NeoForge")
-                    selectedNeoForgeVersion.value?.let { append("-${it.version}") }
+                    selectedNeoForgeVersion.value?.let { append("-${it.version ?: ""}") }
                 }
                 ModLoader.Quilt -> {
                     append("-Quilt")
-                    selectedQuiltVersion.value?.let { append("-${it.version}") }
+                    selectedQuiltVersion.value?.let { append("-${it.version ?: ""}") }
                 }
                 ModLoader.None -> { /* Do nothing */ }
             }
 
             if (isOptifineSelected.value) {
                 append("-Optifine")
-                selectedOptifineVersion.value?.let { append("-${it.version}") }
+                selectedOptifineVersion.value?.let { append("-${it.version ?: ""}") }
             }
         }
     }
@@ -250,31 +250,39 @@ class VersionDetailViewModel(application: Application, private val versionId: St
                 if (version != null) {
                     // 根据选择的 Mod Loader 创建相应的版本信息
                     val fabricVersion = selectedFabricVersion.value?.let {
-                        com.lanrhyme.shardlauncher.game.download.game.FabricVersion(
-                            version = it.version,
-                            loaderName = "Fabric"
-                        )
+                        if (it.version != null) {
+                            com.lanrhyme.shardlauncher.game.download.game.FabricVersion(
+                                version = it.version,
+                                loaderName = "Fabric"
+                            )
+                        } else null
                     }
-                    
+
                     val forgeVersion = selectedForgeVersion.value?.let {
-                        com.lanrhyme.shardlauncher.game.download.game.ForgeVersion(
-                            version = it.version,
-                            loaderName = "Forge"
-                        )
+                        if (it.version != null) {
+                            com.lanrhyme.shardlauncher.game.download.game.ForgeVersion(
+                                version = it.version,
+                                loaderName = "Forge"
+                            )
+                        } else null
                     }
-                    
+
                     val neoForgeVersion = selectedNeoForgeVersion.value?.let {
-                        com.lanrhyme.shardlauncher.game.download.game.NeoForgeVersion(
-                            version = it.version,
-                            loaderName = "NeoForge"
-                        )
+                        if (it.version != null) {
+                            com.lanrhyme.shardlauncher.game.download.game.NeoForgeVersion(
+                                version = it.version,
+                                loaderName = "NeoForge"
+                            )
+                        } else null
                     }
-                    
+
                     val quiltVersion = selectedQuiltVersion.value?.let {
-                        com.lanrhyme.shardlauncher.game.download.game.QuiltVersion(
-                            version = it.version,
-                            loaderName = "Quilt"
-                        )
+                        if (it.version != null) {
+                            com.lanrhyme.shardlauncher.game.download.game.QuiltVersion(
+                                version = it.version,
+                                loaderName = "Quilt"
+                            )
+                        } else null
                     }
                     
                     val downloadInfo = com.lanrhyme.shardlauncher.game.download.game.GameDownloadInfo(

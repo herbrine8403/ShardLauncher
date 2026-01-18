@@ -11,6 +11,13 @@ import com.lanrhyme.shardlauncher.coroutine.TitledTask
 import com.lanrhyme.shardlauncher.coroutine.addTask
 import com.lanrhyme.shardlauncher.coroutine.buildPhase
 import com.lanrhyme.shardlauncher.game.addons.mirror.mapMirrorableUrls
+import com.lanrhyme.shardlauncher.game.download.game.forge.getForgeLikeAnalyseTask
+import com.lanrhyme.shardlauncher.game.download.game.forge.getForgeLikeDownloadTask
+import com.lanrhyme.shardlauncher.game.download.game.forge.getForgeLikeInstallTask
+import com.lanrhyme.shardlauncher.game.download.game.fabric.getFabricLikeCompleterTask
+import com.lanrhyme.shardlauncher.game.download.game.fabric.getFabricLikeDownloadTask
+import com.lanrhyme.shardlauncher.game.modloader.forgelike.forge.ForgeVersion
+import com.lanrhyme.shardlauncher.game.modloader.forgelike.forge.NeoForgeVersion
 import com.lanrhyme.shardlauncher.game.path.getGameHome
 import com.lanrhyme.shardlauncher.game.version.download.BaseMinecraftDownloader
 import com.lanrhyme.shardlauncher.game.version.download.GameLibDownloader
@@ -311,56 +318,50 @@ class GameInstaller(
         tempFolderName: String
     ) {
         val tempVersionJson = File(tempMinecraftDir, "versions/$tempFolderName/$tempFolderName.json")
-        val tempVersionJar = File(tempMinecraftDir, "versions/$tempFolderName/$tempFolderName.jar")
 
-        // 下载 Mod Loader Json
+        // 构造版本JSON下载URL
+        val loaderJsonUrl = when (loaderName) {
+            "Fabric" -> {
+                val downloadSource = AllSettings.fetchModLoaderSource.state
+                // 支持镜像源
+                if (downloadSource == com.lanrhyme.shardlauncher.settings.enums.MirrorSourceType.MIRROR_FIRST) {
+                    "https://bmclapi2.bangbang93.com/fabric-meta/v2/versions/loader/${info.gameVersion}/${loaderVersion.version}/profile/json"
+                } else {
+                    "https://meta.fabricmc.net/v2/versions/loader/${info.gameVersion}/${loaderVersion.version}/profile/json"
+                }
+            }
+            "Quilt" -> {
+                val downloadSource = AllSettings.fetchModLoaderSource.state
+                // 支持镜像源
+                if (downloadSource == com.lanrhyme.shardlauncher.settings.enums.MirrorSourceType.MIRROR_FIRST) {
+                    "https://bmclapi2.bangbang93.com/quilt-meta/v3/versions/loader/${info.gameVersion}/${loaderVersion.version}/profile/json"
+                } else {
+                    "https://meta.quiltmc.org/v3/versions/loader/${info.gameVersion}/${loaderVersion.version}/profile/json"
+                }
+            }
+            else -> throw IllegalArgumentException("不支持的加载器: $loaderName")
+        }
+
+        // 1. 下载版本JSON配置文件
         addTask(
             title = context.getString(
                 R.string.download_game_install_fabric,
                 loaderVersion.version
             ),
-            task = Task.runTask(id = "Download.$loaderName.Json", task = { task ->
-                // 构造 Mod Loader 版本 URL
-                val baseUrl = when (loaderName) {
-                    "Fabric" -> "https://meta.fabricmc.net/v2/versions/loader"
-                    "Quilt" -> "https://meta.quiltmc.org/v3/versions/loader"
-                    else -> throw IllegalArgumentException("Unsupported loader: $loaderName")
-                }
-                
-                val loaderUrl = "$baseUrl/${info.gameVersion}/${loaderVersion.version}/profile/json"
-
-                // 下载 Mod Loader 配置文件
-                val downloadSource = AllSettings.fetchModLoaderSource.state
-                val loaderJson = fetchStringFromUrls(loaderUrl.mapMirrorableUrls(downloadSource))
-
-                // 保存 Mod Loader 配置文件
-                tempVersionJson.parentFile.mkdirs()
-                tempVersionJson.writeText(loaderJson)
-
-                Logger.lInfo("Downloaded $loaderName profile: $loaderUrl")
-            })
+            task = com.lanrhyme.shardlauncher.game.download.game.fabric.getFabricLikeDownloadTask(
+                loaderJsonUrl = loaderJsonUrl,
+                tempVersionJson = tempVersionJson
+            )
         )
         
-        // 下载 Mod Loader 库文件
+        // 2. 下载所有库文件（完成安装）
         addTask(
             title = context.getString(R.string.download_game_install_game_files_progress),
-            task = Task.runTask(id = "Download.$loaderName.Libraries", task = { task ->
-                // 从 Mod Loader 配置文件中提取并下载所需的库
-                val loaderJson = tempVersionJson.readText()
-                val gameManifest = GSON.fromJson(loaderJson, GameManifest::class.java)
-
-                // 创建库下载器
-                val libDownloader = GameLibDownloader(
-                    downloader = this@GameInstaller.downloader,
-                    gameManifest = gameManifest,
-                    maxDownloadThreads = 32
-                )
-                
-                // 下载所有库文件
-                libDownloader.download(task)
-                
-                Logger.lInfo("Downloaded $loaderName libraries")
-            })
+            task = com.lanrhyme.shardlauncher.game.download.game.fabric.getFabricLikeCompleterTask(
+                downloader = this@GameInstaller.downloader,
+                tempMinecraftDir = tempMinecraftDir,
+                tempVersionJson = tempVersionJson
+            )
         )
     }
     
@@ -374,75 +375,69 @@ class GameInstaller(
         val tempVersionJson = File(tempMinecraftDir, "versions/$tempFolderName/$tempFolderName.json")
         val tempInstallerJar = File(tempGameDir, "$tempFolderName-installer.jar")
 
-        // 下载安装器
-        addTask(
-            title = context.getString(R.string.download_game_install_game_files_progress),
-            task = Task.runTask(id = "Download.$loaderName.Installer", task = { task ->
-                // 获取下载 URL
-                val downloadUrl = when (loaderName) {
-                    "Forge" -> {
-                        val forgeVersion = loaderVersion as ForgeVersion
-                        forgeVersion.installerPath ?: getForgeDownloadUrl(info.gameVersion, loaderVersion.version)
-                    }
-                    "NeoForge" -> {
-                        val neoForgeVersion = loaderVersion as NeoForgeVersion
-                        neoForgeVersion.installerPath ?: getNeoForgeDownloadUrl(info.gameVersion, loaderVersion.version)
-                    }
-                    else -> throw IllegalArgumentException("Unsupported loader: $loaderName")
-                }
-                
-                // 下载安装器
-                val downloadSource = AllSettings.fetchModLoaderSource.state
-                downloadFromMirrorListSuspend(
-                    urls = downloadUrl.mapMirrorableUrls(downloadSource),
-                    targetFile = tempInstallerJar
+        // 创建ForgeLikeVersion对象
+        val forgeLikeVersion = when (loaderName) {
+            "Forge" -> {
+                val forgeVersion = loaderVersion as ForgeVersion
+                com.lanrhyme.shardlauncher.game.modloader.forgelike.forge.ForgeVersion(
+                    versionName = forgeVersion.version,
+                    branch = null,
+                    inherit = info.gameVersion,
+                    releaseTime = "",
+                    hash = null,
+                    isRecommended = forgeVersion.isRecommended,
+                    category = "installer",
+                    fileVersion = "${info.gameVersion}-${forgeVersion.version}",
+                    isLegacy = false // 可以根据版本号判断
                 )
-                
-                Logger.lInfo("Downloaded $loaderName installer: $downloadUrl")
-            })
+            }
+            "NeoForge" -> {
+                val neoForgeVersion = loaderVersion as NeoForgeVersion
+                com.lanrhyme.shardlauncher.game.modloader.forgelike.forge.NeoForgeVersion(
+                    versionName = neoForgeVersion.version,
+                    inherit = info.gameVersion,
+                    isLegacy = false
+                )
+            }
+            else -> throw IllegalArgumentException("不支持的加载器: $loaderName")
+        }
+
+        // 1. 下载安装器
+        addTask(
+            title = "下载 $loaderName 安装器",
+            task = com.lanrhyme.shardlauncher.game.download.game.forge.getForgeLikeDownloadTask(
+                targetTempInstaller = tempInstallerJar,
+                forgeLikeVersion = forgeLikeVersion
+            )
         )
         
-        // 安装 Mod Loader（这里简化处理，实际应该运行安装器）
+        // 2. 分析安装器（解压、解析配置）
         addTask(
-            title = context.getString(R.string.download_game_install_game_files_progress),
-            task = Task.runTask(id = "Install.$loaderName", task = { task ->
-                // TODO: 运行 Forge/NeoForge 安装器
-                // 由于 Forge/NeoForge 安装器需要运行 Java 程序，这里先简化处理
-                // 实际应该：
-                // 1. 解压安装器 JAR
-                // 2. 运行安装器提取文件
-                // 3. 获取版本 JSON 和库文件列表
-                
-                // 临时方案：直接下载版本 JSON（如果可用）
-                val versionJsonUrl = when (loaderName) {
-                    "Forge" -> getForgeVersionJsonUrl(info.gameVersion, loaderVersion.version)
-                    "NeoForge" -> getNeoForgeVersionJsonUrl(info.gameVersion, loaderVersion.version)
-                    else -> null
-                }
-                
-                versionJsonUrl?.let { url ->
-                    try {
-                        val downloadSource = AllSettings.fetchModLoaderSource.state
-                        val versionJson = fetchStringFromUrls(url.mapMirrorableUrls(downloadSource))
-                        tempVersionJson.parentFile.mkdirs()
-                        tempVersionJson.writeText(versionJson)
-                        
-                        // 下载库文件
-                        val gameManifest = GSON.fromJson(versionJson, GameManifest::class.java)
-                        val libDownloader = GameLibDownloader(
-                            downloader = this@GameInstaller.downloader,
-                            gameManifest = gameManifest,
-                            maxDownloadThreads = 32
-                        )
-                        libDownloader.download(task)
-                    } catch (e: Exception) {
-                        Logger.lError("Failed to install $loaderName: ${e.message}")
-                        throw e
-                    }
-                }
-                
-                Logger.lInfo("Installed $loaderName")
-            })
+            title = "分析 $loaderName 安装器",
+            task = com.lanrhyme.shardlauncher.game.download.game.forge.getForgeLikeAnalyseTask(
+                downloader = this@GameInstaller.downloader,
+                targetTempInstaller = tempInstallerJar,
+                forgeLikeVersion = forgeLikeVersion,
+                tempMinecraftFolder = tempMinecraftDir,
+                sourceInherit = info.gameVersion,
+                processedInherit = info.gameVersion,
+                loaderVersion = loaderVersion.version
+            )
+        )
+        
+        // 3. 执行安装（运行processors）
+        addTask(
+            title = "安装 $loaderName",
+            task = com.lanrhyme.shardlauncher.game.download.game.forge.getForgeLikeInstallTask(
+                isNew = true, // TODO: 根据版本号判断是否为新版
+                downloader = this@GameInstaller.downloader,
+                forgeLikeVersion = forgeLikeVersion,
+                tempFolderName = tempFolderName,
+                tempInstaller = tempInstallerJar,
+                tempGameFolder = tempGameDir,
+                tempMinecraftDir = tempMinecraftDir,
+                inherit = info.gameVersion
+            )
         )
     }
 

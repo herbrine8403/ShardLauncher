@@ -39,11 +39,11 @@ fun <T> LoaderVersionDropdown(
     val actualSelectedVersion = selectedVersion ?: versions.firstOrNull()
     
     val selectedVersionText = when (actualSelectedVersion) {
-        is FabricLoaderVersion -> actualSelectedVersion.version
-        is LoaderVersion -> actualSelectedVersion.version
+        is FabricLoaderVersion -> actualSelectedVersion.version ?: ""
+        is LoaderVersion -> actualSelectedVersion.version ?: ""
         is String -> actualSelectedVersion
         else -> ""
-    }
+    } ?: ""
 
     ExposedDropdownMenuBox(
         expanded = expanded,

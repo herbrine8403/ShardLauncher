@@ -89,10 +89,18 @@ class VersionDetailViewModel(application: Application, private val versionId: St
                 _fabricVersions.value = fabricVersions
                 _selectedFabricVersion.value = fabricVersions.firstOrNull { it.stable == true }
 
-                val forgeVersionTokens = ApiClient.forgeApiService.getForgeVersions(versionId)
-                val forgeVersions = forgeVersionTokens.map { it.toLoaderVersion() }
-                _forgeVersions.value = forgeVersions
-                _selectedForgeVersion.value = forgeVersions.firstOrNull { it.isRecommended }
+                // 使用新的ForgeVersions对象获取Forge列表（支持官方源+BMCLAPI双源）
+                val forgeVersions = com.lanrhyme.shardlauncher.game.modloader.forgelike.forge.ForgeVersions.fetchForgeList(versionId)
+                val mappedForgeVersions = forgeVersions?.map { forgeVersion ->
+                    LoaderVersion(
+                        version = forgeVersion.versionName,
+                        releaseTime = forgeVersion.releaseTime,
+                        isRecommended = forgeVersion.isRecommended,
+                        status = if (forgeVersion.isRecommended) "Recommended" else null
+                    )
+                } ?: emptyList()
+                _forgeVersions.value = mappedForgeVersions
+                _selectedForgeVersion.value = mappedForgeVersions.firstOrNull { it.isRecommended } ?: mappedForgeVersions.firstOrNull()
 
                 val neoForgeVersionStrings = ApiClient.neoForgeApiService.getNeoForgeVersions(versionId)
                 val neoForgeVersions = neoForgeVersionStrings.map { LoaderVersion(version = it) }

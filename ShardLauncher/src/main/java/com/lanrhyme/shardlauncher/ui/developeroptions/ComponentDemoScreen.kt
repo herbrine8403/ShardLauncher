@@ -30,6 +30,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.lanrhyme.shardlauncher.common.SidebarPosition
 import com.lanrhyme.shardlauncher.ui.components.BackgroundTextTag
+import com.lanrhyme.shardlauncher.ui.components.CapsuleTextField
 import com.lanrhyme.shardlauncher.ui.components.CombinedCard
 import com.lanrhyme.shardlauncher.ui.components.CustomButton
 import com.lanrhyme.shardlauncher.ui.components.CustomCard
@@ -98,6 +99,15 @@ fun ComponentDemoScreen() {
                     value = textState,
                     onValueChange = { textState = it },
                     label = "Custom Text Field"
+            )
+        }
+
+        item {
+            CapsuleTextField(
+                value = textState,
+                onValueChange = { textState = it },
+                label = "Capsule Input",
+                hint = "Type here..."
             )
         }
 

@@ -26,6 +26,7 @@ import androidx.navigation.NavController
 import com.lanrhyme.shardlauncher.coroutine.TaskState
 import com.lanrhyme.shardlauncher.model.FabricLoaderVersion
 import com.lanrhyme.shardlauncher.model.LoaderVersion
+import com.lanrhyme.shardlauncher.ui.components.CapsuleTextField
 import com.lanrhyme.shardlauncher.ui.components.CombinedCard
 import com.lanrhyme.shardlauncher.ui.components.LoaderVersionDropdown
 import com.lanrhyme.shardlauncher.ui.components.LocalCardLayoutConfig
@@ -73,7 +74,7 @@ fun VersionDetailScreen(navController: NavController, versionId: String?) {
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                ShardInputField(
+                CapsuleTextField(
                         value = versionName,
                         onValueChange = { viewModel.setVersionName(it) },
                         label = "版本名称",

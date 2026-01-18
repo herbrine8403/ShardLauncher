@@ -7,6 +7,7 @@ import androidx.compose.animation.core.MutableTransitionState
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.core.updateTransition
@@ -21,21 +22,24 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.text.selection.LocalTextSelectionColors
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Search
@@ -66,9 +70,13 @@ import androidx.compose.ui.composed
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.scale
+import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Paint
+import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.toArgb
@@ -608,6 +616,145 @@ fun SearchTextField(
                         }
                 }
         )
+}
+
+/**
+ * 一个胶囊风格的输入框组件
+ *
+ * @param value 输入框的值
+ * @param onValueChange 当值改变时的回调
+ * @param label 左侧显示的标签
+ * @param modifier 修饰符
+ * @param hint 输入框为空时的提示文本
+ */
+@Composable
+fun CapsuleTextField(
+    value: String,
+    onValueChange: (String) -> Unit,
+    label: String,
+    modifier: Modifier = Modifier,
+    hint: String = ""
+) {
+    val (isCardBlurEnabled, cardAlpha, hazeState) = LocalCardLayoutConfig.current
+    var isFocused by remember { mutableStateOf(false) }
+    var textWidth by remember { mutableStateOf(0f) }
+    
+    // 目标宽度：只有在获取到焦点且有文字时才显示
+    val targetWidth = if (isFocused && value.isNotEmpty()) textWidth else 0f
+    
+    val indicatorWidth by animateFloatAsState(
+        targetValue = targetWidth,
+        label = "IndicatorWidth",
+        animationSpec = spring(stiffness = Spring.StiffnessMediumLow)
+    )
+
+    // 文字垂直偏移：聚焦时上移，未聚焦时居中（0）
+    val textVerticalOffset by animateDpAsState(
+        targetValue = if (isFocused) (-2).dp else 0.dp,
+        label = "TextVerticalOffset",
+        animationSpec = spring(stiffness = Spring.StiffnessMediumLow)
+    )
+    
+    val indicatorColor = MaterialTheme.colorScheme.primary
+    val containerShape = RoundedCornerShape(16.dp)
+
+    Row(
+        modifier = modifier
+            .height(52.dp)
+            .clip(containerShape)
+            .then(
+                if (isCardBlurEnabled && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                    Modifier.hazeEffect(state = hazeState)
+                } else Modifier
+            )
+            .background(
+                MaterialTheme.colorScheme.surfaceVariant.copy(
+                    alpha = (cardAlpha * 0.4f).coerceAtLeast(0.1f)
+                )
+            ),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        // 左侧标签部分
+        Text(
+            text = label,
+            style = MaterialTheme.typography.titleMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            fontWeight = FontWeight.Bold,
+            modifier = Modifier.padding(horizontal = 16.dp)
+        )
+
+        // 右侧输入部分
+        Box(
+            modifier = Modifier
+                .clip(RoundedCornerShape(16.dp))
+                .weight(1f)
+                .fillMaxHeight()
+                .background(
+                    MaterialTheme.colorScheme.surface.copy(
+                        alpha = (cardAlpha * 0.9f).coerceAtLeast(0.3f)
+                    )
+                )
+                .onFocusChanged { isFocused = it.isFocused }
+                .padding(horizontal = 16.dp),
+            contentAlignment = Alignment.CenterStart
+        ) {
+            BasicTextField(
+                value = value,
+                onValueChange = onValueChange,
+                modifier = Modifier.fillMaxWidth(),
+                textStyle = MaterialTheme.typography.bodyMedium.copy(
+                    color = MaterialTheme.colorScheme.onSurface
+                ),
+                singleLine = true,
+                cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
+                onTextLayout = { textLayoutResult ->
+                    // 核心修复：使用 getLineRight(0) 获取第一行文字的实际结束位置，
+                    // 而不是使用 textLayoutResult.size.width，后者在 fillMaxWidth 下会返回整个输入框宽度。
+                    if (value.isNotEmpty()) {
+                        textWidth = textLayoutResult.getLineRight(0)
+                    } else {
+                        textWidth = 0f
+                    }
+                },
+                decorationBox = { innerTextField ->
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.CenterStart
+                    ) {
+                        if (value.isEmpty() && !isFocused) {
+                            Text(
+                                text = hint,
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
+                            )
+                        }
+                        
+                        // 文字主体带上位移动画
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .offset(y = textVerticalOffset),
+                            contentAlignment = Alignment.CenterStart
+                        ) {
+                            innerTextField()
+                            
+                            // 指示线：相对于文字底部定位
+                            if (indicatorWidth > 0.1f) {
+                                Box(
+                                    modifier = Modifier
+                                        .align(Alignment.BottomStart)
+                                        .offset(y = 2.dp) // 这里的 offset 是相对于 innerTextField 底部的
+                                        .width(with(LocalDensity.current) { indicatorWidth.toDp() })
+                                        .height(2.dp)
+                                        .background(indicatorColor, RoundedCornerShape(100))
+                                )
+                            }
+                        }
+                    }
+                }
+            )
+        }
+    }
 }
 
 /**

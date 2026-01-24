@@ -26,6 +26,17 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 
+/**
+ * 带开关的布局卡片组件
+ *
+ * @param checked 开关是否选中
+ * @param onCheckedChange 开关状态改变时的回调
+ * @param modifier 应用于卡片的修饰符
+ * @param title 标题文本
+ * @param summary 摘要文本（可选）
+ * @param enabled 是否启用
+ * @param shape 卡片形状
+ */
 @Composable
 fun SwitchLayoutCard(
         checked: Boolean,
@@ -84,6 +95,19 @@ fun SwitchLayoutCard(
         }
 }
 
+/**
+ * 带图标和开关的布局卡片组件
+ *
+ * @param checked 开关是否选中
+ * @param onCheckedChange 开关状态改变时的回调
+ * @param onIconClick 图标点击时的回调
+ * @param modifier 应用于卡片的修饰符
+ * @param icon 图标组件
+ * @param title 标题文本
+ * @param summary 摘要文本（可选）
+ * @param enabled 是否启用
+ * @param shape 卡片形状
+ */
 @Composable
 fun IconSwitchLayoutCard(
         checked: Boolean,
@@ -145,6 +169,21 @@ fun IconSwitchLayoutCard(
         }
 }
 
+/**
+ * 简单列表选择布局卡片组件
+ *
+ * @param modifier 应用于卡片的修饰符
+ * @param items 选项列表
+ * @param selectedItem 当前选中的项
+ * @param title 标题文本
+ * @param getItemText 获取选项显示文本的函数
+ * @param onValueChange 选中项改变时的回调
+ * @param summary 摘要文本（可选），默认为选中项的文本
+ * @param getItemSummary 获取选项摘要的函数（可选）
+ * @param enabled 是否启用
+ * @param autoCollapse 选中后是否自动收起
+ * @param shape 卡片形状
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun <E> SimpleListLayoutCard(
@@ -445,6 +484,17 @@ fun TextInputLayoutCard(
     }
 }
 
+/**
+ * 带按钮的布局卡片组件
+ *
+ * @param onClick 按钮点击时的回调
+ * @param modifier 应用于卡片的修饰符
+ * @param title 标题文本
+ * @param summary 摘要文本（可选）
+ * @param buttonText 按钮显示的文本
+ * @param enabled 是否启用
+ * @param shape 卡片形状
+ */
 @Composable
 fun ButtonLayoutCard(
     onClick: () -> Unit,

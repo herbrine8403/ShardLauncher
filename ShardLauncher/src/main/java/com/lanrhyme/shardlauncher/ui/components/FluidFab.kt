@@ -49,6 +49,12 @@ import kotlin.math.cos
 import kotlin.math.roundToInt
 import kotlin.math.sin
 
+/**
+ * FluidFab 展开方向枚举
+ * 定义了 FAB 展开时子项分布的中心角度
+ *
+ * @property angle 角度值（度）
+ */
 enum class FluidFabDirection(val angle: Float) {
     TOP(270f),
     TOP_RIGHT(315f),
@@ -60,6 +66,13 @@ enum class FluidFabDirection(val angle: Float) {
     TOP_LEFT(225f)
 }
 
+/**
+ * FluidFab 中的单个项目数据类
+ *
+ * @property label 项目显示的标签文本
+ * @property icon 项目显示的图标
+ * @property onClick 点击项目时的回调操作
+ */
 data class FluidFabItem(
     val label: String,
     val icon: ImageVector,
@@ -339,6 +352,16 @@ private fun getBlurRenderEffect(): RenderEffect {
     return RenderEffect.createChainEffect(alphaMatrix, blurEffect)
 }
 
+/**
+ * 计算子项位置偏移量
+ *
+ * @param direction 展开方向
+ * @param index 子项索引
+ * @param totalCount 子项总数
+ * @param radiusPx 半径（像素）
+ * @param sectorSize 扇区大小（度）
+ * @return 坐标对 (x, y)
+ */
 private fun calculateOffset(
     direction: FluidFabDirection,
     index: Int,
@@ -363,6 +386,14 @@ private fun calculateOffset(
     return x to y
 }
 
+/**
+ * 根据给定的范围将值映射并应用缓动函数
+ *
+ * @param from 范围起始值
+ * @param to 范围结束值
+ * @param value 当前值
+ * @return 应用缓动后的转换值
+ */
 fun Easing.transform(from: Float, to: Float, value: Float): Float {
     return transform(((value - from) * (1f / (to - from))).coerceIn(0f, 1f))
 }

@@ -91,7 +91,7 @@ import kotlinx.coroutines.launch
 
 @Composable
 fun MusicPlayerDialog(onDismissRequest: () -> Unit, musicPlayerViewModel: MusicPlayerViewModel) {
-    var selectedTab by remember { mutableStateOf(MusicPlayerTab.MusicList) }
+    var selectedTab by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf(MusicPlayerTab.MusicList) }
 
     ShardDialog(visible = true, onDismissRequest = onDismissRequest) {
         Column {

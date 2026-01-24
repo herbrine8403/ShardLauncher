@@ -172,6 +172,15 @@ fun CollapsibleCard(
         }
 }
 
+/**
+ * 一个组合卡片组件，包含标题、可选摘要和常驻内容区域
+ * 支持卡片模糊效果配置
+ *
+ * @param modifier 应用于卡片的修饰符
+ * @param title 卡片标题
+ * @param summary 卡片摘要（可选）
+ * @param content 卡片内容
+ */
 @Composable
 fun CombinedCard(
         modifier: Modifier = Modifier,
@@ -368,6 +377,15 @@ fun <T> SegmentedNavigationBar(
         }
 }
 
+/**
+ * 子页面导航栏组件
+ * 包含返回按钮、标题和可选的描述文本
+ *
+ * @param title 导航栏标题，默认为 "返回"
+ * @param description 标题旁边的描述文本（可选）
+ * @param onBack 返回按钮点击回调
+ * @param modifier 应用于组件的修饰符
+ */
 @Composable
 fun SubPageNavigationBar(
         title: String = "返回",
@@ -390,6 +408,15 @@ fun SubPageNavigationBar(
         }
 }
 
+/**
+ * 样式化的过滤芯片组件，用于显示可选的标签或选项
+ * 选中时使用主色调背景
+ *
+ * @param selected 是否处于选中状态
+ * @param onClick 点击时的回调
+ * @param label 芯片显示的标签内容
+ * @param modifier 应用于组件的修饰符
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun StyledFilterChip(

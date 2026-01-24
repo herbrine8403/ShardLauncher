@@ -30,13 +30,18 @@ import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonColors
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.MenuDefaults
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -121,6 +126,80 @@ fun ShardCard(
         content = content
     )
 }
+
+/**
+ * 按钮类型枚举
+ * 定义了 ShardButton 支持的三种样式
+ */
+enum class ButtonType {
+    FILLED,
+    OUTLINED,
+    TEXT
+}
+
+@Composable
+fun ShardButton(
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    type: ButtonType = ButtonType.FILLED,
+    enabled: Boolean = true,
+    shape: Shape = RoundedCornerShape(16.dp),
+    colors: ButtonColors? = null,
+    contentPadding: PaddingValues = ButtonDefaults.ContentPadding,
+    content: @Composable RowScope.() -> Unit
+) {
+    val (isCardBlurEnabled, _, hazeState) = LocalCardLayoutConfig.current
+
+    val buttonModifier = if (isCardBlurEnabled && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+        modifier.clip(shape).hazeEffect(state = hazeState)
+    } else {
+        modifier
+    }
+
+    when (type) {
+        ButtonType.FILLED -> {
+            val defaultColors = if (isCardBlurEnabled && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.9f)
+                )
+            } else {
+                ButtonDefaults.buttonColors()
+            }
+            Button(
+                onClick = onClick,
+                modifier = buttonModifier,
+                enabled = enabled,
+                shape = shape,
+                colors = colors ?: defaultColors,
+                contentPadding = contentPadding,
+                content = content
+            )
+        }
+        ButtonType.OUTLINED -> {
+            OutlinedButton(
+                onClick = onClick,
+                modifier = buttonModifier,
+                enabled = enabled,
+                shape = shape,
+                colors = colors ?: ButtonDefaults.outlinedButtonColors(),
+                contentPadding = contentPadding,
+                content = content
+            )
+        }
+        ButtonType.TEXT -> {
+            TextButton(
+                onClick = onClick,
+                modifier = buttonModifier,
+                enabled = enabled,
+                shape = shape,
+                colors = colors ?: ButtonDefaults.textButtonColors(),
+                contentPadding = contentPadding,
+                content = content
+            )
+        }
+    }
+}
+
 /**
  * ShardTheme 对话框组件
  * 在复杂布局下具有较高性能
@@ -283,6 +362,20 @@ fun ShardDialog(
     }
 }
 
+/**
+ * 符合 ShardTheme 风格的下拉菜单组件
+ *
+ * @param expanded 是否展开
+ * @param onDismissRequest 关闭请求回调
+ * @param modifier 修饰符
+ * @param offset 偏移量
+ * @param shape 菜单形状
+ * @param tonalElevation 色调高度
+ * @param shadowElevation 阴影高度
+ * @param border 边框
+ * @param properties 弹出窗口属性
+ * @param content 菜单内容
+ */
 @Composable
 fun ShardDropdownMenu(
     expanded: Boolean,

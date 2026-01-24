@@ -32,10 +32,8 @@ import com.lanrhyme.shardlauncher.common.SidebarPosition
 import com.lanrhyme.shardlauncher.ui.components.BackgroundTextTag
 import com.lanrhyme.shardlauncher.ui.components.CapsuleTextField
 import com.lanrhyme.shardlauncher.ui.components.CombinedCard
-import com.lanrhyme.shardlauncher.ui.components.CustomButton
-import com.lanrhyme.shardlauncher.ui.components.CustomCard
+import com.lanrhyme.shardlauncher.ui.components.ShardButton
 import com.lanrhyme.shardlauncher.ui.components.ShardDialog
-import com.lanrhyme.shardlauncher.ui.components.CustomTextField
 import com.lanrhyme.shardlauncher.ui.components.FluidFab
 import com.lanrhyme.shardlauncher.ui.components.FluidFabDirection
 import com.lanrhyme.shardlauncher.ui.components.FluidFabItem
@@ -43,6 +41,8 @@ import com.lanrhyme.shardlauncher.ui.components.LocalCardLayoutConfig
 import com.lanrhyme.shardlauncher.ui.components.PopupContainer
 import com.lanrhyme.shardlauncher.ui.components.ScalingActionButton
 import com.lanrhyme.shardlauncher.ui.components.SegmentedNavigationBar
+import com.lanrhyme.shardlauncher.ui.components.ShardCard
+import com.lanrhyme.shardlauncher.ui.components.ShardInputField
 import com.lanrhyme.shardlauncher.ui.components.SimpleListLayoutCard
 import com.lanrhyme.shardlauncher.ui.components.SliderLayoutCard
 import com.lanrhyme.shardlauncher.ui.components.StyledFilterChip
@@ -71,9 +71,9 @@ fun ComponentDemoScreen() {
 
         item {
             var showDialog by remember { mutableStateOf(false) }
-            CustomButton(onClick = { showDialog = true }) { Text("Show CustomDialog") }
+            ShardButton(onClick = { showDialog = true }) { Text("Show CustomDialog") }
             ShardDialog(visible = showDialog, onDismissRequest = { showDialog = false }) {
-                CustomCard(modifier = Modifier.padding(16.dp)) {
+                ShardCard(modifier = Modifier.padding(16.dp)) {
                     Text(
                         "This is a custom dialog with custom content.",
                         modifier = Modifier.padding(16.dp)
@@ -90,15 +90,13 @@ fun ComponentDemoScreen() {
             )
         }
 
-        item { CustomCard { Text("This is a CustomCard", modifier = Modifier.padding(16.dp)) } }
-
-        item { CustomButton(onClick = {}) { Text("Custom Button") } }
+        item { ShardButton(onClick = {}) { Text("Custom Button") } }
 
         item {
-            CustomTextField(
+            ShardInputField(
                     value = textState,
                     onValueChange = { textState = it },
-                    label = "Custom Text Field"
+                    label = "ShardInputField"
             )
         }
 
@@ -153,14 +151,14 @@ fun ComponentDemoScreen() {
         item {
             var showPopup by remember { mutableStateOf(false) }
             Box {
-                CustomButton(onClick = { showPopup = true }) { Text("Show Popup Container") }
+                ShardButton(onClick = { showPopup = true }) { Text("Show Popup Container") }
                 PopupContainer(visible = showPopup, onDismissRequest = { showPopup = false }) {
                     Column(modifier = Modifier.padding(16.dp)) {
                         Text("This is a PopupContainer", fontWeight = FontWeight.Bold)
                         Spacer(modifier = Modifier.height(8.dp))
                         Text("It can contain any content.")
                         Spacer(modifier = Modifier.height(16.dp))
-                        CustomButton(onClick = { showPopup = false }) { Text("Close") }
+                        ShardButton(onClick = { showPopup = false }) { Text("Close") }
                     }
                 }
             }

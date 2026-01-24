@@ -40,6 +40,12 @@ import androidx.compose.ui.layout.IntrinsicMeasureScope
 import androidx.compose.ui.layout.IntrinsicMeasurable
 import androidx.compose.ui.unit.Constraints
 
+/**
+ * 禁用内部测量组件，用于解决某些布局嵌套导致的崩溃问题
+ *
+ * @param modifier 应用于组件的修饰符
+ * @param content 内容组件
+ */
 @Composable
 fun DisableIntrinsicMeasurements(
     modifier: Modifier = Modifier,
@@ -84,6 +90,13 @@ fun DisableIntrinsicMeasurements(
     )
 }
 
+/**
+ * 加载器版本下拉选择组件
+ *
+ * @param versions 版本列表
+ * @param selectedVersion 当前选中的版本
+ * @param onVersionSelected 版本选择回调
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun <T> LoaderVersionDropdown(
@@ -122,7 +135,7 @@ fun <T> LoaderVersionDropdown(
             }
         }
     ) {
-        CustomTextField(
+        ShardInputField(
             value = selectedVersionText,
             onValueChange = {},
             readOnly = true,
@@ -167,6 +180,11 @@ fun <T> LoaderVersionDropdown(
     }
 }
 
+/**
+ * 版本下拉菜单项
+ *
+ * @param version 版本对象
+ */
 @Composable
 private fun <T> VersionDropdownItem(version: T) {
     when (version) {

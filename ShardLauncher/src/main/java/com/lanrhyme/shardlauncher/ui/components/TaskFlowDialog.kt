@@ -30,8 +30,6 @@ import com.lanrhyme.shardlauncher.coroutine.Task
 import com.lanrhyme.shardlauncher.coroutine.TaskState
 import com.lanrhyme.shardlauncher.coroutine.TitledTask
 
-import androidx.compose.material3.ButtonDefaults
-
 /**
  * 任务流进度对话框
  * @param title 对话框标题
@@ -98,7 +96,7 @@ fun TaskFlowDialog(
             
             // 取消/完成按钮
             if (isCompleted) {
-                CustomButton(
+                ShardButton(
                     onClick = {
                         onComplete()
                         onDismiss()
@@ -113,7 +111,7 @@ fun TaskFlowDialog(
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     // 终止按钮
-                    CustomButton(
+                    ShardButton(
                         onClick = {
                             onCancel()
                             onDismiss()
@@ -124,7 +122,7 @@ fun TaskFlowDialog(
                     }
                     
                     // 关闭按钮
-                    CustomButton(
+                    ShardButton(
                         onClick = {
                             onClose()
                         },
@@ -139,7 +137,13 @@ fun TaskFlowDialog(
 }
 
 /**
- * 单个任务项
+ * 单个任务项组件
+ * 显示任务的图标、标题、进度和状态信息
+ *
+ * @param modifier 应用于组件的修饰符
+ * @param title 任务标题
+ * @param icon 任务图标，如果为 null 则根据状态显示默认图标
+ * @param task 任务数据对象，包含进度和状态
  */
 @Composable
 private fun TaskItem(

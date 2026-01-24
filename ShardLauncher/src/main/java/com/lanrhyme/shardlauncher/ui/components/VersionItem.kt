@@ -12,6 +12,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.lanrhyme.shardlauncher.model.BmclapiManifest
 
+/**
+ * 版本列表项组件
+ *
+ * @param version 版本信息对象
+ * @param onClick 点击时的回调
+ */
 @Composable
 fun VersionItem(
     version: BmclapiManifest.Version,

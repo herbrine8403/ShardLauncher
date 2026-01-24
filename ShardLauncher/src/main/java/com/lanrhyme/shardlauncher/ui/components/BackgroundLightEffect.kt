@@ -20,6 +20,13 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
 
+/**
+ * 背景光效组件，在屏幕背景上绘制两个缓慢移动和脉动的径向渐变光斑
+ *
+ * @param modifier 应用于组件的修饰符
+ * @param themeColor 光斑的主题颜色
+ * @param animationSpeed 动画速度系数
+ */
 @Composable
 fun BackgroundLightEffect(
     modifier: Modifier = Modifier,

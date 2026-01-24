@@ -19,6 +19,14 @@ import androidx.compose.ui.unit.dp
 import com.lanrhyme.shardlauncher.game.resource.ResourceManager
 import kotlinx.coroutines.launch
 
+/**
+ * 资源安装对话框
+ * 用于检测并安装缺少的游戏资源
+ *
+ * @param visible 是否显示对话框
+ * @param onDismiss 关闭对话框回调
+ * @param onResourcesReady 资源准备就绪回调
+ */
 @Composable
 fun ResourceInstallDialog(
     visible: Boolean,

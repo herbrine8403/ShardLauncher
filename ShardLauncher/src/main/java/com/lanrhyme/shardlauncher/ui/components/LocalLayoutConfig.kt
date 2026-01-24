@@ -9,4 +9,7 @@ data class CardLayoutConfig(
         val hazeState: HazeState = HazeState()
 )
 
+/**
+ * 提供卡片布局配置的 CompositionLocal
+ */
 val LocalCardLayoutConfig = compositionLocalOf { CardLayoutConfig() }

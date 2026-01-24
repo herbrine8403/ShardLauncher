@@ -130,6 +130,7 @@ object DownloadManager {
     fun cancelDownload() {
         installer?.cancelInstall()
         _showDialog.value = false
+        dismissNotification()
         cleanup()
     }
     

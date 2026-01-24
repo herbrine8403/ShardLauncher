@@ -105,7 +105,7 @@ fun ShaderPacksManagementScreen(
                         fontWeight = FontWeight.Bold,
                         modifier = Modifier.weight(1f)
                     )
-                    
+
                     Text(
                         text = "${shaderPackFiles.size} 个光影包",
                         style = MaterialTheme.typography.bodyMedium,

@@ -23,9 +23,9 @@ import com.lanrhyme.shardlauncher.R
 import com.lanrhyme.shardlauncher.game.version.installed.Version
 import com.lanrhyme.shardlauncher.game.version.installed.VersionsManager
 import com.lanrhyme.shardlauncher.ui.components.LocalCardLayoutConfig
-import com.lanrhyme.shardlauncher.ui.components.SimpleAlertDialog
-import com.lanrhyme.shardlauncher.ui.components.SimpleEditDialog
-import com.lanrhyme.shardlauncher.ui.components.SimpleTaskDialog
+import com.lanrhyme.shardlauncher.ui.components.ShardAlertDialog
+import com.lanrhyme.shardlauncher.ui.components.ShardEditDialog
+import com.lanrhyme.shardlauncher.ui.components.ShardTaskDialog
 import com.lanrhyme.shardlauncher.utils.file.FolderUtils
 import com.lanrhyme.shardlauncher.utils.logging.Logger.lError
 import com.lanrhyme.shardlauncher.utils.string.getMessageOrToString
@@ -478,7 +478,7 @@ private fun VersionOverviewOperations(
     when(operation) {
         is VersionOverviewOperation.None -> {}
         is VersionOverviewOperation.ResetIconAlert -> {
-            SimpleAlertDialog(
+            ShardAlertDialog(
                 title = "重置图标",
                 text = "确定要重置版本图标吗？",
                 onDismiss = { updateOperation(VersionOverviewOperation.None) },
@@ -524,11 +524,11 @@ private fun VersionOverviewOperations(
             val version = operation.version
             var value by remember { mutableStateOf(version.getVersionConfig().versionSummary) }
 
-            SimpleEditDialog(
+            ShardEditDialog(
                 title = "编辑版本描述",
                 value = value,
                 onValueChange = { value = it },
-                label = { Text("版本描述") },
+                label = "版本描述",
                 singleLine = true,
                 onDismissRequest = { updateOperation(VersionOverviewOperation.None) },
                 onConfirm = {
@@ -538,7 +538,7 @@ private fun VersionOverviewOperations(
             )
         }
         is VersionOverviewOperation.RunTask -> {
-            SimpleTaskDialog(
+            ShardTaskDialog(
                 title = operation.title,
                 task = operation.task,
                 context = kotlinx.coroutines.CoroutineScope(Dispatchers.IO),

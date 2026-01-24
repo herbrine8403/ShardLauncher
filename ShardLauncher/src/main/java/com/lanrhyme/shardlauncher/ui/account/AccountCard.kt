@@ -22,7 +22,6 @@ import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -50,6 +49,7 @@ import com.lanrhyme.shardlauncher.game.account.ACCOUNT_TYPE_LOCAL
 import com.lanrhyme.shardlauncher.game.account.Account
 import com.lanrhyme.shardlauncher.game.account.getDisplayName
 import com.lanrhyme.shardlauncher.ui.components.LocalCardLayoutConfig
+import com.lanrhyme.shardlauncher.ui.components.ShardDropdownMenu
 import com.lanrhyme.shardlauncher.ui.components.selectableCard
 import dev.chrisbanes.haze.hazeEffect
 
@@ -194,25 +194,25 @@ fun AccountCard(
                                                 Arrangement.SpaceEvenly // Distribute text evenly
                                 ) {
                                         Text(
-                                                text = account.username,
-                                                style = MaterialTheme.typography.titleSmall,
-                                                maxLines = 1,
-                                                overflow = TextOverflow.Ellipsis,
-                                                textAlign = TextAlign.Center
+                                            text = account.username,
+                                            style = MaterialTheme.typography.titleSmall,
+                                            maxLines = 1,
+                                            overflow = TextOverflow.Ellipsis,
+                                            textAlign = TextAlign.Center
                                         )
-                                        Text(
-                                                text = account.getDisplayName(),
-                                                style = MaterialTheme.typography.bodySmall,
-                                                color = Color.Gray,
-                                                maxLines = 1,
-                                                overflow = TextOverflow.Ellipsis,
-                                                textAlign = TextAlign.Center
-                                        )
+                                    Text(
+                                        text = account.getDisplayName(),
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = Color.Gray,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis,
+                                        textAlign = TextAlign.Center
+                                    )
                                 }
                         }
                 }
 
-                DropdownMenu(expanded = showMenu, onDismissRequest = { showMenu = false }) {
+                ShardDropdownMenu(expanded = showMenu, onDismissRequest = { showMenu = false }) {
                         DropdownMenuItem(
                                 text = { Text("删除账户档案") },
                                 onClick = {

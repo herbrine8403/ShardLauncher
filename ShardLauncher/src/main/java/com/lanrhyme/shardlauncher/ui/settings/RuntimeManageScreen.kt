@@ -127,7 +127,7 @@ fun RuntimeManageScreen(
                     ) {
                         Icon(Icons.Default.Refresh, contentDescription = null)
                         Spacer(Modifier.width(8.dp))
-                        Text("刷新")
+                        androidx.compose.material3.Text("刷新")
                     }
                     OutlinedButton(
                         onClick = { showBundledInstallDialog = true },
@@ -135,7 +135,7 @@ fun RuntimeManageScreen(
                     ) {
                         Icon(Icons.Default.GetApp, contentDescription = null)
                         Spacer(Modifier.width(8.dp))
-                        Text("内置")
+                        androidx.compose.material3.Text("内置")
                     }
                     OutlinedButton(
                         onClick = { filePickerLauncher.launch(arrayOf("*/*")) },
@@ -143,7 +143,7 @@ fun RuntimeManageScreen(
                     ) {
                         Icon(Icons.Default.FileOpen, contentDescription = null)
                         Spacer(Modifier.width(8.dp))
-                        Text("导入")
+                        androidx.compose.material3.Text("导入")
                     }
                     Spacer(Modifier.weight(1f))
                     IconButton(onClick = onDismissRequest) {
@@ -196,7 +196,7 @@ fun RuntimeManageScreen(
                         onClick = { showDeleteDialog = null },
                         shape = RoundedCornerShape(12.dp)
                     ) {
-                        Text("取消")
+                        androidx.compose.material3.Text("取消")
                     }
                     Spacer(Modifier.width(8.dp))
                     Button(
@@ -207,7 +207,7 @@ fun RuntimeManageScreen(
                         },
                         shape = RoundedCornerShape(12.dp)
                     ) {
-                        Text("删除")
+                        androidx.compose.material3.Text("删除")
                     }
                 }
             }
@@ -309,7 +309,7 @@ fun RuntimeManageScreen(
                 Spacer(Modifier.height(16.dp))
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
                     Button(onClick = { importErrorMessage = null }, shape = RoundedCornerShape(12.dp)) {
-                        Text("关闭")
+                        androidx.compose.material3.Text("关闭")
                     }
                 }
             }
@@ -473,7 +473,7 @@ private fun BundledRuntimeInstallDialog(
                     onClick = onDismiss,
                     shape = RoundedCornerShape(12.dp)
                 ) {
-                    Text("关闭")
+                    androidx.compose.material3.Text("关闭")
                 }
             }
         }

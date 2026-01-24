@@ -38,10 +38,10 @@ internal fun OtherSettingsContent(navController: NavController) {
         ) {
         item {
             Text(
-                    text = "高级",
-                    style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                text = "高级",
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
             )
         }
         item {

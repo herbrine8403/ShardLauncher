@@ -219,11 +219,11 @@ fun <E> SimpleListLayoutCard(
                                                         Spacer(Modifier.width(16.dp))
                                                         Column {
                                                                 Text(
-                                                                        text = getItemText(item),
-                                                                        style =
-                                                                                MaterialTheme
-                                                                                        .typography
-                                                                                        .bodyLarge
+                                                                    text = getItemText(item),
+                                                                    style =
+                                                                        MaterialTheme
+                                                                            .typography
+                                                                            .bodyLarge
                                                                 )
                                                                 getItemSummary?.let {
                                                                         Spacer(
@@ -396,14 +396,14 @@ fun SliderLayoutCard(
                                                         focusRequester.requestFocus()
                                                 }
                                         } else {
-                                                Text(
-                                                        text = String.format("%.1fx", displayValue),
-                                                        style = MaterialTheme.typography.bodyLarge,
-                                                        modifier =
-                                                                Modifier.clickable(
-                                                                        enabled = enabled
-                                                                ) { isEditing = true }
-                                                )
+                                            Text(
+                                                text = String.format("%.1fx", displayValue),
+                                                style = MaterialTheme.typography.bodyLarge,
+                                                modifier =
+                                                    Modifier.clickable(
+                                                        enabled = enabled
+                                                    ) { isEditing = true }
+                                            )
                                         }
                                 }
                         }
@@ -479,7 +479,7 @@ fun ButtonLayoutCard(
                     contentColor = MaterialTheme.colorScheme.onPrimary
                 )
             ) {
-                Text(buttonText)
+                androidx.compose.material3.Text(buttonText)
             }
         }
     }

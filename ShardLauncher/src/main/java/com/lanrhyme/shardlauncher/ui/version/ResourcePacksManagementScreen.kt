@@ -105,7 +105,7 @@ fun ResourcePacksManagementScreen(
                         fontWeight = FontWeight.Bold,
                         modifier = Modifier.weight(1f)
                     )
-                    
+
                     Text(
                         text = "${resourcePackFiles.size} 个资源包",
                         style = MaterialTheme.typography.bodyMedium,

@@ -19,20 +19,27 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.MenuDefaults
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ProvideTextStyle
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
@@ -51,10 +58,12 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.VisualTransformation
-import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.PopupProperties
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.compose.ui.window.DialogWindowProvider
@@ -132,7 +141,7 @@ fun ShardDialog(
     height : Dp = 380.dp,
     content: @Composable () -> Unit
 ) {
-    val (isCardBlurEnabled, cardAlpha, hazeState) = LocalCardLayoutConfig.current
+    val (isCardBlurEnabled, _, hazeState) = LocalCardLayoutConfig.current
     val tween = tween<Float>(durationMillis = 300)
 
     var showDialog by remember { mutableStateOf(visible) }
@@ -274,6 +283,47 @@ fun ShardDialog(
     }
 }
 
+@Composable
+fun ShardDropdownMenu(
+    expanded: Boolean,
+    onDismissRequest: () -> Unit,
+    modifier: Modifier = Modifier,
+    offset: DpOffset = DpOffset(0.dp, 0.dp),
+    shape: Shape = RoundedCornerShape(16.dp),
+    tonalElevation: Dp = MenuDefaults.TonalElevation,
+    shadowElevation: Dp = MenuDefaults.ShadowElevation,
+    border: BorderStroke? = null,
+    properties: PopupProperties = PopupProperties(focusable = true),
+    content: @Composable ColumnScope.() -> Unit
+) {
+    val (isCardBlurEnabled, _, hazeState) = LocalCardLayoutConfig.current
+    val resolvedColor =
+        if (isCardBlurEnabled && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            MaterialTheme.colorScheme.surface.copy(alpha = 0.9f)
+        } else {
+            MaterialTheme.colorScheme.surface
+        }
+    val menuModifier =
+        if (isCardBlurEnabled && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            modifier.clip(shape).hazeEffect(state = hazeState)
+        } else {
+            modifier
+        }
+    DropdownMenu(
+        expanded = expanded,
+        onDismissRequest = onDismissRequest,
+        modifier = menuModifier,
+        offset = offset,
+        shape = shape,
+        containerColor = resolvedColor,
+        tonalElevation = tonalElevation,
+        shadowElevation = shadowElevation,
+        border = border,
+        properties = properties,
+        content = content
+    )
+}
+
 
 /**
  * 一个符合 ShardTheme 风格的通用输入框组件
@@ -394,4 +444,241 @@ fun ShardInputField(
             }
         }
     )
+}
+/**
+ * 一个符合 ShardTheme 风格的通用提示对话框
+ *
+ * 基于 [ShardDialog] 实现，提供标题、正文与确认/取消操作区域
+ *
+ * @param title 对话框标题
+ * @param text 对话框正文内容
+ * @param onDismiss 关闭对话框时的回调
+ * @param onConfirm 点击确认按钮时的回调，为 null 时不显示确认按钮
+ * @param onCancel 点击取消按钮时的回调，为 null 时复用 [onDismiss]
+ * @param onDismissRequest 外部关闭请求回调，默认等同于 [onDismiss]
+ */
+@Composable
+fun ShardAlertDialog(
+    title: String,
+    text: String,
+    onDismiss: () -> Unit,
+    onConfirm: (() -> Unit)? = null,
+    onCancel: (() -> Unit)? = null,
+    onDismissRequest: () -> Unit = onDismiss
+) {
+    ShardDialog(
+        visible = true,
+        onDismissRequest = onDismissRequest,
+        width = 320.dp,
+        height = 240.dp
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(16.dp)
+        ) {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+            Text(text)
+            Spacer(modifier = Modifier.height(16.dp))
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+                if (onConfirm != null) {
+                    Button(onClick = onConfirm, shape = RoundedCornerShape(12.dp)) {
+                        Text("确定")
+                    }
+                    Spacer(modifier = Modifier.width(8.dp))
+                }
+                TextButton(onClick = onCancel ?: onDismiss) {
+                    Text("取消")
+                }
+            }
+        }
+    }
+}
+/**
+ * 一个符合 ShardTheme 风格的通用提示对话框
+ *
+ * 基于 [ShardDialog] 实现，提供标题、正文与确认/取消操作区域
+ *
+ * @param title 对话框标题
+ * @param text 对话框正文内容
+ * @param onDismiss 关闭对话框时的回调
+ * @param onConfirm 点击确认按钮时的回调，为 null 时不显示确认按钮
+ * @param onCancel 点击取消按钮时的回调，为 null 时复用 [onDismiss]
+ * @param onDismissRequest 外部关闭请求回调，默认等同于 [onDismiss]
+ */
+@Composable
+fun ShardAlertDialog(
+    title: String,
+    text: @Composable (() -> Unit),
+    onDismiss: () -> Unit,
+    onConfirm: (() -> Unit)? = null,
+    onCancel: (() -> Unit)? = null,
+    onDismissRequest: () -> Unit = onDismiss
+) {
+    ShardDialog(
+        visible = true,
+        onDismissRequest = onDismissRequest,
+        width = 320.dp,
+        height = 240.dp
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(16.dp)
+        ) {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+            text()
+            Spacer(modifier = Modifier.height(16.dp))
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+                if (onConfirm != null) {
+                    Button(onClick = onConfirm, shape = RoundedCornerShape(12.dp)) {
+                        Text("确定")
+                    }
+                    Spacer(modifier = Modifier.width(8.dp))
+                }
+                TextButton(onClick = onCancel ?: onDismiss) {
+                    Text("取消")
+                }
+            }
+        }
+    }
+}
+
+/**
+ * 一个符合 ShardTheme 风格的输入对话框
+ *
+ * 基于 [ShardDialog] 实现，提供标题与输入框，适用于简单的文本编辑场景
+ *
+ * @param title 对话框标题
+ * @param value 输入框当前值
+ * @param onValueChange 输入内容变化时的回调
+ * @param label 输入框标签，可选
+ * @param isError 是否显示错误状态
+ * @param supportingText 输入框辅助文本，可选
+ * @param singleLine 是否限制为单行输入
+ * @param onDismissRequest 关闭对话框时的回调
+ * @param onConfirm 点击确认按钮时的回调
+ */
+@Composable
+fun ShardEditDialog(
+    title: String,
+    value: String,
+    onValueChange: (String) -> Unit,
+    label: String? = null,
+    isError: Boolean = false,
+    supportingText: @Composable (() -> Unit)? = null,
+    singleLine: Boolean = false,
+    onDismissRequest: () -> Unit,
+    onConfirm: () -> Unit
+) {
+    ShardDialog(
+        visible = true,
+        onDismissRequest = onDismissRequest,
+        width = 360.dp,
+        height = 260.dp
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(16.dp)
+        ) {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+            ShardInputField(
+                value = value,
+                onValueChange = onValueChange,
+                label = label,
+                isError = isError,
+                singleLine = singleLine,
+                modifier = Modifier.fillMaxWidth()
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+                TextButton(onClick = onDismissRequest) {
+                    Text("取消")
+                }
+                Spacer(modifier = Modifier.width(8.dp))
+                Button(
+                    onClick = onConfirm,
+                    enabled = !isError,
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Text("确定")
+                }
+            }
+        }
+    }
+}
+
+/**
+ * 一个符合 ShardTheme 风格的任务执行对话框
+ *
+ * 执行 [task] 时显示进度指示，成功后触发 [onDismiss]，失败时触发 [onError]
+ *
+ * @param title 对话框标题
+ * @param task 需要执行的挂起任务
+ * @param context 外部协程上下文
+ * @param onDismiss 任务完成后关闭对话框的回调
+ * @param onError 任务失败时的回调
+ */
+@Composable
+fun ShardTaskDialog(
+    title: String,
+    task: suspend () -> Unit,
+    context: kotlinx.coroutines.CoroutineScope,
+    onDismiss: () -> Unit,
+    onError: (Throwable) -> Unit
+) {
+    var isRunning by remember { mutableStateOf(true) }
+
+    LaunchedEffect(Unit) {
+        try {
+            task()
+            onDismiss()
+        } catch (e: Throwable) {
+            isRunning = false
+            onError(e)
+        }
+    }
+
+    if (isRunning) {
+        ShardDialog(
+            visible = true,
+            onDismissRequest = { },
+            width = 320.dp,
+            height = 200.dp
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(16.dp)
+            ) {
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold
+                )
+                Spacer(modifier = Modifier.height(16.dp))
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    CircularProgressIndicator(modifier = Modifier.size(24.dp))
+                    Spacer(modifier = Modifier.width(16.dp))
+                    Text("正在执行...")
+                }
+            }
+        }
+    }
 }

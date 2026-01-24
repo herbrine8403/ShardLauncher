@@ -18,8 +18,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.lanrhyme.shardlauncher.game.renderer.RendererInstaller
-import com.lanrhyme.shardlauncher.ui.components.*
-import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -57,7 +55,7 @@ fun RendererManageScreen(
                     style = MaterialTheme.typography.headlineSmall,
                     color = MaterialTheme.colorScheme.onSurface
                 )
-                
+
                 Text(
                     text = "管理游戏渲染器库文件（已内置）",
                     style = MaterialTheme.typography.bodyMedium,
@@ -77,7 +75,7 @@ fun RendererManageScreen(
                     ) {
                         Icon(Icons.Default.Refresh, contentDescription = null)
                         Spacer(Modifier.width(8.dp))
-                        Text("刷新")
+                        androidx.compose.material3.Text("刷新")
                     }
                     
                     Button(
@@ -86,7 +84,7 @@ fun RendererManageScreen(
                     ) {
                         Icon(Icons.Default.Info, contentDescription = null)
                         Spacer(Modifier.width(8.dp))
-                        Text("查看")
+                        androidx.compose.material3.Text("查看")
                     }
                 }
             }
@@ -144,23 +142,23 @@ fun RendererManageScreen(
         val renderer = bundledRenderers.find { it.displayName == rendererName }
         AlertDialog(
             onDismissRequest = { showInfoDialog = null },
-            title = { Text("渲染器信息") },
+            title = { androidx.compose.material3.Text("渲染器信息") },
             text = {
                 Column(
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     renderer?.let {
-                        Text("名称: ${it.displayName}")
-                        Text("描述: ${it.description}")
-                        Text("架构: ${it.architecture}")
-                        Text("库文件: ${it.libraryName}")
-                        Text("状态: 已内置")
+                        androidx.compose.material3.Text("名称: ${it.displayName}")
+                        androidx.compose.material3.Text("描述: ${it.description}")
+                        androidx.compose.material3.Text("架构: ${it.architecture}")
+                        androidx.compose.material3.Text("库文件: ${it.libraryName}")
+                        androidx.compose.material3.Text("状态: 已内置")
                     }
                 }
             },
             confirmButton = {
                 TextButton(onClick = { showInfoDialog = null }) {
-                    Text("确定")
+                    androidx.compose.material3.Text("确定")
                 }
             }
         )
@@ -202,13 +200,13 @@ private fun BundledRendererItem(
                     style = MaterialTheme.typography.titleMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
-                
+
                 Text(
                     text = renderer.description,
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
                 )
-                
+
                 Text(
                     text = "库文件: ${renderer.libraryName}",
                     style = MaterialTheme.typography.bodySmall,
@@ -234,7 +232,7 @@ private fun BundledRendererViewDialog(
 ) {
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("内置渲染器") },
+        title = { androidx.compose.material3.Text("内置渲染器") },
         text = {
             LazyColumn(
                 modifier = Modifier.height(300.dp),
@@ -269,7 +267,7 @@ private fun BundledRendererViewDialog(
         },
         confirmButton = {
             TextButton(onClick = onDismiss) {
-                Text("关闭")
+                androidx.compose.material3.Text("关闭")
             }
         }
     )

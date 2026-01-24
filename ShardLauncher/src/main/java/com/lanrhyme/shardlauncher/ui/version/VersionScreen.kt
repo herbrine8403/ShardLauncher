@@ -45,7 +45,8 @@ import com.lanrhyme.shardlauncher.game.version.installed.VersionsManager
 import com.lanrhyme.shardlauncher.ui.components.LocalCardLayoutConfig
 import com.lanrhyme.shardlauncher.ui.components.PopupContainer
 import com.lanrhyme.shardlauncher.ui.components.SearchTextField
-import com.lanrhyme.shardlauncher.ui.components.SimpleAlertDialog
+import com.lanrhyme.shardlauncher.ui.components.ShardAlertDialog
+import com.lanrhyme.shardlauncher.ui.components.ShardDropdownMenu
 import com.lanrhyme.shardlauncher.ui.components.animatedAppearance
 import com.lanrhyme.shardlauncher.ui.components.selectableCard
 import com.lanrhyme.shardlauncher.utils.file.PathHelper
@@ -162,7 +163,7 @@ fun VersionScreen(navController: NavController, animationSpeed: Float) {
 
     // 错误对话框
     errorMessage?.let { message ->
-        SimpleAlertDialog(
+        ShardAlertDialog(
             title = "错误",
             text = message,
             onDismiss = { errorMessage = null }
@@ -194,10 +195,10 @@ fun LeftNavigationPane(
                         modifier = Modifier.size(100.dp).padding(8.dp)
                 )
                 Text(
-                        text = selectedVersion?.getVersionName() ?: "",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold,
-                        textAlign = TextAlign.Center
+                    text = selectedVersion?.getVersionName() ?: "",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    textAlign = TextAlign.Center
                 )
                 Spacer(modifier = Modifier.height(24.dp))
                 HorizontalDivider()
@@ -208,9 +209,9 @@ fun LeftNavigationPane(
         if (selectedVersion == null) {
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 Text(
-                        "请从右侧选择一个版本",
-                        textAlign = TextAlign.Center,
-                        modifier = Modifier.padding(16.dp)
+                    "请从右侧选择一个版本",
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.padding(16.dp)
                 ) // TODO: i18n
             }
         } else {
@@ -543,7 +544,7 @@ fun GameVersionCard(
                     )
                 }
 
-                DropdownMenu(
+                ShardDropdownMenu(
                     expanded = showMenu,
                     onDismissRequest = { showMenu = false }
                 ) {

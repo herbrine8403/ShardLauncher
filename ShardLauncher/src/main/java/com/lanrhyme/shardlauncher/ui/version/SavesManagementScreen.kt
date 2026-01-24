@@ -1,8 +1,6 @@
 package com.lanrhyme.shardlauncher.ui.version
 
 import android.os.Build
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -82,7 +80,7 @@ fun SavesManagementScreen(
                         fontWeight = FontWeight.Bold,
                         modifier = Modifier.weight(1f)
                     )
-                    
+
                     Text(
                         text = "${saveFiles.size} 个存档",
                         style = MaterialTheme.typography.bodyMedium,

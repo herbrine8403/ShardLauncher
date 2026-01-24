@@ -1,7 +1,6 @@
 package com.lanrhyme.shardlauncher.ui.version
 
 import android.os.Build
-import androidx.compose.animation.Crossfade
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -16,14 +15,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import com.lanrhyme.shardlauncher.R
 import com.lanrhyme.shardlauncher.game.path.GamePathManager
 import com.lanrhyme.shardlauncher.game.version.installed.Version
 import com.lanrhyme.shardlauncher.game.version.installed.VersionComparator
@@ -206,9 +203,9 @@ fun VersionManageScreen(
 
     // Error dialog
     errorMessage?.let { message ->
-        SimpleAlertDialog(
+        ShardAlertDialog(
             title = "错误", // TODO: i18n
-            text = message,
+            text = { Text(message) },
             onDismiss = { errorMessage = null }
         )
     }
@@ -280,7 +277,7 @@ private fun LeftMenu(
                     // TODO: Add new path
                 }
             ) {
-                MarqueeText(text = "添加新路径") // TODO: i18n
+                Text(text = "添加新路径") // TODO: i18n
             }
 
             OutlinedButton(
@@ -291,7 +288,7 @@ private fun LeftMenu(
                     // TODO: Cleanup game files
                 }
             ) {
-                MarqueeText(text = "清理游戏文件") // TODO: i18n
+                Text(text = "清理游戏文件") // TODO: i18n
             }
         }
     }
@@ -426,7 +423,7 @@ private fun VersionsLayout(
                             .fillMaxWidth()
                             .weight(1f)
                     ) {
-                        Text(
+                        androidx.compose.material3.Text(
                             modifier = Modifier.align(Alignment.Center),
                             text = "暂无版本" // TODO: i18n
                         )

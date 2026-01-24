@@ -8,11 +8,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.lanrhyme.shardlauncher.game.version.installed.Version
 import com.lanrhyme.shardlauncher.game.version.installed.VersionsManager
-import com.lanrhyme.shardlauncher.ui.components.SimpleAlertDialog
-import com.lanrhyme.shardlauncher.ui.components.SimpleEditDialog
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
+import com.lanrhyme.shardlauncher.ui.components.ShardAlertDialog
+import com.lanrhyme.shardlauncher.ui.components.ShardEditDialog
+import com.lanrhyme.shardlauncher.ui.components.ShardInputField
 
 @Composable
 fun RenameVersionDialog(
@@ -33,10 +31,11 @@ fun RenameVersionDialog(
         }
     }
 
-    SimpleEditDialog(
+    ShardEditDialog(
         title = "重命名版本",
         value = name,
         onValueChange = { name = it },
+        label = "版本名称",
         isError = isError,
         supportingText = {
             when {
@@ -83,20 +82,27 @@ fun CopyVersionDialog(
             ) {
                 Text("创建版本的副本")
                 
-                OutlinedTextField(
+                ShardInputField(
                     value = name,
                     onValueChange = { name = it },
-                    label = { Text("新版本名称") },
+                    label = "新版本名称",
                     isError = isError,
-                    supportingText = {
-                        when {
-                            name.isEmpty() -> Text("版本名称不能为空")
-                            isError -> Text(errorMessage)
-                        }
-                    },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth()
                 )
+                if (name.isEmpty()) {
+                    Text(
+                        text = "版本名称不能为空",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.error
+                    )
+                } else if (isError) {
+                    Text(
+                        text = errorMessage,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.error
+                    )
+                }
                 
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -141,20 +147,20 @@ fun DeleteVersionDialog(
     onConfirm: () -> Unit
 ) {
     if (message != null) {
-        SimpleAlertDialog(
+        ShardAlertDialog(
             title = "删除版本",
-            text = message,
+            text = {Text(message)},
             onDismiss = onDismissRequest,
             onConfirm = onConfirm
         )
     } else {
-        SimpleAlertDialog(
+        ShardAlertDialog(
             title = "删除版本",
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                     Text(text = "确定要删除版本 ${version.getVersionName()} 吗？")
-                    Text(text = "此操作将删除版本文件夹及其所有内容。")
-                    Text(text = "包括存档、模组、资源包等所有数据。")
+                    Text(text = "此操作将删除版本文件夹及其所有内容")
+                    Text(text = "包括存档、模组、资源包等所有数据")
                     Text(
                         text = "此操作不可撤销！",
                         fontWeight = FontWeight.Bold,

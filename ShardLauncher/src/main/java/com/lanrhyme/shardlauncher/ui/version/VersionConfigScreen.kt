@@ -267,9 +267,9 @@ fun VersionConfigScreen(
     }
 
     if (showSaveDialog) {
-        SimpleAlertDialog(
+        ShardAlertDialog(
             title = "保存配置",
-            text = "确定要保存版本配置吗？",
+            text = {Text("确定要保存版本配置吗？")},
             onDismiss = { showSaveDialog = false },
             onConfirm = {
                 try {

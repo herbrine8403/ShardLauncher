@@ -75,8 +75,8 @@ fun ComponentDemoScreen() {
             ShardDialog(visible = showDialog, onDismissRequest = { showDialog = false }) {
                 CustomCard(modifier = Modifier.padding(16.dp)) {
                     Text(
-                            "This is a custom dialog with custom content.",
-                            modifier = Modifier.padding(16.dp)
+                        "This is a custom dialog with custom content.",
+                        modifier = Modifier.padding(16.dp)
                     )
                 }
             }
@@ -201,8 +201,8 @@ fun ComponentDemoScreen() {
                     contentAlignment = Alignment.BottomCenter
             ) {
                 Text(
-                        "Fluid FAB (Top Direction)",
-                        modifier = Modifier.align(Alignment.TopCenter).padding(bottom = 16.dp)
+                    "Fluid FAB (Top Direction)",
+                    modifier = Modifier.align(Alignment.TopCenter).padding(bottom = 16.dp)
                 )
 
                 Spacer(modifier = Modifier.height(16.dp))

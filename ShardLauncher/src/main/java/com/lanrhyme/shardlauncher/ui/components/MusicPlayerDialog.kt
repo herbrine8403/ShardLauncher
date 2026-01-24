@@ -45,7 +45,6 @@ import androidx.compose.material.icons.filled.Shuffle
 import androidx.compose.material.icons.filled.SkipNext
 import androidx.compose.material.icons.filled.SkipPrevious
 import androidx.compose.material3.Card
-import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -214,7 +213,7 @@ fun MusicListPage(musicPlayerViewModel: MusicPlayerViewModel) {
                             contentDescription = "Play Mode"
                     )
                 }
-                DropdownMenu(
+                ShardDropdownMenu(
                         expanded = showPlayModeMenu,
                         onDismissRequest = { showPlayModeMenu = false }
                 ) {
@@ -493,7 +492,7 @@ fun MusicCard(
             }
 
             // 删除菜单
-            DropdownMenu(expanded = showDeleteMenu, onDismissRequest = { showDeleteMenu = false }) {
+            ShardDropdownMenu(expanded = showDeleteMenu, onDismissRequest = { showDeleteMenu = false }) {
                 DropdownMenuItem(
                         text = { Text("删除") },
                         onClick = { // TODO:i18n
@@ -598,10 +597,10 @@ fun CurrentlyPlayingCard(musicPlayerViewModel: MusicPlayerViewModel) {
             // 歌曲信息与进度条
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                        currentMediaItem?.mediaMetadata?.title?.toString() ?: "暂无歌曲",
-                        style = MaterialTheme.typography.titleMedium,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
+                    currentMediaItem?.mediaMetadata?.title?.toString() ?: "暂无歌曲",
+                    style = MaterialTheme.typography.titleMedium,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
                 )
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     val interactionSource = remember { MutableInteractionSource() }
@@ -650,9 +649,9 @@ fun CurrentlyPlayingCard(musicPlayerViewModel: MusicPlayerViewModel) {
                                     if (isSeeking) (sliderPosition * duration).toLong()
                                     else currentPosition
                             Text(
-                                    text =
-                                            "${formatMillis(positionText)} / ${formatMillis(duration)}",
-                                    style = MaterialTheme.typography.bodySmall
+                                text =
+                                    "${formatMillis(positionText)} / ${formatMillis(duration)}",
+                                style = MaterialTheme.typography.bodySmall
                             )
                         }
                     }

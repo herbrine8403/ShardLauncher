@@ -39,7 +39,6 @@ import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ColorScheme
-import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -76,6 +75,7 @@ import com.google.gson.reflect.TypeToken
 import com.lanrhyme.shardlauncher.common.SidebarPosition
 import com.lanrhyme.shardlauncher.ui.components.CollapsibleCard
 import com.lanrhyme.shardlauncher.ui.components.ShardDialog
+import com.lanrhyme.shardlauncher.ui.components.ShardDropdownMenu
 import com.lanrhyme.shardlauncher.ui.components.IconSwitchLayoutCard
 import com.lanrhyme.shardlauncher.ui.components.LocalCardLayoutConfig
 import com.lanrhyme.shardlauncher.ui.components.MusicPlayerDialog
@@ -402,31 +402,30 @@ internal fun LauncherSettingsContent(
                                     )
                                     if (item.isVideo) {
                                         Text(
-                                                "Video",
-                                                modifier =
-                                                        Modifier.align(Alignment.BottomStart)
-                                                                .padding(4.dp)
-                                                                .background(
-                                                                        Color.Black.copy(
-                                                                                alpha = 0.5f
-                                                                        ),
-                                                                        RoundedCornerShape(4.dp)
-                                                                )
-                                                                .padding(
-                                                                        horizontal = 4.dp,
-                                                                        vertical = 2.dp
-                                                                ),
-                                                color = Color.White,
-                                                style = MaterialTheme.typography.labelSmall
+                                            "Video",
+                                            modifier =
+                                                Modifier.align(Alignment.BottomStart)
+                                                    .padding(4.dp)
+                                                    .background(
+                                                        Color.Black.copy(
+                                                            alpha = 0.5f
+                                                        ),
+                                                        RoundedCornerShape(4.dp)
+                                                    )
+                                                    .padding(
+                                                        horizontal = 4.dp,
+                                                        vertical = 2.dp
+                                                    ),
+                                            color = Color.White,
+                                            style = MaterialTheme.typography.labelSmall
                                         )
                                     }
                                 }
-                                DropdownMenu(
+                                ShardDropdownMenu(
                                         expanded =
                                                 showDeleteBackgroundMenu &&
                                                         itemToDelete?.uri == item.uri,
-                                        onDismissRequest = { showDeleteBackgroundMenu = false },
-                                    modifier = Modifier.clip(RoundedCornerShape(16.dp))
+                                        onDismissRequest = { showDeleteBackgroundMenu = false }
                                 ) {
                                     DropdownMenuItem(
                                             text = { Text("删除") },
@@ -462,10 +461,9 @@ internal fun LauncherSettingsContent(
                         }
                     }
 
-                    DropdownMenu(
+                    ShardDropdownMenu(
                             expanded = showAddBackgroundMenu,
-                            onDismissRequest = { showAddBackgroundMenu = false },
-                            modifier = Modifier.clip(RoundedCornerShape(16.dp))
+                            onDismissRequest = { showAddBackgroundMenu = false }
                     ) {
                         DropdownMenuItem(
                                 text = { Text("添加图片") },
@@ -678,12 +676,12 @@ internal fun LauncherSettingsContent(
         ) {
         item {
             Text(
-                    text = "显示设置",
-                    style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.primary,
-                    modifier =
-                            Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
-                                    .animatedAppearance(0, animationSpeed)
+                text = "显示设置",
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.primary,
+                modifier =
+                    Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                        .animatedAppearance(0, animationSpeed)
             )
         }
         item {
@@ -886,9 +884,9 @@ internal fun LauncherSettingsContent(
                                     horizontalAlignment = Alignment.CenterHorizontally
                             ) {
                                 Text(
-                                        text = "自定义光效颜色",
-                                        style = MaterialTheme.typography.titleMedium,
-                                        fontWeight = FontWeight.Bold
+                                    text = "自定义光效颜色",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Bold
                                 )
                                 Spacer(modifier = Modifier.height(16.dp))
                                 HsvColorPicker(

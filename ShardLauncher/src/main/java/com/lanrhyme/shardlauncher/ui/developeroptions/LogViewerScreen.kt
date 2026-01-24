@@ -9,9 +9,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
@@ -108,27 +106,27 @@ fun LogViewerScreen(navController: NavController) {
                     FilterChip(
                         selected = selectedLevel == null,
                         onClick = { selectedLevel = null },
-                        label = { Text("全部") }
+                        label = { androidx.compose.material3.Text("全部") }
                     )
                     FilterChip(
                         selected = selectedLevel == LogCollector.LogLevel.DEBUG,
                         onClick = { selectedLevel = LogCollector.LogLevel.DEBUG },
-                        label = { Text("调试") }
+                        label = { androidx.compose.material3.Text("调试") }
                     )
                     FilterChip(
                         selected = selectedLevel == LogCollector.LogLevel.INFO,
                         onClick = { selectedLevel = LogCollector.LogLevel.INFO },
-                        label = { Text("信息") }
+                        label = { androidx.compose.material3.Text("信息") }
                     )
                     FilterChip(
                         selected = selectedLevel == LogCollector.LogLevel.WARNING,
                         onClick = { selectedLevel = LogCollector.LogLevel.WARNING },
-                        label = { Text("警告") }
+                        label = { androidx.compose.material3.Text("警告") }
                     )
                     FilterChip(
                         selected = selectedLevel == LogCollector.LogLevel.ERROR,
                         onClick = { selectedLevel = LogCollector.LogLevel.ERROR },
-                        label = { Text("错误") }
+                        label = { androidx.compose.material3.Text("错误") }
                     )
                 }
                 
@@ -175,10 +173,10 @@ fun LogViewerScreen(navController: NavController) {
                 val stats = LogCollector.getStats()
                 Text(
                     text = "日志统计: " +
-                        "调试:${stats[LogCollector.LogLevel.DEBUG] ?: 0} " +
-                        "信息:${stats[LogCollector.LogLevel.INFO] ?: 0} " +
-                        "警告:${stats[LogCollector.LogLevel.WARNING] ?: 0} " +
-                        "错误:${stats[LogCollector.LogLevel.ERROR] ?: 0}",
+                            "调试:${stats[LogCollector.LogLevel.DEBUG] ?: 0} " +
+                            "信息:${stats[LogCollector.LogLevel.INFO] ?: 0} " +
+                            "警告:${stats[LogCollector.LogLevel.WARNING] ?: 0} " +
+                            "错误:${stats[LogCollector.LogLevel.ERROR] ?: 0}",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -261,7 +259,7 @@ private fun LogItem(log: LogCollector.LogEntry) {
         }
         
         Spacer(modifier = Modifier.height(2.dp))
-        
+
         Text(
             text = log.message,
             style = MaterialTheme.typography.bodySmall,

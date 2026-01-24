@@ -4,6 +4,7 @@ import android.content.ClipData
 import android.content.Intent
 import android.net.Uri
 import android.os.Build
+import android.widget.Toast
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
@@ -61,7 +62,6 @@ import androidx.navigation.compose.rememberNavController
 import coil.compose.SubcomposeAsyncImage
 import coil.request.CachePolicy
 import coil.request.ImageRequest
-import com.lanrhyme.shardlauncher.R
 import com.lanrhyme.shardlauncher.game.account.Account
 import com.lanrhyme.shardlauncher.ui.components.FluidFab
 import com.lanrhyme.shardlauncher.ui.components.FluidFabDirection
@@ -301,69 +301,67 @@ fun AccountScreen(navController: NavController, accountViewModel: AccountViewMod
                             deviceCodeResponse!!
                                 .verificationUri,
                             style =
-                            MaterialTheme.typography
-                                .bodyLarge,
+                                MaterialTheme.typography
+                                    .bodyLarge,
                             color =
-                            MaterialTheme.colorScheme
-                                .primary,
+                                MaterialTheme.colorScheme
+                                    .primary,
                             modifier =
-                            Modifier.clickable {
-                                val intent =
-                                    Intent(
-                                        Intent.ACTION_VIEW,
-                                        Uri.parse(
-                                            deviceCodeResponse!!
-                                                .verificationUri
+                                Modifier.clickable {
+                                    val intent =
+                                        Intent(
+                                            Intent.ACTION_VIEW,
+                                            Uri.parse(
+                                                deviceCodeResponse!!
+                                                    .verificationUri
+                                            )
                                         )
+                                    context.startActivity(
+                                        intent
                                     )
-                                context.startActivity(
-                                    intent
-                                )
-                            }
+                                }
                         )
                         Spacer(modifier = Modifier.height(16.dp))
                         Text(
                             "代码 (长按复制)：",
                             style =
-                            MaterialTheme.typography
-                                .titleMedium
+                                MaterialTheme.typography
+                                    .titleMedium
                         )
                         Text(
                             text =
-                            deviceCodeResponse!!
-                                .userCode,
+                                deviceCodeResponse!!
+                                    .userCode,
                             style =
-                            MaterialTheme.typography
-                                .displayMedium,
+                                MaterialTheme.typography
+                                    .displayMedium,
                             modifier =
-                            Modifier.combinedClickable(
-                                onClick = {},
-                                onLongClick = {
-                                    scope
-                                        .launch {
-                                            clipboardManager
-                                                .setClipEntry(
-                                                    ClipEntry(
-                                                        ClipData.newPlainText(
-                                                            "Microsoft Device Code",
-                                                            deviceCodeResponse!!
-                                                                .userCode
+                                Modifier.combinedClickable(
+                                    onClick = {},
+                                    onLongClick = {
+                                        scope
+                                            .launch {
+                                                clipboardManager
+                                                    .setClipEntry(
+                                                        ClipEntry(
+                                                            ClipData.newPlainText(
+                                                                "Microsoft Device Code",
+                                                                deviceCodeResponse!!
+                                                                    .userCode
+                                                            )
                                                         )
                                                     )
-                                                )
-                                        }
-                                    android.widget
-                                        .Toast
-                                        .makeText(
-                                            context,
-                                            "代码已复制到剪贴板",
-                                            android.widget
-                                                .Toast
-                                                .LENGTH_SHORT
-                                        )
-                                        .show()
-                                }
-                            )
+                                            }
+                                        Toast
+                                            .makeText(
+                                                context,
+                                                "代码已复制到剪贴板",
+                                                Toast
+                                                    .LENGTH_SHORT
+                                            )
+                                            .show()
+                                    }
+                                )
                         )
                         Spacer(modifier = Modifier.height(16.dp))
                         CircularProgressIndicator(

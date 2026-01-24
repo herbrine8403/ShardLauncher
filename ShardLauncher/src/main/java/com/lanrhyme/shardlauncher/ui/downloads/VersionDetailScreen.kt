@@ -31,7 +31,6 @@ import com.lanrhyme.shardlauncher.ui.components.CombinedCard
 import com.lanrhyme.shardlauncher.ui.components.LoaderVersionDropdown
 import com.lanrhyme.shardlauncher.ui.components.LocalCardLayoutConfig
 import com.lanrhyme.shardlauncher.ui.components.ScalingActionButton
-import com.lanrhyme.shardlauncher.ui.components.ShardInputField
 import com.lanrhyme.shardlauncher.ui.components.StyledFilterChip
 import com.lanrhyme.shardlauncher.ui.components.SubPageNavigationBar
 import com.lanrhyme.shardlauncher.ui.components.TaskFlowDialog

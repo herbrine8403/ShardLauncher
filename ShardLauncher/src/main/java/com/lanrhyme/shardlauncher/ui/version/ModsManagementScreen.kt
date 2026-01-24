@@ -21,11 +21,9 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import com.lanrhyme.shardlauncher.R
 import com.lanrhyme.shardlauncher.game.mod.LocalMod
 import com.lanrhyme.shardlauncher.game.mod.ModCache
 import com.lanrhyme.shardlauncher.game.mod.ModMetadataParser
@@ -140,7 +138,7 @@ fun ModsManagementScreen(
                         fontWeight = FontWeight.Bold,
                         modifier = Modifier.weight(1f)
                     )
-                    
+
                     Text(
                         text = "${modsList?.size ?: 0} 个模组",
                         style = MaterialTheme.typography.bodyMedium,

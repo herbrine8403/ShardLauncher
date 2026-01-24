@@ -185,9 +185,9 @@ fun LazyItemScope.VersionItem(version: BmclapiManifest.Version, onClick: () -> U
                             else -> version.type
                         }
                 Text(
-                        text = "$versionTypeString - ${version.releaseTime.substringBefore('T')}",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    text = "$versionTypeString - ${version.releaseTime.substringBefore('T')}",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
         }

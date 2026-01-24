@@ -21,7 +21,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
 import com.lanrhyme.shardlauncher.ui.components.ScrollIndicator
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -110,9 +109,9 @@ fun AboutScreen(animationSpeed: Float) {
                                                                 modifier = Modifier.size(200.dp)
                                                         )
                                                         Spacer(Modifier.width(16.dp))
-                                                        Text(
-                                                                "一款使用Kotlin和JetPack Compose开发的安卓Minecraft:Java Edition启动器"
-                                                        )
+                                                    Text(
+                                                        "一款使用Kotlin和JetPack Compose开发的安卓Minecraft:Java Edition启动器"
+                                                    )
                                                 }
                                                 Spacer(Modifier.padding(8.dp))
                                                 Row(
@@ -314,13 +313,13 @@ fun AboutScreen(animationSpeed: Float) {
                                                                 Arrangement.spacedBy(16.dp)
                                                 ) {
                                                         Column(modifier = Modifier.weight(1f)) {
-                                                                Text(
-                                                                        text = "本应用使用了许多优秀的开源库来构建",
-                                                                        style =
-                                                                                MaterialTheme
-                                                                                        .typography
-                                                                                        .bodySmall
-                                                                )
+                                                            Text(
+                                                                text = "本应用使用了许多优秀的开源库来构建",
+                                                                style =
+                                                                    MaterialTheme
+                                                                        .typography
+                                                                        .bodySmall
+                                                            )
                                                         }
                                                         Row(
                                                                 horizontalArrangement =
@@ -394,25 +393,25 @@ fun AboutScreen(animationSpeed: Float) {
                                                         shape = RoundedCornerShape(8.dp),
                                                         color = MaterialTheme.colorScheme.primary
                                                 ) {
-                                                        Text(
-                                                                text =
-                                                                        stringResource(
-                                                                                id =
-                                                                                        R.string
-                                                                                                .git_hash
-                                                                        ),
-                                                                modifier =
-                                                                        Modifier.padding(
-                                                                                horizontal = 8.dp,
-                                                                                vertical = 4.dp
-                                                                        ),
-                                                                color =
-                                                                        MaterialTheme.colorScheme
-                                                                                .onPrimary,
-                                                                style =
-                                                                        MaterialTheme.typography
-                                                                                .bodySmall,
-                                                        )
+                                                    Text(
+                                                        text =
+                                                            stringResource(
+                                                                id =
+                                                                    R.string
+                                                                        .git_hash
+                                                            ),
+                                                        modifier =
+                                                            Modifier.padding(
+                                                                horizontal = 8.dp,
+                                                                vertical = 4.dp
+                                                            ),
+                                                        color =
+                                                            MaterialTheme.colorScheme
+                                                                .onPrimary,
+                                                        style =
+                                                            MaterialTheme.typography
+                                                                .bodySmall,
+                                                    )
                                                 }
                                         }
                                         Text(
@@ -549,17 +548,17 @@ fun LicensesDialog(onDismiss: () -> Unit) {
                                                         }
                                         ) {
                                                 Text(lib.name, fontWeight = FontWeight.Bold)
-                                                Text(
-                                                        "by ${lib.author}",
-                                                        style = MaterialTheme.typography.bodySmall
-                                                )
-                                                Text(
-                                                        lib.license,
-                                                        style = MaterialTheme.typography.bodySmall,
-                                                        color =
-                                                                MaterialTheme.colorScheme
-                                                                        .onSurfaceVariant
-                                                )
+                                            Text(
+                                                "by ${lib.author}",
+                                                style = MaterialTheme.typography.bodySmall
+                                            )
+                                            Text(
+                                                lib.license,
+                                                style = MaterialTheme.typography.bodySmall,
+                                                color =
+                                                    MaterialTheme.colorScheme
+                                                        .onSurfaceVariant
+                                            )
                                         }
                                 }
                         }

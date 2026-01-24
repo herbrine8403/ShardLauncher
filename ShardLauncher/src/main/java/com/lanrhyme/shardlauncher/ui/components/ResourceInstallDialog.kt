@@ -6,8 +6,6 @@
 package com.lanrhyme.shardlauncher.ui.components
 
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -178,7 +176,7 @@ fun ResourceInstallDialog(
                                 fontWeight = FontWeight.Bold,
                                 color = MaterialTheme.colorScheme.onPrimaryContainer
                             )
-                            
+
                             Text(
                                 text = installMessage,
                                 style = MaterialTheme.typography.bodyMedium,
@@ -189,7 +187,7 @@ fun ResourceInstallDialog(
                                 progress = installProgress / 100f,
                                 modifier = Modifier.fillMaxWidth()
                             )
-                            
+
                             Text(
                                 text = "${installProgress}%",
                                 style = MaterialTheme.typography.bodySmall,
@@ -235,7 +233,7 @@ fun ResourceInstallDialog(
                             onClick = onDismiss,
                             modifier = Modifier.weight(1f)
                         ) {
-                            Text("稍后安装")
+                            androidx.compose.material3.Text("稍后安装")
                         }
                         
                         Button(
@@ -260,7 +258,7 @@ fun ResourceInstallDialog(
                             },
                             modifier = Modifier.weight(1f)
                         ) {
-                            Text("立即安装")
+                            androidx.compose.material3.Text("立即安装")
                         }
                     } else {
                         // Show cancel button during installation
@@ -271,7 +269,7 @@ fun ResourceInstallDialog(
                             },
                             modifier = Modifier.fillMaxWidth()
                         ) {
-                            Text("取消安装")
+                            androidx.compose.material3.Text("取消安装")
                         }
                     }
                 }
@@ -299,7 +297,7 @@ fun ResourceInstallDialog(
                         },
                         modifier = Modifier.fillMaxWidth()
                     ) {
-                        Text("安装推荐资源 (包含高性能渲染器)")
+                        androidx.compose.material3.Text("安装推荐资源 (包含高性能渲染器)")
                     }
                 }
 
@@ -313,7 +311,7 @@ fun ResourceInstallDialog(
                         },
                         modifier = Modifier.fillMaxWidth()
                     ) {
-                        Text("重试")
+                        androidx.compose.material3.Text("重试")
                     }
                 }
             }

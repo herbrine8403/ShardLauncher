@@ -50,8 +50,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.ColorFilter
-import androidx.compose.ui.graphics.ColorMatrix
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -119,7 +117,6 @@ import com.lanrhyme.shardlauncher.utils.logging.Logger
 import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.hazeSource
 import kotlin.math.abs
-import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
     private val tag = "MainActivity"
@@ -1294,10 +1291,10 @@ fun SideBarButton(
             if (isExpanded) {
                 Spacer(modifier = Modifier.width(16.dp))
                 Text(
-                        text = screen.label,
-                        color = contentColor,
-                        style = MaterialTheme.typography.bodyLarge,
-                        maxLines = 1
+                    text = screen.label,
+                    color = contentColor,
+                    style = MaterialTheme.typography.bodyLarge,
+                    maxLines = 1
                 )
             }
         }

@@ -3,9 +3,6 @@ package com.lanrhyme.shardlauncher.ui.version
 import androidx.compose.animation.Crossfade
 import androidx.compose.foundation.basicMarquee
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
@@ -17,29 +14,17 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.lanrhyme.shardlauncher.R
 import com.lanrhyme.shardlauncher.game.path.GamePath
 import com.lanrhyme.shardlauncher.game.path.GamePathManager
 import com.lanrhyme.shardlauncher.game.version.installed.Version
 import com.lanrhyme.shardlauncher.game.version.installed.VersionsManager
-import com.lanrhyme.shardlauncher.ui.components.MarqueeText
-import com.lanrhyme.shardlauncher.ui.components.SimpleAlertDialog
-import com.lanrhyme.shardlauncher.ui.components.SimpleEditDialog
-import com.lanrhyme.shardlauncher.ui.components.SimpleTaskDialog
+import com.lanrhyme.shardlauncher.ui.components.ShardDropdownMenu
 import com.lanrhyme.shardlauncher.utils.logging.Logger.lError
 import com.lanrhyme.shardlauncher.utils.string.getMessageOrToString
-import com.lanrhyme.shardlauncher.ui.components.SimpleAlertDialog
-import com.lanrhyme.shardlauncher.ui.components.SimpleEditDialog
-import com.lanrhyme.shardlauncher.ui.components.SimpleTaskDialog
-import com.lanrhyme.shardlauncher.utils.logging.Logger.lError
-import com.lanrhyme.shardlauncher.utils.string.getMessageOrToString
-import com.lanrhyme.shardlauncher.utils.string.isNotEmptyOrBlank
-import kotlinx.coroutines.Dispatchers
 
 sealed interface GamePathOperation {
     data object None: GamePathOperation
@@ -95,7 +80,7 @@ fun GamePathItemLayout(
                     )
                 }
 
-                DropdownMenu(
+                ShardDropdownMenu(
                     expanded = menuExpanded,
                     shape = MaterialTheme.shapes.large,
                     shadowElevation = 3.dp,
@@ -278,7 +263,7 @@ fun VersionItemLayout(
                     )
                 }
 
-                DropdownMenu(
+                ShardDropdownMenu(
                     expanded = menuExpanded,
                     shape = MaterialTheme.shapes.large,
                     shadowElevation = 3.dp,

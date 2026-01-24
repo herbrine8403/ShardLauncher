@@ -48,7 +48,6 @@ import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import com.lanrhyme.shardlauncher.api.ApiClient
 import com.lanrhyme.shardlauncher.data.SettingsRepository
-import com.lanrhyme.shardlauncher.game.account.ACCOUNT_TYPE_LOCAL
 import com.lanrhyme.shardlauncher.game.account.Account
 import com.lanrhyme.shardlauncher.model.LatestVersionsResponse
 import com.lanrhyme.shardlauncher.model.VersionInfo
@@ -65,12 +64,10 @@ import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
 import java.io.IOException
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import androidx.compose.runtime.rememberCoroutineScope
 import com.lanrhyme.shardlauncher.game.launch.GameLaunchManager
 import com.lanrhyme.shardlauncher.game.version.installed.VersionsManager
-import com.lanrhyme.shardlauncher.ui.home.VersionSelector
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -295,23 +292,23 @@ fun VersionInfoCard(versionInfo: VersionInfo) {
                         Text(text = versionInfo.title, style = MaterialTheme.typography.titleLarge)
                         versionInfo.intro?.let { intro ->
                             Text(
-                                    text = intro,
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    modifier = Modifier.padding(top = 4.dp)
+                                text = intro,
+                                style = MaterialTheme.typography.bodyMedium,
+                                modifier = Modifier.padding(top = 4.dp)
                             )
                         }
                     }
                     Text(
-                            text = versionInfo.versionType,
-                            style = MaterialTheme.typography.bodyMedium
+                        text = versionInfo.versionType,
+                        style = MaterialTheme.typography.bodyMedium
                     )
                 }
                 Spacer(modifier = Modifier.height(8.dp))
                 versionInfo.translator?.let {
                     Text(
-                            text = "翻译：$it",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+                        text = "翻译：$it",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
                     )
                     Spacer(modifier = Modifier.height(16.dp))
                 }

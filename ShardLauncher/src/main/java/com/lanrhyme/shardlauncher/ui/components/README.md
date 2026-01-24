@@ -1,153 +1,158 @@
 # UI 组件文档
 
-本目录包含 ShardLauncher 项目的各种 Jetpack Compose UI 组件。这些组件遵循 Material Design 3 指南，并提供一致的样式和行为。
+本目录包含 ShardLauncher 项目的各种 Jetpack Compose UI 组件。这些组件遵循 Material Design 3 指南，并结合了 ShardLauncher 的独特视觉风格（如磨砂玻璃效果、圆角设计等）。
 
 所有组件均以可重用性为设计理念，旨在简化整个应用的 UI 开发。
 
-## 组件列表
+## 目录
 
-### 1. 通用组件 (`CommonComponents.kt`)
+- [1. 基础组件 (Basic Components)](#1-基础组件-basic-components)
+- [2. 布局卡片 (Layout Cards)](#2-布局卡片-layout-cards)
+- [3. 对话框 (Dialogs)](#3-对话框-dialogs)
+- [4. 业务组件 (Business Components)](#4-业务组件-business-components)
+- [5. 视觉特效 (Visual Effects)](#5-视觉特效-visual-effects)
 
-**`ScalingActionButton`**
+---
 
-带缩放动画的按钮，可在按下时提供视觉反馈。
+### 1. 基础组件 (Basic Components)
 
-- **`onClick`**: `() -> Unit` - 点击按钮时执行的操作。
-- **`modifier`**: `Modifier` - 应用于按钮的修饰符。
-- **`icon`**: `ImageVector?` - (可选) 按钮中显示的图标。
-- **`text`**: `String?` - (可选) 按钮中显示的文本。
-- **`enabled`**: `Boolean` - 控制按钮的启用状态。
+主要位于 `ShardThemeComponents.kt` 和 `CommonComponents.kt`。
 
-**`TitleAndSummary`**
+#### `ShardThemeComponents.kt`
+提供符合 ShardTheme 主题规范的基础原子组件。
 
-显示标题及其下方较小的半透明摘要的组合。
+- **`ShardCard`**
+  - 基础卡片容器，支持圆角和背景颜色配置。
+  - **特性**: 当 `LocalCardLayoutConfig.isCardBlurEnabled` 开启且系统版本支持时，自动应用高斯模糊 (Haze) 效果。
 
-- **`title`**: `String` - 主标题文本。
-- **`summary`**: `String?` - (可选) 显示在标题下方的摘要文本。
-- **`modifier`**: `Modifier` - 应用于布局的修饰符。
+- **`ShardButton`**
+  - 统一风格的按钮组件。
+  - **支持类型**: `FILLED` (填充), `OUTLINED` (描边), `TEXT` (文本)。
+  - **特性**: 支持自定义颜色、形状，并集成了模糊效果支持。
 
-**`CombinedCard`**
+- **`ShardDialog`**
+  - 统一风格的对话框容器。
+  - **特性**: 针对复杂布局进行了性能优化，支持全屏半透明背景和入场/出场动画。
 
-带有标题、摘要和内容的卡片容器。
+- **`ShardDropdownMenu`**
+  - 统一样式的下拉菜单。
+  - **特性**: 支持磨砂玻璃背景效果。
 
-- **`modifier`**: `Modifier` - 应用于卡片的修饰符。
-- **`title`**: `String` - 卡片的标题。
-- **`summary`**: `String?` - (可选) 卡片的摘要。
-- **`content`**: `@Composable () -> Unit` - 卡片内部显示的内容。
+- **`ShardInputField`**
+  - 通用文本输入框。
+  - **特性**: 基于 `BasicTextField` 封装，提供一致的边框、背景和内边距样式。
 
-**`SegmentedNavigationBar`**
+#### `CommonComponents.kt`
+通用的交互式组件。
 
-分段导航栏，用于在不同页面或选项卡之间切换。
+- **`ScalingActionButton`**
+  - 带点击缩放动画的按钮。
+  - **用途**: 用于需要强调点击反馈的操作，如列表项的次要操作按钮。
 
-- **`title`**: `String` - 导航栏的标题。
-- **`selectedPage`**: `T` - 当前选定的页面。
-- **`onPageSelected`**: `(T) -> Unit` - 选择新页面时调用的回调。
-- **`pages`**: `List<T>` - 要显示的页面列表。
-- **`getTitle`**: `(T) -> String` - 从页面对象获取标题的函数。
+- **`StyledFilterChip`**
+  - 带样式的过滤标签芯片。
+  - **用途**: 用于多选或单选过滤场景。
 
-**`StyledFilterChip`**
+- **`SegmentedNavigationBar`**
+  - 分段式导航栏。
+  - **特性**: 包含发光标题和切换选项卡，用于页面内的一级导航。
 
-带样式的筛选条，用于选择和取消选择。
+- **`SubPageNavigationBar`**
+  - 子页面导航栏。
+  - **特性**: 包含返回按钮和标题，用于二级详情页面的顶部导航。
 
-- **`selected`**: `Boolean` - 指示筛选条是否已选择。
-- **`onClick`**: `() -> Unit` - 点击筛选条时调用的回调。
-- **`label`**: `@Composable () -> Unit` - 筛选条上显示的标签。
-- **`modifier`**: `Modifier` - 应用于筛选条的修饰符。
+---
 
-**`CollapsibleCard`**
+### 2. 布局卡片 (Layout Cards)
 
-一个可展开和折叠的卡片，用于显示或隐藏其内容。
+主要位于 `LayoutCards.kt` 和 `CommonComponents.kt`，用于构建设置页或信息展示页的列表项。
 
-- **`modifier`**: `Modifier` - 应用于卡片的修饰符。
-- **`title`**: `String` - 卡片的标题。
-- **`summary`**: `String?` - (可选) 显示在标题旁边的摘要。
-- **`content`**: `@Composable () -> Unit` - 展开时在卡片内部显示的内容。
+#### `LayoutCards.kt`
+封装了常见的设置项布局。
 
-**`.glow` 修饰符**
+- **`SwitchLayoutCard`**
+  - 带开关 (Switch) 的卡片。
+  - **用途**: 用于布尔值设置（开/关）。
 
-一个 `Modifier` 扩展函数，为任何 Composable 添加可配置的发光效果。
+- **`IconSwitchLayoutCard`**
+  - 带左侧图标和开关的卡片。
+  - **用途**: 图形化的布尔值设置。
 
-- **`color`**: `Color` - 辉光的颜色。
-- **`cornerRadius`**: `Dp` - 发光效果的圆角半径。
-- **`blurRadius`**: `Dp` - 辉光的模糊半径。
-- **`enabled`**: `Boolean` - 控制辉光效果是否启用。
+- **`SimpleListLayoutCard`**
+  - 列表选择卡片。
+  - **用途**: 点击后弹出选择列表（如 Dialog 或 Dropdown 逻辑需外部实现，此为触发入口布局）。
 
-### 2. 自定义视图
+- **`SliderLayoutCard`**
+  - 滑动条调节卡片。
+  - **用途**: 数值范围调整（如音量、亮度）。
+  - **特性**: 包含发光边框效果 (`glow`)。
 
-**`CustomCard.kt`**
+- **`TextInputLayoutCard`**
+  - 文本输入卡片。
+  - **用途**: 用于修改名称、路径等文本信息。
 
-一个简单的 `Card` 封装，提供一致的默认样式。
+- **`ButtonLayoutCard`**
+  - 纯按钮功能的列表卡片。
+  - **用途**: 执行特定操作（如“清除缓存”、“重置设置”）。
 
-- **`modifier`**: `Modifier` - 应用于卡片的修饰符。
-- **`shape`**: `Shape` - 卡片的形状。
-- **`content`**: `@Composable ColumnScope.() -> Unit` - 卡片内部显示的内容。
+#### `CommonComponents.kt`
 
-**`CustomButton.kt`**
+- **`CollapsibleCard`**
+  - 可折叠卡片。
+  - **用途**: 用于收纳次要信息或长内容，点击标题栏展开/收起。
 
-可自定义样式的按钮，支持填充、描边和文本三种样式。
+- **`CombinedCard`**
+  - 组合卡片。
+  - **用途**: 标准的信息展示容器，包含标题、摘要和自定义内容区域。
 
-- **`onClick`**: `() -> Unit` - 点击按钮时执行的操作。
-- **`modifier`**: `Modifier` - 应用于按钮的修饰符。
-- **`type`**: `ButtonType` - 按钮的样式 (`FILLED`, `OUTLINED`, `TEXT`)。
-- **`enabled`**: `Boolean` - 控制按钮的启用状态。
+- **`TitleAndSummary`**
+  - 标题与摘要文本组件。
+  - **用途**: 布局卡片内部的基础文本排版单元。
 
-**`CustomDialog.kt`**
+---
 
-一个简单的 `AlertDialog` 封装。
+### 3. 对话框 (Dialogs)
 
-- **`onDismissRequest`**: `() -> Unit` - 当请求关闭对话框时调用。
-- **`confirmButton`**: `@Composable () -> Unit` - 对话框的确认按钮。
-- **`dismissButton`**: `@Composable (() -> Unit)?` - (可选) 对话框的取消按钮。
-- **`icon`**: `@Composable (() -> Unit)?` - (可选) 对话框的图标。
-- **`title`**: `@Composable (() -> Unit)?` - (可选) 对话框的标题。
-- **`text`**: `@Composable (() -> Unit)?` - (可选) 对话框的正文。
+特定功能的业务对话框。
 
-**`CustomTextField.kt`**
+- **`MusicPlayerDialog`** (`MusicPlayerDialog.kt`)
+  - 音乐播放器对话框。
+  - **功能**: 展示音乐列表、播放控制、设置等，集成 ViewModel 数据。
 
-一个 `OutlinedTextField` 的封装，提供一致的样式和行为。
+- **`ResourceInstallDialog`** (`ResourceInstallDialog.kt`)
+  - 资源安装对话框。
+  - **功能**: 检测并引导用户安装缺失的游戏资源文件。
 
-- **`value`**: `String` - 文本字段的当前值。
-- **`onValueChange`**: `(String) -> Unit` - 当值更改时调用。
-- **`modifier`**: `Modifier` - 应用于文本字段的修饰符。
-- ...以及其他 `OutlinedTextField` 参数。
+- **`TaskFlowDialog`** (`TaskFlowDialog.kt`)
+  - 任务流进度对话框。
+  - **功能**: 展示多步骤任务的执行进度（如：下载 -> 解压 -> 安装），支持终止和后台运行。
 
-### 3. 布局 (`Layouts.kt`)
+---
 
-**`SwitchLayout`**
+### 4. 业务组件 (Business Components)
 
-带有标题、摘要和开关的布局。
+与特定业务逻辑强相关的组件。
 
-- **`checked`**: `Boolean` - 开关是否已打开。
-- **`onCheckedChange`**: `() -> Unit` - 当开关状态更改时调用。
-- **`title`**: `String` - 布局的标题。
-- **`summary`**: `String?` - (可选) 布局的摘要。
+- **`FluidFab`** (`FluidFab.kt`)
+  - 流体动画悬浮按钮。
+  - **特性**: 具有独特的“粘性”展开动画，用于主界面的核心操作入口。支持多个子菜单项。
 
-**`SimpleListLayout`**
+- **`LoaderVersionDropdown`** (`LoaderVersionDropdown.kt`)
+  - 加载器版本选择组件。
+  - **功能**: 专门用于选择 Minecraft 加载器（Fabric/Forge）版本的下拉列表，支持分页加载。
 
-用于显示项目列表并允许单选的布局。
+- **`VersionItem`** (`VersionItem.kt`)
+  - 游戏版本列表项。
+  - **功能**: 在主页版本列表中展示单个游戏版本的详细信息（图标、名称、状态）。
 
-- **`items`**: `List<E>` - 要显示的项目列表。
-- **`selectedItem`**: `E` - 当前选定的项目。
-- **`title`**: `String` - 列表的标题。
-- **`getItemText`**: `@Composable (E) -> String` - 从项目对象获取文本的函数。
-- **`onValueChange`**: `(E) -> Unit` - 当选择更改时调用。
+---
 
-**`SliderLayout`**
+### 5. 视觉特效 (Visual Effects)
 
-带有标题、摘要和滑块的布局。
+- **`BackgroundLightEffect`** (`BackgroundLightEffect.kt`)
+  - 背景光斑动画。
+  - **功能**: 在页面背景绘制缓慢移动和呼吸的彩色光斑，增强视觉层次感。
 
-- **`value`**: `Float` - 滑块的当前值。
-- **`onValueChange`**: `(Float) -> Unit` - 当值更改时调用。
-- **`title`**: `String` - 布局的标题。
-- **`summary`**: `String?` - (可选) 布局的摘要。
-- **`valueRange`**: `ClosedFloatingPointRange<Float>` - 滑块的值范围。
-
-### 4. 特效 (`BackgroundLightEffect.kt`)
-
-**`BackgroundLightEffect`**
-
-创建平滑的、动画的背景光效。
-
-- **`modifier`**: `Modifier` - 应用于效果的修饰符。
-- **`themeColor`**: `Color` - 效果的基础颜色。
-- **`animationSpeed`**: `Float` - 动画的速度。
+- **`LocalLayoutConfig`** (`LocalLayoutConfig.kt`)
+  - 布局配置 CompositionLocal。
+  - **功能**: 提供全局的卡片外观配置（如 `isCardBlurEnabled`），允许组件根据环境动态调整渲染策略（如降级为纯色背景）。

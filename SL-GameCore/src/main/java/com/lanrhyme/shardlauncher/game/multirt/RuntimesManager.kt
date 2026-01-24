@@ -19,8 +19,8 @@
 
 package com.lanrhyme.shardlauncher.game.multirt
 
+import android.system.Os
 import com.lanrhyme.shardlauncher.path.PathManager
-import com.lanrhyme.shardlauncher.utils.file.FileUtils
 import com.lanrhyme.shardlauncher.utils.logging.Logger
 import com.lanrhyme.shardlauncher.utils.string.compareVersions
 import com.lanrhyme.shardlauncher.utils.string.extractUntilCharacter
@@ -29,6 +29,7 @@ import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.withContext
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream
 import org.apache.commons.compress.compressors.xz.XZCompressorInputStream
+import org.apache.commons.io.FileUtils
 import org.apache.commons.io.IOUtils
 import java.io.File
 import java.io.FileOutputStream
@@ -75,15 +76,9 @@ object RuntimesManager {
             .minByOrNull { it.javaVersion }?.name
     }
 
-    fun getRuntime(name: String): Runtime {
+    fun forceReload(name: String): Runtime {
+        cache.remove(name)
         return loadRuntime(name)
-    }
-
-    fun getDefaultRuntime(javaVersion: Int): Runtime? {
-        val runtimes = getRuntimes()
-        return runtimes
-            .filter { it.javaVersion >= javaVersion }
-            .minByOrNull { it.javaVersion }
     }
 
     fun loadRuntime(name: String, forceLoad: Boolean = false): Runtime {
@@ -111,6 +106,7 @@ object RuntimesManager {
                         versionString = javaVersion,
                         arch = osArch,
                         javaVersion = majorVersion,
+                        isProvidedByLauncher = name.startsWith("openjdk-") || name.startsWith("Internal-"),
                         isJDK8 = isJDK8(runtimeDir.absolutePath)
                     )
                 } else {
@@ -126,15 +122,16 @@ object RuntimesManager {
 
     @Throws(IOException::class)
     suspend fun installRuntime(
+        nativeLibDir: String,
         inputStream: InputStream,
         name: String,
         updateProgress: (Int, Array<Any>) -> Unit = { _, _ -> }
-    ): Runtime = withContext(Dispatchers.IO) {
+    ) = withContext(Dispatchers.IO) {
         val dest = File(RUNTIME_FOLDER, name)
         try {
             if (dest.exists()) FileUtils.deleteDirectory(dest)
             uncompressTarXZ(inputStream, dest, updateProgress)
-            unpack200(PathManager.DIR_NATIVE_LIB, dest.absolutePath)
+            unpack200(nativeLibDir, dest.absolutePath)
             loadRuntime(name).also { runtime ->
                 postPrepare(runtime)
             }
@@ -144,29 +141,12 @@ object RuntimesManager {
         }
     }
 
-    @Throws(IOException::class)
-    suspend fun installRuntimeBinaries(
+    // Compatibility overload
+    suspend fun installRuntime(
         inputStream: InputStream,
         name: String,
         updateProgress: (Int, Array<Any>) -> Unit = { _, _ -> }
-    ): Unit = withContext(Dispatchers.IO) {
-        val dest = File(RUNTIME_FOLDER, name)
-        if (!dest.exists()) {
-            throw IOException("Runtime directory does not exist: ${dest.absolutePath}")
-        }
-        
-        try {
-            // Extract binaries to existing runtime directory
-            uncompressTarXZ(inputStream, dest, updateProgress)
-            unpack200(PathManager.DIR_NATIVE_LIB, dest.absolutePath)
-            
-            // Re-run post-prepare to handle any new binaries
-            postPrepare(name)
-        } catch (e: Exception) {
-            Logger.e("RuntimesManager", "Failed to install runtime binaries for $name", e)
-            throw e
-        }
-    }
+    ) = installRuntime(PathManager.DIR_NATIVE_LIB, inputStream, name, updateProgress)
 
     @Throws(IOException::class)
     suspend fun postPrepare(name: String) = withContext(Dispatchers.IO) {
@@ -205,10 +185,51 @@ object RuntimesManager {
 
         val localXawtLib = File(PathManager.DIR_NATIVE_LIB, "libawt_xawt.so")
         val targetXawtLib = File(dest, "$libFolder/libawt_xawt.so")
+        if (targetXawtLib.exists()) targetXawtLib.delete()
         if (localXawtLib.exists()) {
-            if (targetXawtLib.exists()) targetXawtLib.delete()
             FileUtils.copyFile(localXawtLib, targetXawtLib)
         }
+    }
+
+    @Throws(IOException::class)
+    suspend fun installRuntimeBinPack(
+        universalFileInputStream: InputStream,
+        platformBinsInputStream: InputStream,
+        name: String,
+        binPackVersion: String,
+        updateProgress: (Int, Array<Any>) -> Unit = { _, _ -> }
+    ) = withContext(Dispatchers.IO) {
+        val dest = File(RUNTIME_FOLDER, name)
+        try {
+            if (dest.exists()) FileUtils.deleteDirectory(dest)
+            installRuntimeNoRemove(universalFileInputStream, dest, updateProgress)
+            installRuntimeNoRemove(platformBinsInputStream, dest, updateProgress)
+
+            unpack200(PathManager.DIR_NATIVE_LIB, dest.absolutePath)
+
+            val versionFile = File(dest, "version")
+            versionFile.writeText(binPackVersion)
+
+            forceReload(name)
+        } catch (e: Exception) {
+            FileUtils.deleteDirectory(dest)
+            throw e
+        }
+    }
+
+    @Throws(IOException::class)
+    suspend fun installRuntimeBinaries(
+        inputStream: InputStream,
+        name: String,
+        updateProgress: (Int, Array<Any>) -> Unit = { _, _ -> }
+    ) = withContext(Dispatchers.IO) {
+        val dest = File(RUNTIME_FOLDER, name)
+        if (!dest.exists()) {
+            throw IOException("Runtime directory does not exist: ${dest.absolutePath}")
+        }
+        installRuntimeNoRemove(inputStream, dest, updateProgress)
+        unpack200(PathManager.DIR_NATIVE_LIB, dest.absolutePath)
+        postPrepare(name)
     }
 
     fun loadInternalRuntimeVersion(name: String): String? {
@@ -233,59 +254,51 @@ object RuntimesManager {
 
     fun getRuntimeHome(name: String): File {
         val dest = File(RUNTIME_FOLDER, name)
-        if (!dest.exists() || loadRuntime(name, forceLoad = true).versionString == null) {
+        if (!dest.exists() || forceReload(name).versionString == null) {
             throw RuntimeException("Selected runtime is broken!")
         }
+
         return dest
     }
 
-    fun forceReload(name: String): Runtime {
-        cache.remove(name)
-        return loadRuntime(name)
-    }
-
-    /**
-     * Unpacks all .pack files into .jar Serves only for java 8, as java 9 brought project jigsaw
-     * @param nativeLibraryDir The native lib path, required to execute the unpack200 binary
-     * @param runtimePath The path to the runtime to walk into
-     */
     private suspend fun unpack200(
         nativeLibraryDir: String,
         runtimePath: String
     ) = withContext(Dispatchers.Default) {
-        val basePath = File(runtimePath)
-        val files: Collection<File> = FileUtils.listFiles(basePath, arrayOf("pack"), true)
+            val basePath = File(runtimePath)
+            val files: Collection<File> = FileUtils.listFiles(basePath, arrayOf("pack"), true)
 
-        if (files.isEmpty()) return@withContext
+            val workDir = File(nativeLibraryDir)
+            val processBuilder = ProcessBuilder().directory(workDir)
 
-        val workDir = File(nativeLibraryDir)
-        val unpack200Binary = File(workDir, "libunpack200.so")
-        
-        if (!unpack200Binary.exists()) {
-            Logger.w("RuntimesManager", "unpack200 binary not found, skipping .pack files")
-            return@withContext
-        }
-
-        val processBuilder = ProcessBuilder().directory(workDir)
-
-        files.forEach { jarFile ->
-            ensureActive()
-            runCatching {
-                val destPath = jarFile.absolutePath.replace(".pack", "")
-                processBuilder.command(
-                    "./libunpack200.so",
-                    "-r",
-                    jarFile.absolutePath,
-                    destPath
-                ).start().apply {
-                    waitFor()
+            files.forEach { jarFile ->
+                ensureActive()
+                runCatching {
+                    val destPath = jarFile.absolutePath.replace(".pack", "")
+                    processBuilder.command(
+                        "./libunpack200.so",
+                        "-r",
+                        jarFile.absolutePath,
+                        destPath
+                    ).start().apply {
+                        waitFor()
+                    }
+                }.onFailure { e ->
+                    if (e is IOException) {
+                        Logger.e("RuntimesManager", "Failed to unpack the runtime!", e)
+                    } else throw e
                 }
-            }.onFailure { e ->
-                if (e is IOException) {
-                    Logger.e("RuntimesManager", "Failed to unpack the runtime!", e)
-                } else throw e
             }
         }
+
+    @Throws(IOException::class)
+    private suspend fun installRuntimeNoRemove(
+        inputStream: InputStream,
+        dest: File,
+        updateProgress: (Int, Array<Any>) -> Unit = { _, _ -> }
+    ) = withContext(Dispatchers.IO) {
+        uncompressTarXZ(inputStream, dest, updateProgress)
+        inputStream.close()
     }
 
     @Throws(IOException::class)
@@ -307,6 +320,12 @@ object RuntimesManager {
                 destPath.parentFile?.mkdirs()
 
                 when {
+                    tarEntry.isSymbolicLink -> try {
+                        Os.symlink(tarEntry.linkName, destPath.absolutePath)
+                    } catch (e: Throwable) {
+                        Logger.e("RuntimesManager", "Exception occurred while creating symbolic link", e)
+                    }
+
                     tarEntry.isDirectory -> destPath.mkdirs()
                     !destPath.exists() || destPath.length() != tarEntry.size ->
                         FileOutputStream(destPath).use { os ->

@@ -58,6 +58,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
+import androidx.media3.common.util.UnstableApi
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
@@ -485,6 +486,7 @@ class MainActivity : ComponentActivity() {
     }
 }
 
+@UnstableApi
 @Composable
 fun MainScreen(
         navController: NavHostController,

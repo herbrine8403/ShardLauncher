@@ -155,27 +155,16 @@ object RuntimeInstaller {
                 return@withContext Result.failure(error)
             }
             
-            onProgress(60, "安装运行时...")
-            
-            // Install universal files first
             val installedRuntime = tempUniversalFile.inputStream().use { universalStream ->
-                RuntimesManager.installRuntime(
-                    inputStream = universalStream,
-                    name = runtime.name
-                ) { progress: Int, args: Array<Any> ->
-                    onProgress(60 + progress / 4, "安装通用文件... ${args.getOrNull(0) ?: ""}")
-                }
-            }
-            
-            onProgress(85, "安装架构特定文件...")
-            
-            // Then install architecture-specific binaries
-            tempBinFile.inputStream().use { binStream ->
-                RuntimesManager.installRuntimeBinaries(
-                    inputStream = binStream,
-                    name = runtime.name
-                ) { progress: Int, args: Array<Any> ->
-                    onProgress(85 + progress / 6, "安装二进制文件... ${args.getOrNull(0) ?: ""}")
+                tempBinFile.inputStream().use { binStream ->
+                    RuntimesManager.installRuntimeBinPack(
+                        universalFileInputStream = universalStream,
+                        platformBinsInputStream = binStream,
+                        name = runtime.name,
+                        binPackVersion = runtime.name
+                    ) { progress: Int, args: Array<Any> ->
+                        onProgress(60, "安装文件... ${args.getOrNull(0) ?: ""}")
+                    }
                 }
             }
             

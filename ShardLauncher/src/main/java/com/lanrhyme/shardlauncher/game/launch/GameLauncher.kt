@@ -79,8 +79,7 @@ class GameLauncher(
 
         val customArgs = version.getJvmArgs().takeIf { it.isNotBlank() } ?: AllSettings.jvmArgs.getValue()
         val javaRuntimeName = getRuntimeName()
-        val selectedRuntime = RuntimesManager.getRuntime(javaRuntimeName)
-        this.runtime = selectedRuntime
+        this.runtime = RuntimesManager.loadRuntime(javaRuntimeName)
 
         // Initialize LoggerBridge (temporarily disabled due to JNI issues)
         // TODO: Fix LoggerBridge JNI method resolution
@@ -232,22 +231,8 @@ class GameLauncher(
         
         // Load renderer plugin libraries
         RendererPluginManager.selectedRendererPlugin?.let { renderer ->
-            renderer.dlopen.forEach { lib -> 
-                // ZLBridge.dlopen("${renderer.path}/$lib")  // Temporarily disabled due to JNI issues
-                // Logger.lInfo("Skipping dlopen for renderer plugin due to JNI issues - lib: ${renderer.path}/$lib")
-                
-                // Try to restore renderer plugin library loading
-                try {
-                    val libPath = "${renderer.path}/$lib"
-                    val success = ZLBridge.dlopen(libPath)
-                    if (success) {
-                        Logger.lInfo("Successfully loaded renderer plugin library: $libPath")
-                    } else {
-                        Logger.lWarning("Failed to load renderer plugin library: $libPath")
-                    }
-                } catch (e: UnsatisfiedLinkError) {
-                    Logger.lWarning("JNI error loading renderer plugin library ${renderer.path}/$lib: ${e.message}")
-                }
+            renderer.dlopen.forEach { lib ->
+                ZLBridge.dlopen("${renderer.path}/$lib")
             }
         }
 
@@ -281,55 +266,6 @@ class GameLauncher(
         }
     }
 
-    override fun progressFinalUserArgs(args: MutableList<String>, ramAllocation: Int) {
-        super.progressFinalUserArgs(args, ramAllocation)
-        if (Renderers.isCurrentRendererValid()) {
-            args.add("-Dorg.lwjgl.opengl.libname=${loadGraphicsLibrary()}")
-        }
-    }
-
-    private fun getCacioJavaArgs(windowWidth: Int, windowHeight: Int, isJava8: Boolean): List<String> {
-        val args = mutableListOf<String>()
-        val scaleFactor = AllSettings.resolutionRatio.getValue() / 100f
-        val scaledWidth = getDisplayFriendlyRes(windowWidth, scaleFactor)
-        val scaledHeight = getDisplayFriendlyRes(windowHeight, scaleFactor)
-        
-        args.add("-Djava.awt.headless=false")
-        args.add("-Dawt.toolkit=net.java.openjdk.cacio.ctk.CToolkit")
-        args.add("-Djava.awt.graphicsenv=net.java.openjdk.cacio.ctk.CGraphicsEnvironment")
-        args.add("-Dglfwstub.windowWidth=$scaledWidth")
-        args.add("-Dglfwstub.windowHeight=$scaledHeight")
-        args.add("-Dglfwstub.initEgl=false")
-        
-        if (!isJava8) {
-            args.add("--add-exports=java.desktop/sun.awt=ALL-UNNAMED")
-            args.add("--add-exports=java.desktop/sun.awt.image=ALL-UNNAMED")
-            args.add("--add-exports=java.desktop/sun.java2d=ALL-UNNAMED")
-            args.add("--add-exports=java.desktop/java.awt.peer=ALL-UNNAMED")
-            
-            if (runtime?.javaVersion ?: 8 >= 17) {
-                args.add("-javaagent:${PathManager.DIR_COMPONENTS}/cacio-17/cacio-agent.jar")
-            }
-        }
-        
-        val cacioJarDir = if (runtime?.javaVersion ?: 8 >= 17) {
-            File(PathManager.DIR_COMPONENTS, "cacio-17")
-        } else {
-            File(PathManager.DIR_COMPONENTS, "cacio-8")
-        }
-        args.add("-Xbootclasspath/a:${File(cacioJarDir, "cacio-ttc.jar").absolutePath}")
-        
-        return args
-    }
-
-    private fun findInLdLibPath(libName: String): String? {
-        val ldLibraryPath = getRuntimeLibraryPath()
-        return ldLibraryPath.split(":").firstNotNullOfOrNull { dir ->
-            val file = File(dir, libName)
-            if (file.exists()) file.absolutePath else null
-        }
-    }
-
     private fun printLauncherInfo(
         javaArguments: String,
         javaRuntime: String,
@@ -349,6 +285,37 @@ class GameLauncher(
         Logger.lInfo("Info: Account: ${account.username} (${account.accountType})")
     }
 
+    private fun getCacioJavaArgs(windowWidth: Int, windowHeight: Int, isJava8: Boolean): List<String> {
+        val args = mutableListOf<String>()
+
+        args.add("-Djava.awt.headless=false")
+        args.add("-Dawt.toolkit=net.java.openjdk.cacio.ctk.CToolkit")
+        args.add("-Djava.awt.graphicsenv=net.java.openjdk.cacio.ctk.CGraphicsEnvironment")
+        args.add("-Dglfwstub.windowWidth=$windowWidth")
+        args.add("-Dglfwstub.windowHeight=$windowHeight")
+        args.add("-Dglfwstub.initEgl=false")
+
+        if (!isJava8) {
+            args.add("--add-exports=java.desktop/sun.awt=ALL-UNNAMED")
+            args.add("--add-exports=java.desktop/sun.awt.image=ALL-UNNAMED")
+            args.add("--add-exports=java.desktop/sun.java2d=ALL-UNNAMED")
+            args.add("--add-exports=java.desktop/java.awt.peer=ALL-UNNAMED")
+
+            if (runtime.javaVersion >= 17) {
+                args.add("-javaagent:${PathManager.DIR_COMPONENTS}/cacio-17/cacio-agent.jar")
+            }
+        }
+
+        val cacioJarDir = if (runtime.javaVersion >= 17) {
+            File(PathManager.DIR_COMPONENTS, "cacio-17")
+        } else {
+            File(PathManager.DIR_COMPONENTS, "cacio-8")
+        }
+        args.add("-Xbootclasspath/a:${File(cacioJarDir, "cacio-ttc.jar").absolutePath}")
+
+        return args
+    }
+
     private fun getRuntimeName(): String {
         val versionRuntime = version.getJavaRuntime().takeIf { it.isNotEmpty() } ?: ""
         if (versionRuntime.isNotEmpty()) return versionRuntime
@@ -356,8 +323,8 @@ class GameLauncher(
         val defaultRuntime = AllSettings.javaRuntime.getValue()
         if (AllSettings.autoPickJavaRuntime.getValue()) {
             val targetJavaVersion = gameManifest.javaVersion?.majorVersion ?: 8
-            val runtime0 = RuntimesManager.getDefaultRuntime(targetJavaVersion)
-            if (runtime0 != null) return runtime0.name
+            val runtimeName = RuntimesManager.getNearestJreName(targetJavaVersion)
+            if (runtimeName != null) return runtimeName
         }
         return defaultRuntime
     }

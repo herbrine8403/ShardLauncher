@@ -325,18 +325,12 @@ fun GameSettingsContent(
         )
     }
 
-    // Runtime Management Dialog
-    if (showRuntimeManageDialog) {
-        PopupContainer(
-            visible = true,
-            onDismissRequest = { showRuntimeManageDialog = false }
-        ) {
-            RuntimeManageScreen(
-                animationSpeed = animationSpeed,
-                isGlowEffectEnabled = isGlowEffectEnabled
-            )
-        }
-    }
+    RuntimeManageScreen(
+        visible = showRuntimeManageDialog,
+        onDismissRequest = { showRuntimeManageDialog = false },
+        animationSpeed = animationSpeed,
+        isGlowEffectEnabled = isGlowEffectEnabled
+    )
 
     // Renderer Management Dialog
     if (showRendererManageDialog) {

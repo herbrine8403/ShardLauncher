@@ -261,7 +261,7 @@ fun ShardDialog(
                         shape = dialogShape,
                         color = if (isCardBlurEnabled) {
                             MaterialTheme.colorScheme.surface.copy(
-                                alpha = 0.8f
+                                alpha = 0.9f
                             )
                         } else {
                             MaterialTheme.colorScheme.surface

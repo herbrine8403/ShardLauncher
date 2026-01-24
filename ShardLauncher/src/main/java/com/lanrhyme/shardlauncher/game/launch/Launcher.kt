@@ -209,6 +209,15 @@ abstract class Launcher(
         return null
     }
 
+    protected fun findInLdLibPath(libName: String): String? {
+        val path = getRuntimeLibraryPath()
+        path.split(":").forEach { dir ->
+            val file = File(dir, libName)
+            if (file.exists()) return file.absolutePath
+        }
+        return null
+    }
+
     /**
      * Load engine specific libraries
      */

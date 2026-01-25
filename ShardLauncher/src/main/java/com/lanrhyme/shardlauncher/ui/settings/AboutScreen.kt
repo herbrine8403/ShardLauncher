@@ -21,7 +21,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.layout.Box
-import com.lanrhyme.shardlauncher.ui.components.ScrollIndicator
+import com.lanrhyme.shardlauncher.ui.components.basic.ScrollIndicator
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -54,11 +54,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import com.lanrhyme.shardlauncher.R
-import com.lanrhyme.shardlauncher.ui.components.CombinedCard
-import com.lanrhyme.shardlauncher.ui.components.LocalCardLayoutConfig
-import com.lanrhyme.shardlauncher.ui.components.ScalingActionButton
-import com.lanrhyme.shardlauncher.ui.components.TitleAndSummary
-import com.lanrhyme.shardlauncher.ui.components.animatedAppearance
+import com.lanrhyme.shardlauncher.ui.components.basic.CombinedCard
+import com.lanrhyme.shardlauncher.ui.components.layout.LocalCardLayoutConfig
+import com.lanrhyme.shardlauncher.ui.components.basic.ScalingActionButton
+import com.lanrhyme.shardlauncher.ui.components.basic.TitleAndSummary
+import com.lanrhyme.shardlauncher.ui.components.basic.animatedAppearance
 
 data class OssLibrary(val name: String, val author: String, val url: String, val license: String)
 
@@ -422,8 +422,8 @@ fun AboutScreen(animationSpeed: Float) {
                                                                                 fontWeight =
                                                                                         FontWeight
                                                                                                 .Bold
-                                                                        )
-                                                        ) { append("分支: ") }
+                                                                                )
+                                                                ) { append("分支: ") }
                                                         append(
                                                                 stringResource(
                                                                         id = R.string.git_branch
@@ -439,8 +439,8 @@ fun AboutScreen(animationSpeed: Float) {
                                                                                 fontWeight =
                                                                                         FontWeight
                                                                                                 .Bold
-                                                                        )
-                                                        ) { append("版本状态: ") }
+                                                                                )
+                                                                ) { append("版本状态: ") }
                                                         append(
                                                                 stringResource(
                                                                         id = R.string.build_status
@@ -456,8 +456,8 @@ fun AboutScreen(animationSpeed: Float) {
                                                                                 fontWeight =
                                                                                         FontWeight
                                                                                                 .Bold
-                                                                        )
-                                                        ) { append("上次更新时间: ") }
+                                                                                )
+                                                                ) { append("上次更新时间: ") }
                                                         append(
                                                                 stringResource(
                                                                         id =
@@ -639,3 +639,4 @@ fun CreditsCard(
                 }
         }
 }
+

@@ -1,4 +1,4 @@
-package com.lanrhyme.shardlauncher
+﻿package com.lanrhyme.shardlauncher
 
 import android.content.Context
 import android.content.Intent
@@ -83,14 +83,15 @@ import com.lanrhyme.shardlauncher.common.SidebarPosition
 import com.lanrhyme.shardlauncher.data.SettingsRepository
 import com.lanrhyme.shardlauncher.game.account.AccountsManager
 import com.lanrhyme.shardlauncher.service.MusicPlayerService
-import com.lanrhyme.shardlauncher.ui.LocalSettingsProvider
+import com.lanrhyme.shardlauncher.ui.common.LocalSettingsProvider
+import com.lanrhyme.shardlauncher.ui.common.SettingsProvider
 import com.lanrhyme.shardlauncher.ui.SplashScreen
 import com.lanrhyme.shardlauncher.ui.account.AccountScreen
 import com.lanrhyme.shardlauncher.ui.account.AccountViewModel
-import com.lanrhyme.shardlauncher.ui.components.BackgroundLightEffect
-import com.lanrhyme.shardlauncher.ui.components.CardLayoutConfig
-import com.lanrhyme.shardlauncher.ui.components.LocalCardLayoutConfig
-import com.lanrhyme.shardlauncher.ui.components.glow
+import com.lanrhyme.shardlauncher.ui.components.effect.BackgroundLightEffect
+import com.lanrhyme.shardlauncher.ui.components.layout.CardLayoutConfig
+import com.lanrhyme.shardlauncher.ui.components.layout.LocalCardLayoutConfig
+import com.lanrhyme.shardlauncher.ui.components.basic.glow
 import com.lanrhyme.shardlauncher.ui.developeroptions.ComponentDemoScreen
 import com.lanrhyme.shardlauncher.ui.developeroptions.LogViewerScreen
 import com.lanrhyme.shardlauncher.ui.developeroptions.DeveloperOptionsScreen
@@ -109,9 +110,9 @@ import com.lanrhyme.shardlauncher.ui.settings.SettingsScreen
 import com.lanrhyme.shardlauncher.ui.theme.ColorPalettes
 import com.lanrhyme.shardlauncher.ui.theme.ShardLauncherTheme
 import com.lanrhyme.shardlauncher.ui.theme.ThemeColor
-import com.lanrhyme.shardlauncher.ui.version.VersionScreen
+import com.lanrhyme.shardlauncher.ui.version.list.VersionScreen
 import com.lanrhyme.shardlauncher.utils.rememberParallaxSensorHelper
-import com.lanrhyme.shardlauncher.components.ComponentUnpacker
+import com.lanrhyme.shardlauncher.tasks.ComponentUnpacker
 import com.lanrhyme.shardlauncher.game.resource.ResourceManager
 import com.lanrhyme.shardlauncher.utils.logging.Logger
 import dev.chrisbanes.haze.HazeState
@@ -298,8 +299,7 @@ class MainActivity : ComponentActivity() {
 
             CompositionLocalProvider(
                     LocalDensity provides scaledDensity,
-                    LocalSettingsProvider provides
-                            com.lanrhyme.shardlauncher.ui.SettingsProvider()
+                    LocalSettingsProvider provides SettingsProvider()
             ) {
                 Crossfade(
                         targetState = showSplash,
@@ -757,17 +757,17 @@ fun MainScreen(
 
                 NotificationPopupHost()
 
-                // 全局下载进度对话框
+                // 鍏ㄥ眬涓嬭浇杩涘害瀵硅瘽妗?
                 val downloadTasks by com.lanrhyme.shardlauncher.game.download.DownloadManager.tasksFlow.collectAsState()
                 val showDownloadDialog by com.lanrhyme.shardlauncher.game.download.DownloadManager.showDialog.collectAsState()
                 val downloadTask by com.lanrhyme.shardlauncher.game.download.DownloadManager.downloadTask.collectAsState()
                 val downloadDialogTitle by com.lanrhyme.shardlauncher.game.download.DownloadManager.dialogTitle.collectAsState()
 
-                com.lanrhyme.shardlauncher.ui.components.TaskFlowDialog(
+                com.lanrhyme.shardlauncher.ui.components.dialog.TaskFlowDialog(
                     title = downloadDialogTitle,
                     tasks = downloadTasks,
                     visible = showDownloadDialog && downloadTask != null,
-                    onDismiss = { /* 不允许点击背景关闭 */ },
+                    onDismiss = { /* 涓嶅厑璁哥偣鍑昏儗鏅叧闂?*/ },
                     onCancel = { com.lanrhyme.shardlauncher.game.download.DownloadManager.cancelDownload() },
                     onClose = { com.lanrhyme.shardlauncher.game.download.DownloadManager.closeDialog() },
                     isCompleted = downloadTask?.taskState == com.lanrhyme.shardlauncher.coroutine.TaskState.COMPLETED,
@@ -1235,7 +1235,7 @@ fun ExpandButton(
 @Composable
 fun OnlineScreen() {
     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-        Text("联机", style = MaterialTheme.typography.headlineLarge)
+        Text("鑱旀満", style = MaterialTheme.typography.headlineLarge)
     }
 }
 
@@ -1319,3 +1319,5 @@ fun SideBarButton(
         }
     }
 }
+
+

@@ -1,19 +1,51 @@
 package com.lanrhyme.shardlauncher.ui.components.layout
 
-import androidx.compose.animation.*
-import com.lanrhyme.shardlauncher.ui.components.basic.ShardCard
-import com.lanrhyme.shardlauncher.ui.components.basic.TitleAndSummary
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsDraggedAsState
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExposedDropdownMenuDefaults
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ProvideTextStyle
+import androidx.compose.material3.RadioButton
+import androidx.compose.material3.Slider
+import androidx.compose.material3.SliderDefaults
+import androidx.compose.material3.Switch
+import androidx.compose.material3.SwitchDefaults
+import androidx.compose.material3.Text
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import com.lanrhyme.shardlauncher.ui.components.basic.ShardCard
+import com.lanrhyme.shardlauncher.ui.components.basic.TitleAndSummary
+import com.lanrhyme.shardlauncher.ui.components.basic.glow
+import com.lanrhyme.shardlauncher.ui.components.basic.ShardInputField
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
@@ -451,6 +483,18 @@ fun SliderLayoutCard(
                 }
         }
 }
+/**
+ * 文本输入布局卡片组件
+ *
+ * @param value 输入框的值
+ * @param onValueChange 值改变时的回调
+ * @param modifier 应用于卡片的修饰符
+ * @param title 标题文本
+ * @param summary 摘要文本（可选）
+ * @param placeholder 输入框占位符
+ * @param enabled 是否启用
+ * @param shape 卡片形状
+ */
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun TextInputLayoutCard(

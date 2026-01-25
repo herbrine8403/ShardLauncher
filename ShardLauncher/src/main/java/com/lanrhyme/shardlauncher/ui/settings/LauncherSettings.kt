@@ -1,4 +1,4 @@
-package com.lanrhyme.shardlauncher.ui.settings
+﻿package com.lanrhyme.shardlauncher.ui.settings
 
 import android.content.Context
 import android.net.Uri
@@ -73,21 +73,21 @@ import coil.request.ImageRequest
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import com.lanrhyme.shardlauncher.common.SidebarPosition
-import com.lanrhyme.shardlauncher.ui.components.CollapsibleCard
-import com.lanrhyme.shardlauncher.ui.components.ShardDialog
-import com.lanrhyme.shardlauncher.ui.components.ShardDropdownMenu
-import com.lanrhyme.shardlauncher.ui.components.IconSwitchLayoutCard
-import com.lanrhyme.shardlauncher.ui.components.LocalCardLayoutConfig
-import com.lanrhyme.shardlauncher.ui.components.MusicPlayerDialog
-import com.lanrhyme.shardlauncher.ui.components.PopupContainer
-import com.lanrhyme.shardlauncher.ui.components.ScrollIndicator
-import com.lanrhyme.shardlauncher.ui.components.SimpleListLayoutCard
-import com.lanrhyme.shardlauncher.ui.components.SliderLayoutCard
-import com.lanrhyme.shardlauncher.ui.components.SwitchLayoutCard
-import com.lanrhyme.shardlauncher.ui.components.TitleAndSummary
-import com.lanrhyme.shardlauncher.ui.components.animatedAppearance
-import com.lanrhyme.shardlauncher.ui.composables.HsvColorPicker
-import com.lanrhyme.shardlauncher.ui.composables.ThemeColorEditor
+import com.lanrhyme.shardlauncher.ui.components.basic.CollapsibleCard
+import com.lanrhyme.shardlauncher.ui.components.basic.ShardDialog
+import com.lanrhyme.shardlauncher.ui.components.basic.ShardDropdownMenu
+import com.lanrhyme.shardlauncher.ui.components.layout.IconSwitchLayoutCard
+import com.lanrhyme.shardlauncher.ui.components.layout.LocalCardLayoutConfig
+import com.lanrhyme.shardlauncher.ui.components.dialog.MusicPlayerDialog
+import com.lanrhyme.shardlauncher.ui.components.basic.PopupContainer
+import com.lanrhyme.shardlauncher.ui.components.basic.ScrollIndicator
+import com.lanrhyme.shardlauncher.ui.components.layout.SimpleListLayoutCard
+import com.lanrhyme.shardlauncher.ui.components.layout.SliderLayoutCard
+import com.lanrhyme.shardlauncher.ui.components.layout.SwitchLayoutCard
+import com.lanrhyme.shardlauncher.ui.components.basic.TitleAndSummary
+import com.lanrhyme.shardlauncher.ui.components.basic.animatedAppearance
+import com.lanrhyme.shardlauncher.ui.components.color.HsvColorPicker
+import com.lanrhyme.shardlauncher.ui.components.color.ThemeColorEditor
 import com.lanrhyme.shardlauncher.ui.music.MusicPlayerViewModel
 import com.lanrhyme.shardlauncher.ui.theme.ColorPalettes
 import com.lanrhyme.shardlauncher.ui.theme.ThemeColor
@@ -103,6 +103,13 @@ data class BackgroundItem(
         val brightness: Float = 0f
 )
 
+/**
+ * 视频播放器组件
+ * 用于播放背景视频
+ *
+ * @param uri 视频URI
+ * @param modifier 修饰符
+ */
 @Composable
 fun VideoPlayer(uri: String, modifier: Modifier = Modifier) {
     val context = LocalContext.current
@@ -133,6 +140,54 @@ private const val PREFS_NAME = "launcher_settings"
 private const val KEY_BACKGROUND_ITEMS = "background_items"
 private const val KEY_RANDOM_BACKGROUND = "random_background"
 
+/**
+ * 启动器设置内容组件
+ * 包含所有启动器相关的设置项
+ *
+ * @param isDarkTheme 是否为深色主题
+ * @param onThemeToggle 切换主题回调
+ * @param sidebarPosition 侧边栏位置
+ * @param onPositionChange 侧边栏位置变更回调
+ * @param themeColor 主题颜色
+ * @param onThemeColorChange 主题颜色变更回调
+ * @param customPrimaryColor 自定义主色
+ * @param onCustomPrimaryColorChange 自定义主色变更回调
+ * @param lightColorScheme 浅色主题配色方案
+ * @param darkColorScheme 深色主题配色方案
+ * @param onLightColorSchemeChange 浅色主题配色方案变更回调
+ * @param onDarkColorSchemeChange 深色主题配色方案变更回调
+ * @param enableBackgroundLightEffect 是否启用背景光效
+ * @param onEnableBackgroundLightEffectChange 背景光效开关回调
+ * @param lightEffectAnimationSpeed 光效动画速度
+ * @param onLightEffectAnimationSpeedChange 光效动画速度变更回调
+ * @param enableBackgroundLightEffectCustomColor 是否启用自定义光效颜色
+ * @param onEnableBackgroundLightEffectCustomColorChange 自定义光效颜色开关回调
+ * @param backgroundLightEffectCustomColor 自定义光效颜色
+ * @param onBackgroundLightEffectCustomColorChange 自定义光效颜色变更回调
+ * @param animationSpeed 全局动画速度
+ * @param onAnimationSpeedChange 全局动画速度变更回调
+ * @param launcherBackgroundUri 启动器背景URI
+ * @param onLauncherBackgroundUriChange 启动器背景URI变更回调
+ * @param launcherBackgroundBlur 背景模糊度
+ * @param onLauncherBackgroundBlurChange 背景模糊度变更回调
+ * @param launcherBackgroundBrightness 背景亮度
+ * @param onLauncherBackgroundBrightnessChange 背景亮度变更回调
+ * @param enableParallax 是否启用视差效果
+ * @param onEnableParallaxChange 视差效果开关回调
+ * @param parallaxMagnitude 视差强度
+ * @param onParallaxMagnitudeChange 视差强度变更回调
+ * @param enableVersionCheck 是否启用版本检查
+ * @param onEnableVersionCheckChange 版本检查开关回调
+ * @param uiScale UI缩放比例
+ * @param onUiScaleChange UI缩放比例变更回调
+ * @param isGlowEffectEnabled 是否启用发光效果
+ * @param onIsGlowEffectEnabledChange 发光效果开关回调
+ * @param onIsCardBlurEnabledChange 卡片模糊效果开关回调
+ * @param onCardAlphaChange 卡片透明度变更回调
+ * @param isMusicPlayerEnabled 是否启用音乐播放器
+ * @param onIsMusicPlayerEnabledChange 音乐播放器开关回调
+ * @param musicPlayerViewModel 音乐播放器ViewModel
+ */
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 internal fun LauncherSettingsContent(
@@ -402,7 +457,7 @@ internal fun LauncherSettingsContent(
                                     )
                                     if (item.isVideo) {
                                         Text(
-                                            "Video",
+                                            "视频",
                                             modifier =
                                                 Modifier.align(Alignment.BottomStart)
                                                     .padding(4.dp)
@@ -466,14 +521,14 @@ internal fun LauncherSettingsContent(
                             onDismissRequest = { showAddBackgroundMenu = false }
                     ) {
                         DropdownMenuItem(
-                                text = { Text("添加图片") },
+                                text = { Text("娣诲姞鍥剧墖") },
                                 onClick = {
                                     imagePicker.launch("image/*")
                                     showAddBackgroundMenu = false
                                 }
                         )
                         DropdownMenuItem(
-                                text = { Text("添加视频") },
+                                text = { Text("娣诲姞瑙嗛") },
                                 onClick = {
                                     videoPicker.launch("video/*")
                                     showAddBackgroundMenu = false
@@ -951,3 +1006,4 @@ internal fun LauncherSettingsContent(
         )
     }
 }
+

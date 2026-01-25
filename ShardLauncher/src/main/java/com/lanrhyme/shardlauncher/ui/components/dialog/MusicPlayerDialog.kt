@@ -1,7 +1,15 @@
-package com.lanrhyme.shardlauncher.ui.components.dialog
+﻿package com.lanrhyme.shardlauncher.ui.components.dialog
 
+import com.lanrhyme.shardlauncher.ui.components.layout.SliderLayoutCard
+import com.lanrhyme.shardlauncher.ui.components.basic.SearchTextField
+import com.lanrhyme.shardlauncher.ui.components.basic.TitleAndSummary
+import com.lanrhyme.shardlauncher.ui.components.basic.ShardDropdownMenu
+import com.lanrhyme.shardlauncher.ui.components.basic.glow
+import com.lanrhyme.shardlauncher.ui.components.basic.selectableCard
+import com.lanrhyme.shardlauncher.ui.components.layout.SwitchLayoutCard
 import android.net.Uri
 import com.lanrhyme.shardlauncher.ui.components.basic.ShardDialog
+import com.lanrhyme.shardlauncher.ui.components.business.MusicCard
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedContent
@@ -90,6 +98,13 @@ import java.util.concurrent.TimeUnit
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
+/**
+ * 音乐播放器对话框组件
+ * 支持播放、暂停、进度控制和播放模式切换
+ *
+ * @param onDismissRequest 关闭对话框时的回调
+ * @param musicPlayerViewModel 音乐播放器 ViewModel
+ */
 @Composable
 fun MusicPlayerDialog(onDismissRequest: () -> Unit, musicPlayerViewModel: MusicPlayerViewModel) {
     var selectedTab by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf(MusicPlayerTab.MusicList) }
@@ -105,7 +120,7 @@ fun MusicPlayerDialog(onDismissRequest: () -> Unit, musicPlayerViewModel: MusicP
                             selected = selectedTab == MusicPlayerTab.MusicList,
                             onClick = { selectedTab = MusicPlayerTab.MusicList },
                             icon = {
-                                Icon(Icons.Default.LibraryMusic, contentDescription = "Music List")
+                                Icon(Icons.Default.LibraryMusic, contentDescription = "音乐列表")
                             },
                             label = { Text("音乐列表") }
                     )
@@ -113,13 +128,13 @@ fun MusicPlayerDialog(onDismissRequest: () -> Unit, musicPlayerViewModel: MusicP
                             selected = selectedTab == MusicPlayerTab.Settings,
                             onClick = { selectedTab = MusicPlayerTab.Settings },
                             icon = {
-                                Icon(Icons.Default.Settings, contentDescription = "Settings")
+                                Icon(Icons.Default.Settings, contentDescription = "设置")
                             },
                             label = { Text("设置") }
                     )
                     Spacer(modifier = Modifier.weight(1f))
                     IconButton(onClick = { onDismissRequest() }) {
-                        Icon(Icons.Default.Save, contentDescription = "Save")
+                        Icon(Icons.Default.Save, contentDescription = "保存")
                     }
                     Spacer(modifier = Modifier.height(16.dp))
                 }
@@ -199,7 +214,7 @@ fun MusicListPage(musicPlayerViewModel: MusicPlayerViewModel) {
                     modifier = Modifier.weight(1f)
             )
             IconButton(onClick = { musicPlayerViewModel.loadMusicFiles() }) {
-                Icon(Icons.Default.Refresh, contentDescription = "Refresh")
+                Icon(Icons.Default.Refresh, contentDescription = "刷新")
             }
             Box {
                 IconButton(onClick = { showPlayModeMenu = true }) {
@@ -211,7 +226,7 @@ fun MusicListPage(musicPlayerViewModel: MusicPlayerViewModel) {
                                         Player.REPEAT_MODE_ALL -> Icons.Default.Shuffle
                                         else -> Icons.Default.Repeat
                                     },
-                            contentDescription = "Play Mode"
+                            contentDescription = "播放模式"
                     )
                 }
                 ShardDropdownMenu(
@@ -243,7 +258,7 @@ fun MusicListPage(musicPlayerViewModel: MusicPlayerViewModel) {
             }
             IconButton(
                     onClick = { pickAudioLauncher.launch("audio/flac,audio/wav,audio/ogg,audio/*") }
-            ) { Icon(Icons.Default.Add, contentDescription = "Add Music") }
+            ) { Icon(Icons.Default.Add, contentDescription = "添加音乐") }
         }
         // 音乐列表
         LazyColumn(
@@ -424,87 +439,7 @@ fun MusicPlayerSettingsPage(musicPlayerViewModel: MusicPlayerViewModel) {
     }
 }
 
-@OptIn(ExperimentalFoundationApi::class)
-@Composable
-fun MusicCard(
-        item: MusicItem,
-        isSelected: Boolean,
-        onCLick: () -> Unit,
-        onDelete: () -> Unit,
-) {
-    val interactionSource = remember { MutableInteractionSource() }
-    val isPressed by interactionSource.collectIsPressedAsState()
-    var showDeleteMenu by remember { mutableStateOf(false) }
 
-    Card(
-            modifier =
-                    Modifier.fillMaxWidth()
-                            .height(70.dp)
-                            .pointerInput(Unit) {
-                                detectTapGestures(onLongPress = { showDeleteMenu = true })
-                            }
-                            .clickable(onClick = onCLick)
-                            .selectableCard(isSelected, isPressed)
-                            .combinedClickable(
-                                    interactionSource = interactionSource,
-                                    indication = null,
-                                    onClick = onCLick,
-                                    onLongClick = { showDeleteMenu = true }
-                            ),
-            shape = RoundedCornerShape(16.dp),
-            border =
-                    if (isSelected) BorderStroke(1.5.dp, MaterialTheme.colorScheme.primary)
-                    else null
-    ) {
-        Row(modifier = Modifier.fillMaxSize(), verticalAlignment = Alignment.CenterVertically) {
-            SubcomposeAsyncImage(
-                    model = item.albumArtUri,
-                    contentDescription = "Album Art",
-                    modifier = Modifier.aspectRatio(1f),
-                    contentScale = ContentScale.Crop
-            ) {
-                when (painter.state) {
-                    is State.Success -> {
-                        SubcomposeAsyncImageContent(modifier = Modifier.fillMaxSize())
-                    }
-                    else -> { // // 错误，加载中，空时使用默认封面
-                        Box(
-                                modifier =
-                                        Modifier.fillMaxSize()
-                                                .background(
-                                                        MaterialTheme.colorScheme.surfaceVariant
-                                                ),
-                                contentAlignment = Alignment.Center
-                        ) {
-                            Icon(
-                                    imageVector = Icons.Default.LibraryMusic,
-                                    contentDescription = "Album Art Placeholder",
-                                    modifier = Modifier.size(48.dp),
-                                    tint = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
-                    }
-                }
-            }
-
-            // Title and Summary
-            Box(modifier = Modifier.padding(16.dp)) {
-                TitleAndSummary(title = item.title, summary = item.artist)
-            }
-
-            // 删除菜单
-            ShardDropdownMenu(expanded = showDeleteMenu, onDismissRequest = { showDeleteMenu = false }) {
-                DropdownMenuItem(
-                        text = { Text("删除") },
-                        onClick = { // TODO:i18n
-                            onDelete()
-                            showDeleteMenu = false
-                        }
-                )
-            }
-        }
-    }
-}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -567,7 +502,7 @@ fun CurrentlyPlayingCard(musicPlayerViewModel: MusicPlayerViewModel) {
         ) {
             SubcomposeAsyncImage(
                     model = currentMediaItem?.mediaMetadata?.artworkUri,
-                    contentDescription = "Album Art",
+                    contentDescription = "专辑封面",
                     modifier = Modifier.size(56.dp).clip(RoundedCornerShape(16.dp)),
                     contentScale = ContentScale.Crop
             ) {
@@ -586,7 +521,7 @@ fun CurrentlyPlayingCard(musicPlayerViewModel: MusicPlayerViewModel) {
                         ) {
                             Icon(
                                     Icons.Default.LibraryMusic,
-                                    contentDescription = "Album Art Placeholder",
+                                    contentDescription = "专辑封面占位符",
                                     modifier = Modifier.size(32.dp),
                                     tint = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -694,3 +629,4 @@ private fun formatMillis(millis: Long): String {
     val seconds = TimeUnit.MILLISECONDS.toSeconds(millis) % 60
     return String.format("%02d:%02d", minutes, seconds)
 }
+

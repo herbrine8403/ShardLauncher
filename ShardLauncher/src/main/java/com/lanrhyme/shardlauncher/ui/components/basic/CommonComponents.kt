@@ -93,6 +93,15 @@ import androidx.compose.ui.platform.LocalDensity
 import dev.chrisbanes.haze.hazeEffect
 import kotlinx.coroutines.launch
 
+/**
+ * 可折叠卡片组件
+ *
+ * @param modifier 应用于卡片的修饰符
+ * @param title 卡片标题
+ * @param summary 卡片摘要（可选）
+ * @param animationSpeed 展开/收起动画速度
+ * @param content 卡片展开时显示的内容
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CollapsibleCard(
@@ -317,6 +326,17 @@ fun TitleAndSummary(title: String, summary: String?, modifier: Modifier = Modifi
         }
 }
 
+/**
+ * 分段式导航栏组件
+ * 用于在多个页面或视图之间进行切换
+ *
+ * @param modifier 应用于组件的修饰符
+ * @param title 导航栏标题
+ * @param selectedPage 当前选中的页面
+ * @param onPageSelected 页面选择回调
+ * @param pages 页面列表
+ * @param getTitle 获取页面标题的函数
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun <T> SegmentedNavigationBar(
@@ -581,6 +601,14 @@ fun Modifier.selectableCard(
         }
 }
 
+/**
+ * 搜索文本框组件
+ *
+ * @param value 当前搜索文本
+ * @param onValueChange 文本变更回调
+ * @param hint 提示文本
+ * @param modifier 应用于组件的修饰符
+ */
 @Composable
 fun SearchTextField(
         value: String,

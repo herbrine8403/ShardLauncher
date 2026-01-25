@@ -48,10 +48,10 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.lanrhyme.shardlauncher.R
 import com.lanrhyme.shardlauncher.model.BmclapiManifest
-import com.lanrhyme.shardlauncher.ui.components.CombinedCard
-import com.lanrhyme.shardlauncher.ui.components.LocalCardLayoutConfig
-import com.lanrhyme.shardlauncher.ui.components.SearchTextField
-import com.lanrhyme.shardlauncher.ui.components.StyledFilterChip
+import com.lanrhyme.shardlauncher.ui.components.basic.CombinedCard
+import com.lanrhyme.shardlauncher.ui.components.layout.LocalCardLayoutConfig
+import com.lanrhyme.shardlauncher.ui.components.basic.SearchTextField
+import com.lanrhyme.shardlauncher.ui.components.basic.StyledFilterChip
 import dev.chrisbanes.haze.hazeEffect
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
@@ -193,3 +193,4 @@ fun LazyItemScope.VersionItem(version: BmclapiManifest.Version, onClick: () -> U
         }
     }
 }
+

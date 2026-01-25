@@ -28,7 +28,7 @@ import coil.request.ImageRequest
 import com.lanrhyme.shardlauncher.R
 import com.lanrhyme.shardlauncher.game.account.Account
 import com.lanrhyme.shardlauncher.game.account.getDisplayName
-import com.lanrhyme.shardlauncher.ui.components.LocalCardLayoutConfig
+import com.lanrhyme.shardlauncher.ui.components.layout.LocalCardLayoutConfig
 import dev.chrisbanes.haze.hazeEffect
 
 @Composable

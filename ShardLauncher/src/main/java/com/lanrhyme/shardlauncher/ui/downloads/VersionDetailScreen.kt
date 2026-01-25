@@ -1,4 +1,4 @@
-package com.lanrhyme.shardlauncher.ui.downloads
+﻿package com.lanrhyme.shardlauncher.ui.downloads
 
 import android.app.Application
 import androidx.compose.animation.AnimatedVisibility
@@ -47,13 +47,13 @@ import com.lanrhyme.shardlauncher.coroutine.TaskState
 import com.lanrhyme.shardlauncher.model.FabricLoaderVersion
 import com.lanrhyme.shardlauncher.model.LoaderVersion
 import com.lanrhyme.shardlauncher.model.ModrinthVersion
-import com.lanrhyme.shardlauncher.ui.components.CapsuleTextField
-import com.lanrhyme.shardlauncher.ui.components.CombinedCard
-import com.lanrhyme.shardlauncher.ui.components.LoaderVersionDropdown
-import com.lanrhyme.shardlauncher.ui.components.LocalCardLayoutConfig
-import com.lanrhyme.shardlauncher.ui.components.ScalingActionButton
-import com.lanrhyme.shardlauncher.ui.components.StyledFilterChip
-import com.lanrhyme.shardlauncher.ui.components.SubPageNavigationBar
+import com.lanrhyme.shardlauncher.ui.components.basic.CapsuleTextField
+import com.lanrhyme.shardlauncher.ui.components.basic.CombinedCard
+import com.lanrhyme.shardlauncher.ui.components.business.LoaderVersionDropdown
+import com.lanrhyme.shardlauncher.ui.components.layout.LocalCardLayoutConfig
+import com.lanrhyme.shardlauncher.ui.components.basic.ScalingActionButton
+import com.lanrhyme.shardlauncher.ui.components.basic.StyledFilterChip
+import com.lanrhyme.shardlauncher.ui.components.basic.SubPageNavigationBar
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -327,4 +327,5 @@ private fun LoaderSelectionCard(
         }
     }
 }
+
 

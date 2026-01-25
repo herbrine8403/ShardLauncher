@@ -3,6 +3,13 @@ package com.lanrhyme.shardlauncher.ui.components.layout
 import androidx.compose.runtime.compositionLocalOf
 import dev.chrisbanes.haze.HazeState
 
+/**
+ * 卡片布局配置数据类
+ *
+ * @param isCardBlurEnabled 是否启用卡片模糊效果
+ * @param cardAlpha 卡片背景透明度
+ * @param hazeState 模糊状态对象
+ */
 data class CardLayoutConfig(
         val isCardBlurEnabled: Boolean = false,
         val cardAlpha: Float = 1f,

@@ -18,7 +18,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.navigation.NavController
 import com.lanrhyme.shardlauncher.common.SidebarPosition
-import com.lanrhyme.shardlauncher.ui.components.SegmentedNavigationBar
+import com.lanrhyme.shardlauncher.ui.components.basic.SegmentedNavigationBar
 import com.lanrhyme.shardlauncher.ui.music.MusicPlayerViewModel
 import com.lanrhyme.shardlauncher.ui.theme.ThemeColor
 

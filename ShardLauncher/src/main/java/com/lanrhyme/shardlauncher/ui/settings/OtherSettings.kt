@@ -1,4 +1,4 @@
-package com.lanrhyme.shardlauncher.ui.settings
+﻿package com.lanrhyme.shardlauncher.ui.settings
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
@@ -13,13 +13,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import com.lanrhyme.shardlauncher.ui.components.LocalCardLayoutConfig
-import com.lanrhyme.shardlauncher.ui.components.SimpleListLayoutCard
+import com.lanrhyme.shardlauncher.ui.components.layout.LocalCardLayoutConfig
+import com.lanrhyme.shardlauncher.ui.components.layout.SimpleListLayoutCard
 import com.lanrhyme.shardlauncher.ui.navigation.Screen
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.ui.Alignment
-import com.lanrhyme.shardlauncher.ui.components.ScrollIndicator
+import com.lanrhyme.shardlauncher.ui.components.basic.ScrollIndicator
 
 @Composable
 internal fun OtherSettingsContent(navController: NavController) {
@@ -38,7 +38,7 @@ internal fun OtherSettingsContent(navController: NavController) {
         ) {
         item {
             Text(
-                text = "高级",
+                text = "楂樼骇",
                 style = MaterialTheme.typography.titleMedium,
                 color = MaterialTheme.colorScheme.primary,
                 modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
@@ -46,11 +46,11 @@ internal fun OtherSettingsContent(navController: NavController) {
         }
         item {
             SimpleListLayoutCard(
-                    title = "开发者选项",
+                    title = "寮€鍙戣€呴€夐」",
                     items = listOf(Unit),
                     selectedItem = Unit,
                     onValueChange = { navController.navigate(Screen.DeveloperOptions.route) },
-                    getItemText = { "点击进入开发者选项" }
+                    getItemText = { "鐐瑰嚮杩涘叆寮€鍙戣€呴€夐」" }
             )
         }
         item { Spacer(modifier = Modifier.height(45.dp)) }
@@ -61,3 +61,4 @@ internal fun OtherSettingsContent(navController: NavController) {
         )
     }
 }
+

@@ -1,4 +1,4 @@
-package com.lanrhyme.shardlauncher.ui.home
+﻿package com.lanrhyme.shardlauncher.ui.home
 
 import android.content.Context
 import android.content.Intent
@@ -52,12 +52,12 @@ import com.lanrhyme.shardlauncher.game.account.Account
 import com.lanrhyme.shardlauncher.model.LatestVersionsResponse
 import com.lanrhyme.shardlauncher.model.VersionInfo
 import com.lanrhyme.shardlauncher.ui.account.AccountViewModel
-import com.lanrhyme.shardlauncher.ui.components.CombinedCard
-import com.lanrhyme.shardlauncher.ui.components.LocalCardLayoutConfig
-import com.lanrhyme.shardlauncher.ui.components.ScalingActionButton
-import com.lanrhyme.shardlauncher.ui.components.animatedAppearance
-import com.lanrhyme.shardlauncher.ui.custom.XamlRenderer
-import com.lanrhyme.shardlauncher.ui.custom.parseXaml
+import com.lanrhyme.shardlauncher.ui.components.basic.CombinedCard
+import com.lanrhyme.shardlauncher.ui.components.layout.LocalCardLayoutConfig
+import com.lanrhyme.shardlauncher.ui.components.basic.ScalingActionButton
+import com.lanrhyme.shardlauncher.ui.components.basic.animatedAppearance
+import com.lanrhyme.shardlauncher.ui.xaml.XamlRenderer
+import com.lanrhyme.shardlauncher.ui.xaml.parseXaml
 import com.lanrhyme.shardlauncher.ui.navigation.Screen
 import com.lanrhyme.shardlauncher.utils.Logger
 import java.io.File
@@ -187,7 +187,7 @@ fun HomeScreen(
                                     }
                                 }
                                 else -> {
-                                    Text(text = "正在获取最新版本信息...", modifier = Modifier.padding(16.dp))
+                                    Text(text = "正在获取最新版本信息..", modifier = Modifier.padding(16.dp))
                                 }
                             }
                         }
@@ -306,7 +306,7 @@ fun VersionInfoCard(versionInfo: VersionInfo) {
                 Spacer(modifier = Modifier.height(8.dp))
                 versionInfo.translator?.let {
                     Text(
-                        text = "翻译：$it",
+                        text = "翻译：it",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
                     )
@@ -404,3 +404,4 @@ fun VerticalDivider() {
         )
     }
 }
+

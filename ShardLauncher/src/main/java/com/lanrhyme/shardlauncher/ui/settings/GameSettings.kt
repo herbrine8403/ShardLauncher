@@ -1,4 +1,4 @@
-package com.lanrhyme.shardlauncher.ui.settings
+﻿package com.lanrhyme.shardlauncher.ui.settings
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.fillMaxSize
@@ -10,14 +10,14 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.lanrhyme.shardlauncher.ui.components.SwitchLayoutCard
-import com.lanrhyme.shardlauncher.ui.components.PopupContainer
+import com.lanrhyme.shardlauncher.ui.components.layout.SwitchLayoutCard
+import com.lanrhyme.shardlauncher.ui.components.basic.PopupContainer
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.ui.Alignment
-import com.lanrhyme.shardlauncher.ui.components.animatedAppearance
-import com.lanrhyme.shardlauncher.ui.components.ScrollIndicator
+import com.lanrhyme.shardlauncher.ui.components.basic.animatedAppearance
+import com.lanrhyme.shardlauncher.ui.components.basic.ScrollIndicator
 import androidx.compose.ui.res.stringResource
 import com.lanrhyme.shardlauncher.game.multirt.RuntimesManager
 
@@ -39,7 +39,7 @@ fun GameSettingsContent(
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             // === 基础设置 (Foundation) ===
-            item { com.lanrhyme.shardlauncher.ui.components.TitledDivider(title = "基础设置", modifier = Modifier.animatedAppearance(0, animationSpeed)) }
+            item { com.lanrhyme.shardlauncher.ui.components.basic.TitledDivider(title = "基础设置", modifier = Modifier.animatedAppearance(0, animationSpeed)) }
             
             item {
                 SwitchLayoutCard(
@@ -62,7 +62,7 @@ fun GameSettingsContent(
             }
 
             item {
-                com.lanrhyme.shardlauncher.ui.components.TextInputLayoutCard(
+                com.lanrhyme.shardlauncher.ui.components.layout.TextInputLayoutCard(
                     modifier = Modifier.animatedAppearance(3, animationSpeed),
                     title = "自定义版本信息",
                     summary = "自定义游戏版本显示信息，[zl_version] 将被替换为实际版本号",
@@ -73,14 +73,14 @@ fun GameSettingsContent(
             }
 
             // === 运行环境 (Runtime) ===
-            item { com.lanrhyme.shardlauncher.ui.components.TitledDivider(title = "运行环境", modifier = Modifier.animatedAppearance(4, animationSpeed)) }
+            item { com.lanrhyme.shardlauncher.ui.components.basic.TitledDivider(title = "运行环境", modifier = Modifier.animatedAppearance(4, animationSpeed)) }
 
             item {
                 val runtimes = RuntimesManager.getRuntimes()
                 val runtimeNames = listOf("自动选择") + runtimes.map { it.name }
                 val selectedRuntime = if (allSettings.javaRuntime.state.isEmpty()) "自动选择" else allSettings.javaRuntime.state
                 
-                com.lanrhyme.shardlauncher.ui.components.SimpleListLayoutCard(
+                com.lanrhyme.shardlauncher.ui.components.layout.SimpleListLayoutCard(
                     modifier = Modifier.animatedAppearance(5, animationSpeed),
                     title = "Java 运行时",
                     summary = "选择用于启动游戏的 Java 运行时环境",
@@ -104,10 +104,10 @@ fun GameSettingsContent(
             }
 
             item {
-                com.lanrhyme.shardlauncher.ui.components.SliderLayoutCard(
+                com.lanrhyme.shardlauncher.ui.components.layout.SliderLayoutCard(
                     modifier = Modifier.animatedAppearance(7, animationSpeed),
                     title = "最大内存分配",
-                    summary = "游戏运行时允许使用的最大内存 (MB)",
+                    summary = "游戏运行时允许使用的最大内存(MB)",
                     value = allSettings.ramAllocation.state.toFloat(),
                     onValueChange = { allSettings.ramAllocation.setValue(it.toInt()) },
                     valueRange = 512f..8192f,
@@ -117,7 +117,7 @@ fun GameSettingsContent(
             }
 
             item {
-                com.lanrhyme.shardlauncher.ui.components.TextInputLayoutCard(
+                com.lanrhyme.shardlauncher.ui.components.layout.TextInputLayoutCard(
                     modifier = Modifier.animatedAppearance(8, animationSpeed),
                     title = "JVM 启动参数",
                     summary = "自定义 Java 虚拟机启动参数，多个参数用空格分隔",
@@ -128,7 +128,7 @@ fun GameSettingsContent(
             }
 
             item {
-                com.lanrhyme.shardlauncher.ui.components.ButtonLayoutCard(
+                com.lanrhyme.shardlauncher.ui.components.layout.ButtonLayoutCard(
                     modifier = Modifier.animatedAppearance(9, animationSpeed),
                     title = "运行库管理",
                     summary = "安装、删除和管理 Java 运行时环境",
@@ -140,7 +140,7 @@ fun GameSettingsContent(
             }
 
             // === 图形渲染 (Graphics) ===
-            item { com.lanrhyme.shardlauncher.ui.components.TitledDivider(title = "图形渲染", modifier = Modifier.animatedAppearance(10, animationSpeed)) }
+            item { com.lanrhyme.shardlauncher.ui.components.basic.TitledDivider(title = "图形渲染", modifier = Modifier.animatedAppearance(10, animationSpeed)) }
 
             item {
                 val renderers = com.lanrhyme.shardlauncher.game.renderer.Renderers.getAllRenderers()
@@ -148,7 +148,7 @@ fun GameSettingsContent(
                 val currentRendererName = renderers.find { it.getUniqueIdentifier() == allSettings.renderer.state }?.getRendererName() 
                     ?: if (allSettings.renderer.state.isEmpty()) "自动选择" else allSettings.renderer.state
                 
-                com.lanrhyme.shardlauncher.ui.components.SimpleListLayoutCard(
+                com.lanrhyme.shardlauncher.ui.components.layout.SimpleListLayoutCard(
                     modifier = Modifier.animatedAppearance(11, animationSpeed),
                     title = "全局渲染器",
                     summary = "选择游戏使用的渲染器",
@@ -167,7 +167,7 @@ fun GameSettingsContent(
             }
 
             item {
-                com.lanrhyme.shardlauncher.ui.components.ButtonLayoutCard(
+                com.lanrhyme.shardlauncher.ui.components.layout.ButtonLayoutCard(
                     modifier = Modifier.animatedAppearance(12, animationSpeed),
                     title = "渲染器管理",
                     summary = "安装、删除和管理渲染器库文件",
@@ -179,7 +179,7 @@ fun GameSettingsContent(
             }
 
             item {
-                com.lanrhyme.shardlauncher.ui.components.TextInputLayoutCard(
+                com.lanrhyme.shardlauncher.ui.components.layout.TextInputLayoutCard(
                     modifier = Modifier.animatedAppearance(13, animationSpeed),
                     title = "Vulkan 驱动",
                     summary = "选择 Vulkan 图形驱动",
@@ -190,7 +190,7 @@ fun GameSettingsContent(
             }
 
             item {
-                com.lanrhyme.shardlauncher.ui.components.SliderLayoutCard(
+                com.lanrhyme.shardlauncher.ui.components.layout.SliderLayoutCard(
                     modifier = Modifier.animatedAppearance(14, animationSpeed),
                     title = "分辨率比例",
                     summary = "降低分辨率可以显著提高 FPS",
@@ -253,7 +253,7 @@ fun GameSettingsContent(
             }
 
             // === 日志管理 (Logs) ===
-            item { com.lanrhyme.shardlauncher.ui.components.TitledDivider(title = "日志管理", modifier = Modifier.animatedAppearance(20, animationSpeed)) }
+            item { com.lanrhyme.shardlauncher.ui.components.basic.TitledDivider(title = "日志管理", modifier = Modifier.animatedAppearance(20, animationSpeed)) }
 
             item {
                 SwitchLayoutCard(
@@ -266,7 +266,7 @@ fun GameSettingsContent(
             }
 
             item {
-                com.lanrhyme.shardlauncher.ui.components.SliderLayoutCard(
+                com.lanrhyme.shardlauncher.ui.components.layout.SliderLayoutCard(
                     modifier = Modifier.animatedAppearance(22, animationSpeed),
                     title = "日志文字大小",
                     summary = "调整日志显示的文字大小",
@@ -279,10 +279,10 @@ fun GameSettingsContent(
             }
 
             item {
-                com.lanrhyme.shardlauncher.ui.components.SliderLayoutCard(
+                com.lanrhyme.shardlauncher.ui.components.layout.SliderLayoutCard(
                     modifier = Modifier.animatedAppearance(23, animationSpeed),
                     title = "缓冲区刷新间隔",
-                    summary = "日志缓冲区刷新间隔 (毫秒)，较小的值会更及时显示日志",
+                    summary = "日志缓冲区刷新间隔(毫秒)，较小的值会更及时显示日志",
                     value = allSettings.logBufferFlushInterval.state.toFloat(),
                     onValueChange = { allSettings.logBufferFlushInterval.setValue(it.toInt()) },
                     valueRange = 100f..1000f,
@@ -292,10 +292,10 @@ fun GameSettingsContent(
             }
 
             // === 下载设置 (Downloads) ===
-            item { com.lanrhyme.shardlauncher.ui.components.TitledDivider(title = "下载设置", modifier = Modifier.animatedAppearance(24, animationSpeed)) }
+            item { com.lanrhyme.shardlauncher.ui.components.basic.TitledDivider(title = "下载设置", modifier = Modifier.animatedAppearance(24, animationSpeed)) }
 
             item {
-                com.lanrhyme.shardlauncher.ui.components.SimpleListLayoutCard(
+                com.lanrhyme.shardlauncher.ui.components.layout.SimpleListLayoutCard(
                     modifier = Modifier.animatedAppearance(25, animationSpeed),
                     title = "游戏文件下载源",
                     summary = "选择下载游戏文件时优先使用的源",
@@ -307,7 +307,7 @@ fun GameSettingsContent(
             }
 
             item {
-                com.lanrhyme.shardlauncher.ui.components.SimpleListLayoutCard(
+                com.lanrhyme.shardlauncher.ui.components.layout.SimpleListLayoutCard(
                     modifier = Modifier.animatedAppearance(26, animationSpeed),
                     title = "模组加载器下载源",
                     summary = "选择下载模组加载器时优先使用的源",
@@ -345,3 +345,6 @@ fun GameSettingsContent(
         }
     }
 }
+
+
+

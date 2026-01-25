@@ -1,4 +1,7 @@
-package com.lanrhyme.shardlauncher.ui.components.dialog
+﻿package com.lanrhyme.shardlauncher.ui.components.dialog
+
+import com.lanrhyme.shardlauncher.ui.components.basic.ShardButton
+import com.lanrhyme.shardlauncher.ui.components.basic.ShardDialog
 
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.layout.Arrangement
@@ -233,3 +236,4 @@ private fun TaskItem(
         }
     }
 }
+

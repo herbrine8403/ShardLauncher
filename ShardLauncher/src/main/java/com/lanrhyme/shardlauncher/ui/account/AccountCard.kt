@@ -48,9 +48,9 @@ import com.lanrhyme.shardlauncher.R
 import com.lanrhyme.shardlauncher.game.account.ACCOUNT_TYPE_LOCAL
 import com.lanrhyme.shardlauncher.game.account.Account
 import com.lanrhyme.shardlauncher.game.account.getDisplayName
-import com.lanrhyme.shardlauncher.ui.components.LocalCardLayoutConfig
-import com.lanrhyme.shardlauncher.ui.components.ShardDropdownMenu
-import com.lanrhyme.shardlauncher.ui.components.selectableCard
+import com.lanrhyme.shardlauncher.ui.components.layout.LocalCardLayoutConfig
+import com.lanrhyme.shardlauncher.ui.components.basic.ShardDropdownMenu
+import com.lanrhyme.shardlauncher.ui.components.basic.selectableCard
 import dev.chrisbanes.haze.hazeEffect
 
 @OptIn(ExperimentalFoundationApi::class)

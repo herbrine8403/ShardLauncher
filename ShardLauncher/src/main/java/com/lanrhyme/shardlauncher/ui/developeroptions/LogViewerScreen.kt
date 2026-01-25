@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Shard Launcher
  * Real-time log viewer for debugging
  */
@@ -22,7 +22,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import com.lanrhyme.shardlauncher.ui.components.*
+import com.lanrhyme.shardlauncher.ui.components.layout.LocalCardLayoutConfig
+import com.lanrhyme.shardlauncher.ui.components.basic.SubPageNavigationBar
+import com.lanrhyme.shardlauncher.ui.components.basic.TitleAndSummary
+import com.lanrhyme.shardlauncher.ui.components.basic.ScalingActionButton
 import com.lanrhyme.shardlauncher.utils.logging.LogCollector
 import kotlinx.coroutines.delay
 

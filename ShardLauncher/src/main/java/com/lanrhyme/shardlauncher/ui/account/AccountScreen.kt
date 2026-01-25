@@ -63,11 +63,11 @@ import coil.compose.SubcomposeAsyncImage
 import coil.request.CachePolicy
 import coil.request.ImageRequest
 import com.lanrhyme.shardlauncher.game.account.Account
-import com.lanrhyme.shardlauncher.ui.components.FluidFab
-import com.lanrhyme.shardlauncher.ui.components.FluidFabDirection
-import com.lanrhyme.shardlauncher.ui.components.FluidFabItem
-import com.lanrhyme.shardlauncher.ui.components.LocalCardLayoutConfig
-import com.lanrhyme.shardlauncher.ui.components.PopupContainer
+import com.lanrhyme.shardlauncher.ui.components.business.FluidFab
+import com.lanrhyme.shardlauncher.ui.components.business.FluidFabDirection
+import com.lanrhyme.shardlauncher.ui.components.business.FluidFabItem
+import com.lanrhyme.shardlauncher.ui.components.layout.LocalCardLayoutConfig
+import com.lanrhyme.shardlauncher.ui.components.basic.PopupContainer
 import com.lanrhyme.shardlauncher.ui.theme.ShardLauncherTheme
 import dev.chrisbanes.haze.hazeEffect
 import kotlinx.coroutines.launch
@@ -449,15 +449,15 @@ fun OfflineAccountInputDialog(onDismiss: () -> Unit, onAddOfflineAccount: (Strin
             )
             Spacer(Modifier.height(16.dp))
             Row(modifier = Modifier.align(Alignment.End)) {
-                TextButton(onClick = onDismiss) { Text("取消") }
-                Spacer(Modifier.width(8.dp))
-                Button(
-                    onClick = {
-                        onAddOfflineAccount(username)
-                        onDismiss()
+                        TextButton(onClick = onDismiss) { Text("取消") }
+                        Spacer(Modifier.width(8.dp))
+                        Button(
+                            onClick = {
+                                onAddOfflineAccount(username)
+                                onDismiss()
+                            }
+                        ) { Text("添加") }
                     }
-                ) { Text("添加") }
-            }
         }
     }
 }

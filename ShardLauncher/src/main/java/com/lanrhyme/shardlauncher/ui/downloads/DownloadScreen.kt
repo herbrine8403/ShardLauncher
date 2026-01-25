@@ -9,7 +9,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavController
-import com.lanrhyme.shardlauncher.ui.components.SegmentedNavigationBar
+import com.lanrhyme.shardlauncher.ui.components.basic.SegmentedNavigationBar
 
 @Composable
 fun DownloadScreen(navController: NavController) {

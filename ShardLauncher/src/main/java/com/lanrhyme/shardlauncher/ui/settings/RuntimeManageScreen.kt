@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Shard Launcher
  * Adapted from Zalith Launcher 2
  */
@@ -29,7 +29,8 @@ import androidx.compose.ui.unit.dp
 import com.lanrhyme.shardlauncher.game.multirt.Runtime
 import com.lanrhyme.shardlauncher.game.multirt.RuntimesManager
 import com.lanrhyme.shardlauncher.game.multirt.RuntimeInstaller
-import com.lanrhyme.shardlauncher.ui.components.*
+import com.lanrhyme.shardlauncher.ui.components.basic.ShardDialog
+import com.lanrhyme.shardlauncher.ui.components.basic.ShardCard
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -516,3 +517,4 @@ private fun normalizeRuntimeName(fileName: String): String {
         trimmedName
     }
 }
+

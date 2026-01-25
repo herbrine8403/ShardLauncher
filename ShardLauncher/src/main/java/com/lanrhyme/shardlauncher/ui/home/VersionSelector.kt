@@ -24,8 +24,8 @@ import coil.compose.AsyncImage
 import com.lanrhyme.shardlauncher.R
 import com.lanrhyme.shardlauncher.game.version.installed.Version
 import com.lanrhyme.shardlauncher.game.version.installed.VersionsManager
-import com.lanrhyme.shardlauncher.ui.components.LocalCardLayoutConfig
-import com.lanrhyme.shardlauncher.ui.components.PopupContainer
+import com.lanrhyme.shardlauncher.ui.components.layout.LocalCardLayoutConfig
+import com.lanrhyme.shardlauncher.ui.components.basic.PopupContainer
 import dev.chrisbanes.haze.hazeEffect
 import java.text.SimpleDateFormat
 import java.util.*
@@ -279,7 +279,7 @@ private fun VersionListItem(
                 }
             }
 
-            // 选中指示器
+            // 閫変腑鎸囩ず鍣?
             if (isSelected) {
                 Icon(
                     imageVector = Icons.Rounded.ArrowDropDown,

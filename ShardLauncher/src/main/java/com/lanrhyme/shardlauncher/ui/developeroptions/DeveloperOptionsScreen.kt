@@ -26,11 +26,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import com.lanrhyme.shardlauncher.ui.components.LocalCardLayoutConfig
-import com.lanrhyme.shardlauncher.ui.components.ScalingActionButton
-import com.lanrhyme.shardlauncher.ui.components.SliderLayoutCard
-import com.lanrhyme.shardlauncher.ui.components.SubPageNavigationBar
-import com.lanrhyme.shardlauncher.ui.components.TitleAndSummary
+import com.lanrhyme.shardlauncher.ui.components.layout.LocalCardLayoutConfig
+import com.lanrhyme.shardlauncher.ui.components.basic.ScalingActionButton
+import com.lanrhyme.shardlauncher.ui.components.layout.SliderLayoutCard
+import com.lanrhyme.shardlauncher.ui.components.basic.SubPageNavigationBar
+import com.lanrhyme.shardlauncher.ui.components.basic.TitleAndSummary
 import com.lanrhyme.shardlauncher.ui.notification.Notification
 import com.lanrhyme.shardlauncher.ui.notification.NotificationManager
 import com.lanrhyme.shardlauncher.ui.notification.NotificationType

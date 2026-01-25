@@ -1,6 +1,10 @@
 package com.lanrhyme.shardlauncher.ui.components.basic
 
 import android.os.Build
+import com.lanrhyme.shardlauncher.ui.components.layout.LocalCardLayoutConfig
+import dev.chrisbanes.haze.hazeEffect
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.clip
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
@@ -137,6 +141,18 @@ enum class ButtonType {
     TEXT
 }
 
+/**
+ * 符合 ShardTheme 风格的按钮组件
+ *
+ * @param onClick 点击回调
+ * @param modifier 修饰符
+ * @param type 按钮类型，参考 [ButtonType]
+ * @param enabled 是否启用
+ * @param shape 按钮形状
+ * @param colors 按钮颜色配置
+ * @param contentPadding 内容内边距
+ * @param content 按钮内容
+ */
 @Composable
 fun ShardButton(
     onClick: () -> Unit,

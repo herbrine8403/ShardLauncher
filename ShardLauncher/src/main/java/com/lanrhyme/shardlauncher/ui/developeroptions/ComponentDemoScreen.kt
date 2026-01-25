@@ -1,4 +1,4 @@
-package com.lanrhyme.shardlauncher.ui.developeroptions
+﻿package com.lanrhyme.shardlauncher.ui.developeroptions
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -29,26 +29,26 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.lanrhyme.shardlauncher.common.SidebarPosition
-import com.lanrhyme.shardlauncher.ui.components.BackgroundTextTag
-import com.lanrhyme.shardlauncher.ui.components.CapsuleTextField
-import com.lanrhyme.shardlauncher.ui.components.CombinedCard
-import com.lanrhyme.shardlauncher.ui.components.ShardButton
-import com.lanrhyme.shardlauncher.ui.components.ShardDialog
-import com.lanrhyme.shardlauncher.ui.components.FluidFab
-import com.lanrhyme.shardlauncher.ui.components.FluidFabDirection
-import com.lanrhyme.shardlauncher.ui.components.FluidFabItem
-import com.lanrhyme.shardlauncher.ui.components.LocalCardLayoutConfig
-import com.lanrhyme.shardlauncher.ui.components.PopupContainer
-import com.lanrhyme.shardlauncher.ui.components.ScalingActionButton
-import com.lanrhyme.shardlauncher.ui.components.SegmentedNavigationBar
-import com.lanrhyme.shardlauncher.ui.components.ShardCard
-import com.lanrhyme.shardlauncher.ui.components.ShardInputField
-import com.lanrhyme.shardlauncher.ui.components.SimpleListLayoutCard
-import com.lanrhyme.shardlauncher.ui.components.SliderLayoutCard
-import com.lanrhyme.shardlauncher.ui.components.StyledFilterChip
-import com.lanrhyme.shardlauncher.ui.components.SwitchLayoutCard
-import com.lanrhyme.shardlauncher.ui.components.TitleAndSummary
-import com.lanrhyme.shardlauncher.ui.components.TitledDivider
+import com.lanrhyme.shardlauncher.ui.components.basic.BackgroundTextTag
+import com.lanrhyme.shardlauncher.ui.components.basic.CapsuleTextField
+import com.lanrhyme.shardlauncher.ui.components.basic.CombinedCard
+import com.lanrhyme.shardlauncher.ui.components.basic.ShardButton
+import com.lanrhyme.shardlauncher.ui.components.basic.ShardDialog
+import com.lanrhyme.shardlauncher.ui.components.business.FluidFab
+import com.lanrhyme.shardlauncher.ui.components.business.FluidFabDirection
+import com.lanrhyme.shardlauncher.ui.components.business.FluidFabItem
+import com.lanrhyme.shardlauncher.ui.components.layout.LocalCardLayoutConfig
+import com.lanrhyme.shardlauncher.ui.components.basic.PopupContainer
+import com.lanrhyme.shardlauncher.ui.components.basic.ScalingActionButton
+import com.lanrhyme.shardlauncher.ui.components.basic.SegmentedNavigationBar
+import com.lanrhyme.shardlauncher.ui.components.basic.ShardCard
+import com.lanrhyme.shardlauncher.ui.components.basic.ShardInputField
+import com.lanrhyme.shardlauncher.ui.components.layout.SimpleListLayoutCard
+import com.lanrhyme.shardlauncher.ui.components.layout.SliderLayoutCard
+import com.lanrhyme.shardlauncher.ui.components.basic.StyledFilterChip
+import com.lanrhyme.shardlauncher.ui.components.layout.SwitchLayoutCard
+import com.lanrhyme.shardlauncher.ui.components.basic.TitleAndSummary
+import com.lanrhyme.shardlauncher.ui.components.basic.TitledDivider
 
 @Composable
 fun ComponentDemoScreen() {
@@ -219,3 +219,4 @@ fun ComponentDemoScreen() {
         }
     }
 }
+

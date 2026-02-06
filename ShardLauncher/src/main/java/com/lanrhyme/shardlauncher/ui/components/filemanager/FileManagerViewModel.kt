@@ -204,13 +204,17 @@ class FileManagerViewModel(application: Application) : AndroidViewModel(applicat
      * 获取比较器
      */
     private fun getComparator(): Comparator<FileItem> {
-        val multiplier = if (sortOrder == FileSortOrder.ASCENDING) 1 else -1
-        
-        return when (sortMode) {
+        val baseComparator: Comparator<FileItem> = when (sortMode) {
             FileSortMode.BY_NAME -> compareBy { it.name.lowercase() }
             FileSortMode.BY_SIZE -> compareBy { it.size }
             FileSortMode.BY_DATE -> compareBy { it.lastModified }
-        }.then(compareBy { multiplier })
+        }
+        
+        return if (sortOrder == FileSortOrder.ASCENDING) {
+            baseComparator
+        } else {
+            baseComparator.reversed()
+        }
     }
     
     /**
@@ -222,8 +226,7 @@ class FileManagerViewModel(application: Application) : AndroidViewModel(applicat
             Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS),
             Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS),
             Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES),
-            Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MUSIC),
-            Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_VIDEOS)
+            Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MUSIC)
         ).distinctBy { it.absolutePath }
     }
 }

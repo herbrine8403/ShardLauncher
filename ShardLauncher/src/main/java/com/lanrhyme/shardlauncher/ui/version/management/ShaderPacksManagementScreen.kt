@@ -332,6 +332,7 @@ private fun ShaderPackItem(
                         }
                     }
                     FileSelectorResult.Cancelled -> { /* 用户取消 */ }
+                    FileSelectorResult.MultipleSelected -> { /* 不支持多选 */ }
                 }
                 showFileSelector = false
             }

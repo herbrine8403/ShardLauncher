@@ -641,6 +641,7 @@ fun CurrentlyPlayingCard(musicPlayerViewModel: MusicPlayerViewModel) {
                         musicPlayerViewModel.addMusicFile(Uri.fromFile(result.path))
                     }
                     FileSelectorResult.Cancelled -> { /* 用户取消 */ }
+                    FileSelectorResult.MultipleSelected -> { /* 不支持多选 */ }
                 }
                 showAudioSelector = false
             }

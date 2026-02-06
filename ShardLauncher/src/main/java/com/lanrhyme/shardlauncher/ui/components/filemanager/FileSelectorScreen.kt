@@ -1,13 +1,20 @@
 package com.lanrhyme.shardlauncher.ui.components.filemanager
 
+import android.os.Build
 import android.os.Environment
-import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -17,6 +24,7 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -24,12 +32,12 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.CreateNewFolder
 import androidx.compose.material.icons.filled.Folder
 import androidx.compose.material.icons.filled.FolderOpen
 import androidx.compose.material.icons.filled.InsertDriveFile
-import androidx.compose.material.icons.filled.NavigateBefore
-import androidx.compose.material.icons.filled.Sort
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -41,21 +49,23 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.lanrhyme.shardlauncher.ui.components.basic.PopupContainer
-import com.lanrhyme.shardlauncher.ui.components.basic.ScalingActionButton
-import com.lanrhyme.shardlauncher.ui.components.basic.ShardButton
-import com.lanrhyme.shardlauncher.ui.components.basic.ShardDialog
-import com.lanrhyme.shardlauncher.ui.components.basic.ShardInputField
+import com.lanrhyme.shardlauncher.ui.components.layout.LocalCardLayoutConfig
+import dev.chrisbanes.haze.hazeEffect
+import kotlinx.coroutines.launch
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -77,6 +87,7 @@ fun FileSelectorScreen(
     onSelection: (FileSelectorResult) -> Unit
 ) {
     val viewModel: FileManagerViewModel = viewModel()
+    val scope = rememberCoroutineScope()
     
     LaunchedEffect(config) {
         viewModel.configure(config)
@@ -88,7 +99,27 @@ fun FileSelectorScreen(
     val showCreateDirDialog by viewModel.showCreateDirDialog.collectAsState()
     val errorMessage by viewModel.errorMessage.collectAsState()
     
-    var showSortMenu by remember { mutableStateOf(false) }
+    // 自动选择当前目录
+    LaunchedEffect(currentPath) {
+        viewModel.selectPath(currentPath)
+    }
+    
+    val (isCardBlurEnabled, cardAlpha, hazeState) = LocalCardLayoutConfig.current
+    
+    // 动画
+    val alpha by animateFloatAsState(
+        targetValue = if (visible) 1f else 0f,
+        animationSpec = tween(durationMillis = 300),
+        label = "alpha"
+    )
+    
+    val translationY by animateFloatAsState(
+        targetValue = if (visible) 0f else 50f,
+        animationSpec = tween(durationMillis = 300),
+        label = "translationY"
+    )
+    
+    val cardShape = RoundedCornerShape(24.dp)
     
     PopupContainer(
         visible = visible,
@@ -100,118 +131,132 @@ fun FileSelectorScreen(
             .fillMaxSize()
             .padding(16.dp)
     ) {
-        Surface(
-            modifier = Modifier.fillMaxSize(),
-            shape = RoundedCornerShape(24.dp),
-            color = MaterialTheme.colorScheme.surface
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .graphicsLayer {
+                    this.alpha = alpha
+                    this.translationY = translationY
+                },
+            contentAlignment = Alignment.Center
         ) {
-            Column(
+            Surface(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(20.dp)
-            ) {
-                // 标题栏
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = "选择目录",
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-                    IconButton(onClick = { showSortMenu = true }) {
-                        Icon(
-                            imageVector = Icons.Default.Sort,
-                            contentDescription = "排序",
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                }
-                
-                Spacer(modifier = Modifier.height(16.dp))
-                
-                // 当前路径显示
-                PathBar(
-                    currentPath = currentPath,
-                    onPathClick = { viewModel.loadFiles(it) }
-                )
-                
-                Spacer(modifier = Modifier.height(16.dp))
-                
-                // 文件列表
-                FileList(
-                    fileItems = fileItems,
-                    selectedPath = selectedPath,
-                    onItemClick = { file ->
-                        if (file.isDirectory) {
-                            viewModel.navigateToDirectory(file)
+                    .let {
+                        if (isCardBlurEnabled && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                            it.clip(cardShape).hazeEffect(state = hazeState)
                         } else {
-                            viewModel.selectPath(file)
+                            it.clip(cardShape)
                         }
                     },
-                    onItemLongClick = { file ->
-                        viewModel.selectPath(file)
-                    },
-                    modifier = Modifier
-                        .weight(1f)
-                        .fillMaxWidth()
-                )
-                
-                Spacer(modifier = Modifier.height(16.dp))
-                
-                // 操作按钮
+                shape = cardShape,
+                color = MaterialTheme.colorScheme.surface.copy(alpha = cardAlpha)
+            ) {
                 Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(20.dp)
                 ) {
-                    // 返回上级目录按钮
-                    ShardButton(
-                        onClick = { viewModel.navigateToParent() },
-                        modifier = Modifier.weight(1f),
-                        type = com.lanrhyme.shardlauncher.ui.components.basic.ButtonType.OUTLINED,
-                        enabled = currentPath.parentFile != null
+                    // 左侧操作菜单 (25%)
+                    Column(
+                        modifier = Modifier
+                            .weight(0.25f)
+                            .fillMaxHeight(),
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
-                        Icon(
-                            imageVector = Icons.Default.NavigateBefore,
-                            contentDescription = null,
-                            modifier = Modifier.size(20.dp)
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text("上级")
-                    }
-                    
-                    // 创建目录按钮
-                    if (config.allowCreateDirectory) {
-                        ShardButton(
-                            onClick = { viewModel.showCreateDirectoryDialog() },
-                            modifier = Modifier.weight(1f),
-                            type = com.lanrhyme.shardlauncher.ui.components.basic.ButtonType.OUTLINED
+                        // 标题和关闭按钮
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Icon(
-                                imageVector = Icons.Default.CreateNewFolder,
-                                contentDescription = null,
-                                modifier = Modifier.size(20.dp)
+                            Text(
+                                text = "选择目录",
+                                style = MaterialTheme.typography.titleLarge,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onSurface
                             )
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text("新建")
+                            IconButton(onClick = {
+                                onSelection(FileSelectorResult.Cancelled)
+                                onDismissRequest()
+                            }) {
+                                Icon(
+                                    imageVector = Icons.Default.Close,
+                                    contentDescription = "关闭",
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
                         }
+                        
+                        Spacer(modifier = Modifier.height(16.dp))
+                        
+                        // 返回上级目录按钮
+                        LeftActionButton(
+                            onClick = { viewModel.navigateToParent() },
+                            icon = Icons.AutoMirrored.Filled.ArrowBack,
+                            text = "返回上级",
+                            enabled = currentPath.parentFile != null
+                        )
+                        
+                        // 创建目录按钮
+                        if (config.allowCreateDirectory) {
+                            LeftActionButton(
+                                onClick = { viewModel.showCreateDirectoryDialog() },
+                                icon = Icons.Default.CreateNewFolder,
+                                text = "新建文件夹"
+                            )
+                        }
+                        
+                        // 选择当前目录按钮
+                        LeftActionButton(
+                            onClick = {
+                                selectedPath?.let { path ->
+                                    onSelection(FileSelectorResult.Selected(path))
+                                    onDismissRequest()
+                                }
+                            },
+                            icon = Icons.Default.FolderOpen,
+                            text = "选择此目录",
+                            enabled = currentPath.isDirectory
+                        )
                     }
                     
-                    // 确认按钮
-                    ScalingActionButton(
-                        onClick = {
-                            selectedPath?.let { path ->
-                                onSelection(FileSelectorResult.Selected(path))
-                            }
-                            onDismissRequest()
-                        },
-                        modifier = Modifier.weight(1.5f),
-                        text = "选择",
-                        enabled = selectedPath != null
-                    )
+                    Spacer(modifier = Modifier.width(16.dp))
+                    
+                    // 右侧内容区域 (75%)
+                    Column(
+                        modifier = Modifier
+                            .weight(0.75f)
+                            .fillMaxHeight()
+                    ) {
+                        // 当前路径显示
+                        PathBar(
+                            currentPath = currentPath,
+                            onPathClick = { viewModel.loadFiles(it) }
+                        )
+                        
+                        Spacer(modifier = Modifier.height(16.dp))
+                        
+                        // 文件列表
+                        FileList(
+                            fileItems = fileItems,
+                            selectedPath = selectedPath,
+                            onItemClick = { file ->
+                                if (file.isDirectory) {
+                                    viewModel.navigateToDirectory(file)
+                                } else {
+                                    viewModel.selectPath(file)
+                                }
+                            },
+                            onItemLongClick = { file ->
+                                viewModel.selectPath(file)
+                            },
+                            modifier = Modifier
+                                .weight(1f)
+                                .fillMaxWidth()
+                        )
+                    }
                 }
             }
         }
@@ -230,8 +275,82 @@ fun FileSelectorScreen(
     // 错误消息提示
     errorMessage?.let { error ->
         LaunchedEffect(error) {
-            // 可以在这里添加Toast或SnackBar提示
             viewModel.clearError()
+        }
+    }
+}
+
+/**
+ * 左侧操作按钮
+ */
+@Composable
+private fun LeftActionButton(
+    onClick: () -> Unit,
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    text: String,
+    enabled: Boolean = true
+) {
+    val interactionSource = remember { MutableInteractionSource() }
+    val isPressed by interactionSource.collectIsPressedAsState()
+    
+    val scale by animateFloatAsState(
+        targetValue = if (isPressed) 0.95f else 1f,
+        animationSpec = tween(durationMillis = 150),
+        label = "scale"
+    )
+    
+    Surface(
+        onClick = onClick,
+        enabled = enabled,
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(56.dp)
+            .graphicsLayer {
+                scaleX = scale
+                scaleY = scale
+            }
+            .clip(RoundedCornerShape(16.dp)),
+        shape = RoundedCornerShape(16.dp),
+        color = if (enabled) {
+            MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+        } else {
+            MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
+        },
+        border = BorderStroke(
+            width = 1.dp,
+            color = if (enabled) {
+                MaterialTheme.colorScheme.outline.copy(alpha = 0.5f)
+            } else {
+                MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)
+            }
+        )
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 16.dp),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                modifier = Modifier.size(24.dp),
+                tint = if (enabled) {
+                    MaterialTheme.colorScheme.onSurface
+                } else {
+                    MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+                }
+            )
+            Text(
+                text = text,
+                style = MaterialTheme.typography.bodyMedium,
+                color = if (enabled) {
+                    MaterialTheme.colorScheme.onSurface
+                } else {
+                    MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+                }
+            )
         }
     }
 }
@@ -272,7 +391,7 @@ private fun PathBar(
             
             pathSegments.forEach { segment ->
                 Icon(
-                    imageVector = Icons.Default.NavigateBefore,
+                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                     contentDescription = null,
                     modifier = Modifier.size(16.dp),
                     tint = MaterialTheme.colorScheme.onSurfaceVariant
@@ -282,9 +401,11 @@ private fun PathBar(
                     onClick = {
                         val fullPath = Environment.getExternalStorageDirectory()
                         val index = pathSegments.indexOf(segment)
+                        var path = fullPath
                         for (i in 0..index) {
-                            File(fullPath, pathSegments[i])
+                            path = File(path, pathSegments[i])
                         }
+                        onPathClick(path)
                     }
                 )
             }
@@ -377,8 +498,12 @@ private fun FileListItem(
     onClick: () -> Unit,
     onLongClick: () -> Unit
 ) {
+    val interactionSource = remember { MutableInteractionSource() }
+    val isPressed by interactionSource.collectIsPressedAsState()
+    
     val scale by animateFloatAsState(
-        targetValue = if (isSelected) 1.02f else 1f,
+        targetValue = if (isPressed) 0.98f else if (isSelected) 1.02f else 1f,
+        animationSpec = tween(durationMillis = 150),
         label = "scale"
     )
     
@@ -386,6 +511,10 @@ private fun FileListItem(
         onClick = onClick,
         modifier = Modifier
             .fillMaxWidth()
+            .graphicsLayer {
+                scaleX = scale
+                scaleY = scale
+            }
             .clip(RoundedCornerShape(16.dp)),
         shape = RoundedCornerShape(16.dp),
         color = if (isSelected) {
@@ -450,6 +579,151 @@ private fun FileListItem(
 }
 
 /**
+ * 操作按钮
+ */
+@Composable
+private fun ActionButton(
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    text: String,
+    enabled: Boolean = true
+) {
+    val interactionSource = remember { MutableInteractionSource() }
+    val isPressed by interactionSource.collectIsPressedAsState()
+    
+    val scale by animateFloatAsState(
+        targetValue = if (isPressed) 0.95f else 1f,
+        animationSpec = tween(durationMillis = 150),
+        label = "scale"
+    )
+    
+    Surface(
+        onClick = onClick,
+        enabled = enabled,
+        modifier = modifier
+            .height(48.dp)
+            .graphicsLayer {
+                scaleX = scale
+                scaleY = scale
+            }
+            .clip(RoundedCornerShape(16.dp)),
+        shape = RoundedCornerShape(16.dp),
+        color = if (enabled) {
+            MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+        } else {
+            MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
+        },
+        border = BorderStroke(
+            width = 1.dp,
+            color = if (enabled) {
+                MaterialTheme.colorScheme.outline.copy(alpha = 0.5f)
+            } else {
+                MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)
+            }
+        )
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 12.dp),
+            horizontalArrangement = Arrangement.Center,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                modifier = Modifier.size(20.dp),
+                tint = if (enabled) {
+                    MaterialTheme.colorScheme.onSurface
+                } else {
+                    MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+                }
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(
+                text = text,
+                style = MaterialTheme.typography.bodyMedium,
+                color = if (enabled) {
+                    MaterialTheme.colorScheme.onSurface
+                } else {
+                    MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+                }
+            )
+        }
+    }
+}
+
+/**
+ * 确认按钮
+ */
+@Composable
+private fun ConfirmButton(
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    text: String,
+    enabled: Boolean = true
+) {
+    val interactionSource = remember { MutableInteractionSource() }
+    val isPressed by interactionSource.collectIsPressedAsState()
+    
+    val scale by animateFloatAsState(
+        targetValue = if (isPressed) 0.95f else 1f,
+        animationSpec = tween(durationMillis = 150),
+        label = "scale"
+    )
+    
+    val backgroundBrush = androidx.compose.ui.graphics.Brush.horizontalGradient(
+        colors = listOf(
+            MaterialTheme.colorScheme.primary,
+            MaterialTheme.colorScheme.tertiary
+        )
+    )
+    
+    Surface(
+        onClick = onClick,
+        enabled = enabled,
+        modifier = modifier
+            .height(48.dp)
+            .graphicsLayer {
+                scaleX = scale
+                scaleY = scale
+            }
+            .clip(RoundedCornerShape(16.dp)),
+        shape = RoundedCornerShape(16.dp),
+        color = if (enabled) {
+            Color.Transparent
+        } else {
+            MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
+        }
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .then(
+                    if (enabled) {
+                        Modifier.background(backgroundBrush)
+                    } else {
+                        Modifier
+                    }
+                ),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = text,
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = FontWeight.Bold,
+                color = if (enabled) {
+                    MaterialTheme.colorScheme.onPrimary
+                } else {
+                    MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+                }
+            )
+        }
+    }
+}
+
+/**
  * 创建目录对话框
  */
 @Composable
@@ -460,71 +734,138 @@ private fun CreateDirectoryDialog(
     var dirName by remember { mutableStateOf("") }
     var isError by remember { mutableStateOf(false) }
     
-    ShardDialog(
-        visible = true,
+    val alpha by animateFloatAsState(
+        targetValue = 1f,
+        animationSpec = tween(durationMillis = 300),
+        label = "alpha"
+    )
+    
+    val translationY by animateFloatAsState(
+        targetValue = 0f,
+        animationSpec = tween(durationMillis = 300),
+        label = "translationY"
+    )
+    
+    androidx.compose.ui.window.Dialog(
         onDismissRequest = onDismissRequest,
-        width = 400.dp,
-        height = 300.dp
+        properties = androidx.compose.ui.window.DialogProperties(
+            usePlatformDefaultWidth = false,
+            dismissOnBackPress = true,
+            dismissOnClickOutside = true
+        )
     ) {
-        Column(
+        Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(20.dp)
-        ) {
-            Text(
-                text = "新建文件夹",
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold
-            )
-            
-            Spacer(modifier = Modifier.height(24.dp))
-            
-            ShardInputField(
-                value = dirName,
-                onValueChange = { 
-                    dirName = it
-                    isError = it.isEmpty() || it.contains(Regex("[\\/:*?\"<>|]"))
-                },
-                label = "文件夹名称",
-                placeholder = "请输入文件夹名称",
-                isError = isError,
-                singleLine = true,
-                modifier = Modifier.fillMaxWidth()
-            )
-            
-            if (isError) {
-                Spacer(modifier = Modifier.height(8.dp))
-                Text(
-                    text = "名称不能为空且不能包含特殊字符",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.error
-                )
-            }
-            
-            Spacer(modifier = Modifier.height(24.dp))
-            
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.End
-            ) {
-                ShardButton(
-                    onClick = onDismissRequest,
-                    type = com.lanrhyme.shardlauncher.ui.components.basic.ButtonType.TEXT
-                ) {
-                    Text("取消")
+                .graphicsLayer {
+                    this.alpha = alpha
+                    this.translationY = translationY
                 }
-                
-                Spacer(modifier = Modifier.width(8.dp))
-                
-                ShardButton(
-                    onClick = {
-                        if (dirName.isNotBlank()) {
-                            onConfirm(dirName)
-                        }
-                    },
-                    enabled = dirName.isNotBlank() && !isError
+                .clickable(
+                    indication = null,
+                    interactionSource = remember { MutableInteractionSource() },
+                    onClick = onDismissRequest
+                ),
+            contentAlignment = Alignment.Center
+        ) {
+            Box(
+                modifier = Modifier
+                    .width(400.dp)
+                    .clip(RoundedCornerShape(24.dp))
+                    .background(MaterialTheme.colorScheme.surface)
+                    .clickable(
+                        indication = null,
+                        interactionSource = remember { MutableInteractionSource() },
+                        onClick = {}
+                    )
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(24.dp)
                 ) {
-                    Text("创建")
+                    Text(
+                        text = "新建文件夹",
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold
+                    )
+                    
+                    Spacer(modifier = Modifier.height(24.dp))
+                    
+                    androidx.compose.foundation.text.BasicTextField(
+                        value = dirName,
+                        onValueChange = { 
+                            dirName = it
+                            isError = it.isEmpty() || it.contains(Regex("[\\/:*?\"<>|]"))
+                        },
+                        textStyle = MaterialTheme.typography.bodyMedium.copy(
+                            color = MaterialTheme.colorScheme.onSurface
+                        ),
+                        singleLine = true,
+                        cursorBrush = androidx.compose.ui.graphics.SolidColor(MaterialTheme.colorScheme.primary),
+                        decorationBox = { innerTextField ->
+                            androidx.compose.foundation.layout.Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clip(RoundedCornerShape(16.dp))
+                                    .background(
+                                        MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+                                    )
+                                    .padding(horizontal = 16.dp, vertical = 12.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Box(
+                                    modifier = Modifier.weight(1f),
+                                    contentAlignment = Alignment.CenterStart
+                                ) {
+                                    if (dirName.isEmpty()) {
+                                        Text(
+                                            text = "请输入文件夹名称",
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                                        )
+                                    }
+                                    innerTextField()
+                                }
+                            }
+                        }
+                    )
+                    
+                    if (isError) {
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            text = "名称不能为空且不能包含特殊字符",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.error
+                        )
+                    }
+                    
+                    Spacer(modifier = Modifier.height(24.dp))
+                    
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.End
+                    ) {
+                        ActionButton(
+                            onClick = onDismissRequest,
+                            modifier = Modifier.width(100.dp),
+                            icon = Icons.AutoMirrored.Filled.ArrowBack,
+                            text = "取消"
+                        )
+                        
+                        Spacer(modifier = Modifier.width(12.dp))
+                        
+                        ConfirmButton(
+                            onClick = {
+                                if (dirName.isNotBlank()) {
+                                    onConfirm(dirName)
+                                }
+                            },
+                            modifier = Modifier.width(100.dp),
+                            text = "创建",
+                            enabled = dirName.isNotBlank() && !isError
+                        )
+                    }
                 }
             }
         }

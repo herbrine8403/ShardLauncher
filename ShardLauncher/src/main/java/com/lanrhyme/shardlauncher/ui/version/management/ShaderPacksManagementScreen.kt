@@ -196,13 +196,58 @@ fun ShaderPacksManagementScreen(
                         hazeState = hazeState
                     )
                 }
-            }
-        }
-    }
-}
-
-@Composable
-private fun ShaderPackItem(
+                            }
+                        }
+                    }
+                    
+                    // 显示文件选择器
+                    if (showFileSelector) {
+                        FileSelectorScreen(
+                            visible = showFileSelector,
+                            config = FileSelectorConfig(
+                                initialPath = android.os.Environment.getExternalStorageDirectory(),
+                                mode = FileSelectorMode.FILE_ONLY,
+                                showHiddenFiles = true,
+                                allowCreateDirectory = false,
+                                fileFilter = { file ->
+                                    file.isFile && file.extension == "zip"
+                                }
+                            ),
+                            onDismissRequest = { showFileSelector = false },
+                            onSelection = { result ->
+                                when (result) {
+                                    is FileSelectorResult.Selected -> {
+                                        try {
+                                            val sourceFile = result.path
+                                            val fileName = sourceFile.name
+                                            val targetFile = File(shaderPacksFolder, fileName)
+                                            
+                                            if (!shaderPacksFolder.exists()) {
+                                                shaderPacksFolder.mkdirs()
+                                            }
+                                            
+                                            sourceFile.inputStream().use { input ->
+                                                targetFile.outputStream().use { output ->
+                                                    input.copyTo(output)
+                                                }
+                                            }
+                                            refreshTrigger++
+                                        } catch (e: Exception) {
+                                            // TODO: 显示错误信息
+                                        }
+                                    }
+                                    FileSelectorResult.Cancelled -> { /* 用户取消 */ }
+                                    is FileSelectorResult.MultipleSelected -> { /* 不支持多选 */ }
+                                }
+                                showFileSelector = false
+                            }
+                        )
+                    }
+                }
+                
+                
+                @Composable
+                private fun ShaderPackItem(
     shaderPackFile: File,
     onDelete: () -> Unit,
     isCardBlurEnabled: Boolean,
@@ -291,50 +336,6 @@ private fun ShaderPackItem(
                 ) {
                     Text("取消")
                 }
-            }
-        )
-    }
-    
-    // 显示文件选择器
-    if (showFileSelector) {
-        FileSelectorScreen(
-            visible = showFileSelector,
-            config = FileSelectorConfig(
-                initialPath = android.os.Environment.getExternalStorageDirectory(),
-                mode = FileSelectorMode.FILE_ONLY,
-                showHiddenFiles = true,
-                allowCreateDirectory = false,
-                fileFilter = { file ->
-                    file.isFile && file.extension == "zip"
-                }
-            ),
-            onDismissRequest = { showFileSelector = false },
-            onSelection = { result ->
-                when (result) {
-                    is FileSelectorResult.Selected -> {
-                        try {
-                            val sourceFile = result.path
-                            val fileName = sourceFile.name
-                            val targetFile = File(shaderPacksFolder, fileName)
-                            
-                            if (!shaderPacksFolder.exists()) {
-                                shaderPacksFolder.mkdirs()
-                            }
-                            
-                            sourceFile.inputStream().use { input ->
-                                targetFile.outputStream().use { output ->
-                                    input.copyTo(output)
-                                }
-                            }
-                            refreshTrigger++
-                        } catch (e: Exception) {
-                            // TODO: 显示错误信息
-                        }
-                    }
-                    FileSelectorResult.Cancelled -> { /* 用户取消 */ }
-                    is FileSelectorResult.MultipleSelected -> { /* 不支持多选 */ }
-                }
-                showFileSelector = false
             }
         )
     }

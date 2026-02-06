@@ -298,6 +298,33 @@ fun MusicListPage(musicPlayerViewModel: MusicPlayerViewModel) {
                 )
             }
         }
+        
+        // 显示文件选择器
+        if (showAudioSelector) {
+            FileSelectorScreen(
+                visible = showAudioSelector,
+                config = FileSelectorConfig(
+                    initialPath = android.os.Environment.getExternalStorageDirectory(),
+                    mode = FileSelectorMode.FILE_ONLY,
+                    showHiddenFiles = true,
+                    allowCreateDirectory = false,
+                    fileFilter = { file ->
+                        file.isFile && file.extension.lowercase() in listOf("flac", "wav", "ogg", "mp3", "m4a", "aac")
+                    }
+                ),
+                onDismissRequest = { showAudioSelector = false },
+                onSelection = { result ->
+                    when (result) {
+                        is FileSelectorResult.Selected -> {
+                            musicPlayerViewModel.addMusicFile(Uri.fromFile(result.path))
+                        }
+                        FileSelectorResult.Cancelled -> { /* 用户取消 */ }
+                        is FileSelectorResult.MultipleSelected -> { /* 不支持多选 */ }
+                    }
+                    showAudioSelector = false
+                }
+            )
+        }
     }
 }
 
@@ -619,33 +646,6 @@ fun CurrentlyPlayingCard(musicPlayerViewModel: MusicPlayerViewModel) {
                 ) { Icon(Icons.Default.SkipNext, contentDescription = "Next") }
             }
         }
-    }
-    
-    // 显示文件选择器
-    if (showAudioSelector) {
-        FileSelectorScreen(
-            visible = showAudioSelector,
-            config = FileSelectorConfig(
-                initialPath = android.os.Environment.getExternalStorageDirectory(),
-                mode = FileSelectorMode.FILE_ONLY,
-                showHiddenFiles = true,
-                allowCreateDirectory = false,
-                fileFilter = { file ->
-                    file.isFile && file.extension.lowercase() in listOf("flac", "wav", "ogg", "mp3", "m4a", "aac")
-                }
-            ),
-            onDismissRequest = { showAudioSelector = false },
-            onSelection = { result ->
-                when (result) {
-                    is FileSelectorResult.Selected -> {
-                        musicPlayerViewModel.addMusicFile(Uri.fromFile(result.path))
-                    }
-                    FileSelectorResult.Cancelled -> { /* 用户取消 */ }
-                    is FileSelectorResult.MultipleSelected -> { /* 不支持多选 */ }
-                }
-                showAudioSelector = false
-            }
-        )
     }
 }
 

@@ -248,31 +248,6 @@ internal fun LauncherSettingsContent(
             )
     val context = LocalContext.current
 
-    // Document Provider launchers for selecting images and videos
-    val imagePickerLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.OpenDocument()
-    ) { uri: Uri? ->
-        uri?.let {
-            context.contentResolver.takePersistableUriPermission(
-                it,
-                Intent.FLAG_GRANT_READ_URI_PERMISSION
-            )
-            addBackground(it.toString(), false)
-        }
-    }
-
-    val videoPickerLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.OpenDocument()
-    ) { uri: Uri? ->
-        uri?.let {
-            context.contentResolver.takePersistableUriPermission(
-                it,
-                Intent.FLAG_GRANT_READ_URI_PERMISSION
-            )
-            addBackground(it.toString(), true)
-        }
-    }
-
     var showColorPickerDialog by remember { mutableStateOf(false) }
     var tempLightColorScheme by remember(lightColorScheme) { mutableStateOf(lightColorScheme) }
     var tempDarkColorScheme by remember(darkColorScheme) { mutableStateOf(darkColorScheme) }
@@ -300,6 +275,44 @@ internal fun LauncherSettingsContent(
 
     val prefs = remember { context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE) }
     val gson = remember { Gson() }
+
+    fun addBackground(uri: String, isVideo: Boolean) {
+        val newItem = BackgroundItem(uri, isVideo)
+        backgroundItems = backgroundItems + newItem
+        selectedBackground = newItem
+    }
+
+    fun removeBackground(item: BackgroundItem) {
+        backgroundItems = backgroundItems.filter { it.uri != item.uri }
+        if (selectedBackground?.uri == item.uri) {
+            selectedBackground = backgroundItems.firstOrNull()
+        }
+    }
+
+    // Document Provider launchers for selecting images and videos
+    val imagePickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.OpenDocument()
+    ) { uri: Uri? ->
+        uri?.let {
+            context.contentResolver.takePersistableUriPermission(
+                it,
+                Intent.FLAG_GRANT_READ_URI_PERMISSION
+            )
+            addBackground(it.toString(), false)
+        }
+    }
+
+    val videoPickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.OpenDocument()
+    ) { uri: Uri? ->
+        uri?.let {
+            context.contentResolver.takePersistableUriPermission(
+                it,
+                Intent.FLAG_GRANT_READ_URI_PERMISSION
+            )
+            addBackground(it.toString(), true)
+        }
+    }
 
     LaunchedEffect(Unit) {
         val json = prefs.getString(KEY_BACKGROUND_ITEMS, null)
@@ -330,19 +343,6 @@ internal fun LauncherSettingsContent(
             selectedBackground = backgroundItems.find { it.uri == launcherBackgroundUri }
             tempEnableParallax = enableParallax
             tempParallaxMagnitude = parallaxMagnitude
-        }
-    }
-
-    fun addBackground(uri: String, isVideo: Boolean) {
-        val newItem = BackgroundItem(uri, isVideo)
-        backgroundItems = backgroundItems + newItem
-        selectedBackground = newItem
-    }
-
-    fun removeBackground(item: BackgroundItem) {
-        backgroundItems = backgroundItems.filter { it.uri != item.uri }
-        if (selectedBackground?.uri == item.uri) {
-            selectedBackground = backgroundItems.firstOrNull()
         }
     }
 

@@ -5,6 +5,8 @@
 
 package com.lanrhyme.shardlauncher.game.version.installed
 
+import com.lanrhyme.shardlauncher.game.addons.modloader.ModLoader
+
 /**
  * 版本分类
  */

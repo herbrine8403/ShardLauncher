@@ -242,6 +242,7 @@ private fun LeftMenu(
     isRefreshing: Boolean,
     modifier: Modifier = Modifier
 ) {
+    val context = LocalContext.current
     val cardLayoutConfig = LocalCardLayoutConfig.current
     val isCardBlurEnabled = cardLayoutConfig.isCardBlurEnabled
     val cardAlpha = cardLayoutConfig.cardAlpha

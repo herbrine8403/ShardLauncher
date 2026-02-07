@@ -85,7 +85,7 @@ object VersionValidator {
             
             VersionInfo(
                 minecraftVersion = mcVersion,
-                quickPlay = VersionInfo.QuickPlay("", ""),
+                quickPlay = VersionInfo.QuickPlay(false, false, false),
                 loaderInfo = loaderInfo
             )
         } catch (e: Exception) {

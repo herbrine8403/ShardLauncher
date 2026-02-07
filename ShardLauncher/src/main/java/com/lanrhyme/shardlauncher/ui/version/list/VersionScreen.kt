@@ -672,6 +672,8 @@ fun DirectorySelectionPopup(onDismissRequest: () -> Unit) {
     var showFileSelector by remember { mutableStateOf(false) }
     var showGamePathNameDialog by remember { mutableStateOf(false) }
     var pendingGamePath by remember { mutableStateOf<String?>(null) }
+    var showPermissionErrorDialog by remember { mutableStateOf(false) }
+    var permissionError by remember { mutableStateOf<String?>(null) }
 
     PopupContainer(
         visible = true,
@@ -698,8 +700,19 @@ fun DirectorySelectionPopup(onDismissRequest: () -> Unit) {
                         modifier = Modifier
                             .fillMaxWidth()
                             .clickable {
-                                GamePathManager.selectPath(context, path.id)
-                                onDismissRequest()
+                                // 检查存储权限
+                                if (!GamePathManager.hasStoragePermission(context)) {
+                                    permissionError = "未授予存储权限，无法切换游戏目录"
+                                    showPermissionErrorDialog = true
+                                    return@clickable
+                                }
+                                try {
+                                    GamePathManager.selectPath(context, path.id)
+                                    onDismissRequest()
+                                } catch (e: Exception) {
+                                    permissionError = e.message ?: "切换游戏目录失败"
+                                    showPermissionErrorDialog = true
+                                }
                             },
                         shape = RoundedCornerShape(12.dp),
                         colors = CardDefaults.cardColors(
@@ -803,6 +816,18 @@ fun DirectorySelectionPopup(onDismissRequest: () -> Unit) {
                 pendingGamePath = null
                 showFileSelector = false
             }
+        )
+    }
+
+    // 权限错误提示对话框
+    if (showPermissionErrorDialog) {
+        ShardAlertDialog(
+            visible = true,
+            onDismissRequest = { showPermissionErrorDialog = false },
+            title = "需要权限",
+            message = permissionError ?: "操作失败",
+            confirmButtonText = "确定",
+            onConfirm = { showPermissionErrorDialog = false }
         )
     }
 }

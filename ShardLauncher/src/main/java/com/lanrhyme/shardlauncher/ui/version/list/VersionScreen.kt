@@ -47,6 +47,8 @@ import com.lanrhyme.shardlauncher.ui.components.basic.PopupContainer
 import com.lanrhyme.shardlauncher.ui.components.basic.SearchTextField
 import com.lanrhyme.shardlauncher.ui.components.basic.ShardAlertDialog
 import com.lanrhyme.shardlauncher.ui.components.basic.ShardDropdownMenu
+import com.lanrhyme.shardlauncher.ui.components.basic.ShardEditDialog
+import com.lanrhyme.shardlauncher.ui.components.basic.ShardInputField
 import com.lanrhyme.shardlauncher.ui.components.basic.animatedAppearance
 import com.lanrhyme.shardlauncher.ui.components.basic.selectableCard
 import com.lanrhyme.shardlauncher.utils.file.PathHelper
@@ -630,13 +632,44 @@ fun GameVersionCard(
     }
 }
 
+
+@Composable
+fun GamePathNameDialog(
+    onDismissRequest: () -> Unit,
+    onConfirm: (String) -> Unit
+) {
+    var name by remember { mutableStateOf("自定义目录") }
+
+    ShardEditDialog(
+        title = "命名游戏目录",
+        value = name,
+        onValueChange = { name = it },
+        label = "目录名称",
+        isError = name.isEmpty(),
+        supportingText = {
+            if (name.isEmpty()) {
+                Text(text = "目录名称不能为空")
+            }
+        },
+        singleLine = true,
+        onDismissRequest = onDismissRequest,
+        onConfirm = {
+            if (name.isNotEmpty()) {
+                onConfirm(name)
+            }
+        }
+    )
+}
 @Composable
 fun DirectorySelectionPopup(onDismissRequest: () -> Unit) {
     val context = LocalContext.current
     val gamePaths by GamePathManager.gamePathData.collectAsState()
+
     val currentPathId = GamePathManager.currentPathId
 
     var showFileSelector by remember { mutableStateOf(false) }
+    var showGamePathNameDialog by remember { mutableStateOf(false) }
+    var pendingGamePath by remember { mutableStateOf<String?>(null) }
 
     PopupContainer(
         visible = true,
@@ -734,12 +767,38 @@ fun DirectorySelectionPopup(onDismissRequest: () -> Unit) {
             onSelection = { result ->
                 when (result) {
                     is FileSelectorResult.Selected -> {
-                        val title = result.path.name.ifEmpty { "新目录" } // TODO: i18n
-                        GamePathManager.addNewPath(title, result.path.absolutePath)
+                        // 检查是否是 FCL 公有目录
+                        if (result.path.absolutePath.contains("/FCL/.minecraft")) {
+                            // FCL公有目录直接添加，不显示命名对话框
+                            GamePathManager.addNewPath("FCL公有目录", result.path.absolutePath)
+                            showFileSelector = false
+                        } else {
+                            // 其他目录显示命名对话框
+                            pendingGamePath = result.path.absolutePath
+                            showGamePathNameDialog = true
+                        }
                     }
                     FileSelectorResult.Cancelled -> { /* 用户取消 */ }
                     is FileSelectorResult.MultipleSelected -> { /* 不支持多选 */ }
                 }
+            }
+        )
+    }
+
+    // 游戏目录命名对话框
+    if (showGamePathNameDialog) {
+        GamePathNameDialog(
+            onDismissRequest = { 
+                showGamePathNameDialog = false
+                pendingGamePath = null
+            },
+            onConfirm = { name ->
+                val path = pendingGamePath
+                if (path != null) {
+                    GamePathManager.addNewPath(name, path)
+                }
+                showGamePathNameDialog = false
+                pendingGamePath = null
                 showFileSelector = false
             }
         )

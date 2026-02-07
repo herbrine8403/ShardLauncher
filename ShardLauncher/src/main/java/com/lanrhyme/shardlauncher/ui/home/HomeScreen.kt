@@ -105,7 +105,6 @@ fun HomeScreen(
     LaunchedEffect(currentGamePath) {
         VersionsManager.refresh("HomeScreen_GamePathChanged")
     }
-    }
 
     val animatedSpeed by
             animateFloatAsState(

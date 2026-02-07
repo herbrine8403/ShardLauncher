@@ -250,10 +250,14 @@ fun LogViewerScreen(navController: NavController) {
             }
         )
     }
-
 }
 
-
+@Composable
+fun LogItem(log: LogCollector.LogEntry) {
+    val backgroundColor = when (log.level) {
+        LogCollector.LogLevel.DEBUG -> Color(0xFF4CAF50)
+        LogCollector.LogLevel.INFO -> Color(0xFF2196F3)
+        LogCollector.LogLevel.WARNING -> Color(0xFFFF9800)
         LogCollector.LogLevel.ERROR -> Color(0xFFB71C1C)
     }
     
@@ -285,8 +289,10 @@ fun LogViewerScreen(navController: NavController) {
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
+        }
     }
 }
+
 private fun exportLogs(context: Context, onResult: (String) -> Unit) {
     try {
         val logs = LogCollector.getAllLogs()

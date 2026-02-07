@@ -101,12 +101,14 @@ fun VersionScreen(navController: NavController, animationSpeed: Float) {
     // 版本分类状态
     var versionCategory by remember { mutableStateOf(VersionCategory.ALL) }
     
-    // 过滤版本
-    val filteredVersions = remember(versions, versionCategory) {
-        when (versionCategory) {
-            VersionCategory.ALL -> versions
-            VersionCategory.VANILLA -> versions.filter { it.versionType == VersionType.VANILLA }
-            VersionCategory.MODLOADER -> versions.filter { it.versionType == VersionType.MODLOADERS }
+    // 过滤版本（使用 derivedStateOf 确保 versions 变化时能响应更新）
+    val filteredVersions by remember(versionCategory, isRefreshing) {
+        derivedStateOf {
+            when (versionCategory) {
+                VersionCategory.ALL -> versions
+                VersionCategory.VANILLA -> versions.filter { it.versionType == VersionType.VANILLA }
+                VersionCategory.MODLOADER -> versions.filter { it.versionType == VersionType.MODLOADERS }
+            }
         }
     }
 

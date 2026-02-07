@@ -14,9 +14,9 @@ enum class VersionCategory {
     ALL,        // 全部版本
     VANILLA,    // 原版版本
     MODLOADER,  // 模组加载器版本
-    PINNED      // 置顶版本
-    RECENT      // 最近启动
-    FAVORITE    // 收藏版本
+    PINNED,     // 置顶版本
+    RECENT,     // 最近启动
+    FAVORITE,   // 收藏版本
     INVALID     // 无效版本
 }
 

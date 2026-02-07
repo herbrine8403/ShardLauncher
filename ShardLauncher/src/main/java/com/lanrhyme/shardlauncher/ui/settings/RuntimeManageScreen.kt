@@ -294,16 +294,13 @@ fun RuntimeManageScreen(
                 when (result) {
                     is FileSelectorResult.MultipleSelected -> {
                         val files = result.paths
-                        if (files.isEmpty()) {
-                            showFileSelector = false
-                            return@when
-                        }
-                        showProgressDialog = true
-                        progressMessage = "准备导入..."
-                        progressValue = 0
+                        if (files.isNotEmpty()) {
+                            showProgressDialog = true
+                            progressMessage = "准备导入..."
+                            progressValue = 0
 
-                        scope.launch {
-                            val total = files.size
+                            scope.launch {
+                                val total = files.size
                             files.forEachIndexed { index, selectedFile ->
                                 val rawName = selectedFile.name
                                 if (rawName.isBlank()) {
@@ -337,8 +334,11 @@ fun RuntimeManageScreen(
                                     importErrorMessage = progressMessage
                                 }
                             }
-                            showProgressDialog = false
-                            runtimes = RuntimesManager.getRuntimes()
+                                showProgressDialog = false
+                                runtimes = RuntimesManager.getRuntimes()
+                            }
+                        } else {
+                            showFileSelector = false
                         }
                     }
                     is FileSelectorResult.Selected -> {

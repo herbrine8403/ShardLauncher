@@ -1,14 +1,11 @@
 ﻿package com.lanrhyme.shardlauncher.ui.settings
 
 import android.content.Context
+import android.content.Intent
 import android.net.Uri
 import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import com.lanrhyme.shardlauncher.ui.components.filemanager.FileSelectorConfig
-import com.lanrhyme.shardlauncher.ui.components.filemanager.FileSelectorMode
-import com.lanrhyme.shardlauncher.ui.components.filemanager.FileSelectorResult
-import com.lanrhyme.shardlauncher.ui.components.filemanager.FileSelectorScreen
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
@@ -251,6 +248,31 @@ internal fun LauncherSettingsContent(
             )
     val context = LocalContext.current
 
+    // Document Provider launchers for selecting images and videos
+    val imagePickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.OpenDocument()
+    ) { uri: Uri? ->
+        uri?.let {
+            context.contentResolver.takePersistableUriPermission(
+                it,
+                Intent.FLAG_GRANT_READ_URI_PERMISSION
+            )
+            addBackground(it.toString(), false)
+        }
+    }
+
+    val videoPickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.OpenDocument()
+    ) { uri: Uri? ->
+        uri?.let {
+            context.contentResolver.takePersistableUriPermission(
+                it,
+                Intent.FLAG_GRANT_READ_URI_PERMISSION
+            )
+            addBackground(it.toString(), true)
+        }
+    }
+
     var showColorPickerDialog by remember { mutableStateOf(false) }
     var tempLightColorScheme by remember(lightColorScheme) { mutableStateOf(lightColorScheme) }
     var tempDarkColorScheme by remember(darkColorScheme) { mutableStateOf(darkColorScheme) }
@@ -323,9 +345,6 @@ internal fun LauncherSettingsContent(
             selectedBackground = backgroundItems.firstOrNull()
         }
     }
-
-    var showImageSelector by remember { mutableStateOf(false) }
-    var showVideoSelector by remember { mutableStateOf(false) }
 
     ShardDialog(
             visible = showBackgroundDialog,
@@ -474,14 +493,18 @@ internal fun LauncherSettingsContent(
                         DropdownMenuItem(
                                 text = { Text("添加图片") },
                                 onClick = {
-                                    showImageSelector = true
+                                    imagePickerLauncher.launch(
+                                        arrayOf("image/jpeg", "image/png", "image/gif", "image/webp")
+                                    )
                                     showAddBackgroundMenu = false
                                 }
                         )
                         DropdownMenuItem(
                                 text = { Text("添加视频") },
                                 onClick = {
-                                    showVideoSelector = true
+                                    videoPickerLauncher.launch(
+                                        arrayOf("video/mp4", "video/webm", "video/x-matroska")
+                                    )
                                     showAddBackgroundMenu = false
                                 }
                         )
@@ -950,88 +973,6 @@ internal fun LauncherSettingsContent(
             )
         }
         item { Spacer(modifier = Modifier.height(45.dp)) }
-    }
-    
-    // 显示图片选择器
-    if (showImageSelector) {
-        FileSelectorScreen(
-            visible = showImageSelector,
-            config = FileSelectorConfig(
-                initialPath = android.os.Environment.getExternalStorageDirectory(),
-                mode = FileSelectorMode.FILE_ONLY,
-                showHiddenFiles = true,
-                allowCreateDirectory = false,
-                fileFilter = { file ->
-                    file.isFile && file.extension.lowercase() in listOf("jpg", "jpeg", "png", "gif", "webp")
-                }
-            ),
-            onDismissRequest = { showImageSelector = false },
-            onSelection = { result ->
-                when (result) {
-                    is FileSelectorResult.Selected -> {
-                        val backgroundsDir = File(context.getExternalFilesDir(null), ".shardlauncher/backgrounds")
-                        if (!backgroundsDir.exists()) {
-                            backgroundsDir.mkdirs()
-                        }
-                        val destinationFile = File(backgroundsDir, "${UUID.randomUUID()}.${result.path.extension}")
-                        try {
-                            result.path.inputStream().use { inputStream ->
-                                destinationFile.outputStream().use { outputStream ->
-                                    inputStream.copyTo(outputStream)
-                                }
-                            }
-                            addBackground(Uri.fromFile(destinationFile).toString(), false)
-                        } catch (e: Exception) {
-                            e.printStackTrace()
-                        }
-                    }
-                    FileSelectorResult.Cancelled -> { /* 用户取消 */ }
-                    is FileSelectorResult.MultipleSelected -> { /* 不支持多选 */ }
-                }
-                showImageSelector = false
-            }
-        )
-    }
-    
-    // 显示视频选择器
-    if (showVideoSelector) {
-        FileSelectorScreen(
-            visible = showVideoSelector,
-            config = FileSelectorConfig(
-                initialPath = android.os.Environment.getExternalStorageDirectory(),
-                mode = FileSelectorMode.FILE_ONLY,
-                showHiddenFiles = true,
-                allowCreateDirectory = false,
-                fileFilter = { file ->
-                    file.isFile && file.extension.lowercase() in listOf("mp4", "webm", "mkv")
-                }
-            ),
-            onDismissRequest = { showVideoSelector = false },
-            onSelection = { result ->
-                when (result) {
-                    is FileSelectorResult.Selected -> {
-                        val backgroundsDir = File(context.getExternalFilesDir(null), ".shardlauncher/backgrounds")
-                        if (!backgroundsDir.exists()) {
-                            backgroundsDir.mkdirs()
-                        }
-                        val destinationFile = File(backgroundsDir, "${UUID.randomUUID()}.${result.path.extension}")
-                        try {
-                            result.path.inputStream().use { inputStream ->
-                                destinationFile.outputStream().use { outputStream ->
-                                    inputStream.copyTo(outputStream)
-                                }
-                            }
-                            addBackground(Uri.fromFile(destinationFile).toString(), true)
-                        } catch (e: Exception) {
-                            e.printStackTrace()
-                        }
-                    }
-                    FileSelectorResult.Cancelled -> { /* 用户取消 */ }
-                    is FileSelectorResult.MultipleSelected -> { /* 不支持多选 */ }
-                }
-                showVideoSelector = false
-            }
-        )
     }
     
     ScrollIndicator(

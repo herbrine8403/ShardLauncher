@@ -8,6 +8,7 @@ import com.lanrhyme.shardlauncher.ui.components.basic.glow
 import com.lanrhyme.shardlauncher.ui.components.basic.selectableCard
 import com.lanrhyme.shardlauncher.ui.components.layout.SwitchLayoutCard
 import android.net.Uri
+import android.content.Intent
 import com.lanrhyme.shardlauncher.ui.components.basic.ShardDialog
 import com.lanrhyme.shardlauncher.ui.components.business.MusicCard
 import androidx.compose.animation.AnimatedContent
@@ -74,6 +75,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -92,10 +95,6 @@ import coil.compose.SubcomposeAsyncImageContent
 import com.lanrhyme.shardlauncher.data.SettingsRepository
 import com.lanrhyme.shardlauncher.model.MusicItem
 import com.lanrhyme.shardlauncher.ui.music.MusicPlayerViewModel
-import com.lanrhyme.shardlauncher.ui.components.filemanager.FileSelectorScreen
-import com.lanrhyme.shardlauncher.ui.components.filemanager.FileSelectorConfig
-import com.lanrhyme.shardlauncher.ui.components.filemanager.FileSelectorMode
-import com.lanrhyme.shardlauncher.ui.components.filemanager.FileSelectorResult
 import java.util.concurrent.TimeUnit
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -192,7 +191,19 @@ fun MusicListPage(musicPlayerViewModel: MusicPlayerViewModel) {
         onDispose { mediaController?.removeListener(listener) }
     }
     
-    var showAudioSelector by remember { mutableStateOf(false) }
+    // Document Provider launcher for selecting audio files
+    val context = LocalContext.current
+    val audioPickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.OpenDocument()
+    ) { uri: Uri? ->
+        uri?.let {
+            context.contentResolver.takePersistableUriPermission(
+                it,
+                Intent.FLAG_GRANT_READ_URI_PERMISSION
+            )
+            musicPlayerViewModel.addMusicFile(it)
+        }
+    }
 
     Column(modifier = Modifier.fillMaxSize()) {
         val searchQuery by musicPlayerViewModel.searchQuery.collectAsState()
@@ -255,7 +266,11 @@ fun MusicListPage(musicPlayerViewModel: MusicPlayerViewModel) {
                 }
             }
             IconButton(
-                    onClick = { showAudioSelector = true }
+                    onClick = {
+                        audioPickerLauncher.launch(
+                            arrayOf("audio/mpeg", "audio/wav", "audio/ogg", "audio/mp4", "audio/x-m4a")
+                        )
+                    }
             ) { Icon(Icons.Default.Add, contentDescription = "添加音乐") }
         }
         // 音乐列表
@@ -297,33 +312,6 @@ fun MusicListPage(musicPlayerViewModel: MusicPlayerViewModel) {
                         onDelete = { musicPlayerViewModel.deleteMusicItem(item) }
                 )
             }
-        }
-        
-        // 显示文件选择器
-        if (showAudioSelector) {
-            FileSelectorScreen(
-                visible = showAudioSelector,
-                config = FileSelectorConfig(
-                    initialPath = android.os.Environment.getExternalStorageDirectory(),
-                    mode = FileSelectorMode.FILE_ONLY,
-                    showHiddenFiles = true,
-                    allowCreateDirectory = false,
-                    fileFilter = { file ->
-                        file.isFile && file.extension.lowercase() in listOf("flac", "wav", "ogg", "mp3", "m4a", "aac")
-                    }
-                ),
-                onDismissRequest = { showAudioSelector = false },
-                onSelection = { result ->
-                    when (result) {
-                        is FileSelectorResult.Selected -> {
-                            musicPlayerViewModel.addMusicFile(Uri.fromFile(result.path))
-                        }
-                        FileSelectorResult.Cancelled -> { /* 用户取消 */ }
-                        is FileSelectorResult.MultipleSelected -> { /* 不支持多选 */ }
-                    }
-                    showAudioSelector = false
-                }
-            )
         }
     }
 }

@@ -87,8 +87,8 @@ fun HomeScreen(
     val selectedAccount by accountViewModel.selectedAccount.collectAsState()
     val cardLayoutConfig = LocalCardLayoutConfig.current
     val coroutineScope = rememberCoroutineScope()
-    val currentGamePath by remember { com.lanrhyme.shardlauncher.game.path.GamePathManager.currentPath }
-    
+    val currentGamePath = com.lanrhyme.shardlauncher.game.path.GamePathManager.currentPath
+
     // Get installed versions and current version
     val installedVersions = VersionsManager.versions
     val currentVersion by VersionsManager.currentVersion.collectAsState()

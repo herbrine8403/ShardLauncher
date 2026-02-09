@@ -36,6 +36,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.RowScope
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonColors
 import androidx.compose.material3.ButtonDefaults
@@ -58,8 +59,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.SolidColor
@@ -79,7 +78,6 @@ import androidx.compose.ui.window.DialogWindowProvider
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
-import dev.chrisbanes.haze.hazeEffect
 import kotlinx.coroutines.delay
 
 
@@ -369,8 +367,7 @@ fun ShardDialog(
                             )
                         } else {
                             MaterialTheme.colorScheme.surface
-                        },
-                        tonalElevation = 6.dp
+                        }
                     ) { Box(contentAlignment = Alignment.Center) { content() } }
                 }
             }
@@ -386,8 +383,6 @@ fun ShardDialog(
  * @param modifier 修饰符
  * @param offset 偏移量
  * @param shape 菜单形状
- * @param tonalElevation 色调高度
- * @param shadowElevation 阴影高度
  * @param border 边框
  * @param properties 弹出窗口属性
  * @param content 菜单内容
@@ -399,8 +394,6 @@ fun ShardDropdownMenu(
     modifier: Modifier = Modifier,
     offset: DpOffset = DpOffset(0.dp, 0.dp),
     shape: Shape = RoundedCornerShape(16.dp),
-    tonalElevation: Dp = MenuDefaults.TonalElevation,
-    shadowElevation: Dp = MenuDefaults.ShadowElevation,
     border: BorderStroke? = null,
     properties: PopupProperties = PopupProperties(focusable = true),
     content: @Composable ColumnScope.() -> Unit
@@ -425,8 +418,8 @@ fun ShardDropdownMenu(
         offset = offset,
         shape = shape,
         containerColor = resolvedColor,
-        tonalElevation = tonalElevation,
-        shadowElevation = shadowElevation,
+        tonalElevation = 0.dp,
+        shadowElevation = 0.dp,
         border = border,
         properties = properties,
         content = content
@@ -554,6 +547,134 @@ fun ShardInputField(
         }
     )
 }
+
+@Composable
+private fun ShardDialogWindowSetup() {
+    val view = LocalView.current
+    val darkTheme = isSystemInDarkTheme()
+    if (!view.isInEditMode) {
+        SideEffect {
+            @Suppress("DEPRECATION")
+            val window = (view.parent as? DialogWindowProvider)?.window
+            if (window != null) {
+                WindowCompat.setDecorFitsSystemWindows(
+                    window,
+                    false
+                )
+                val insetsController =
+                    WindowCompat.getInsetsController(
+                        window,
+                        view
+                    )
+                insetsController.hide(
+                    WindowInsetsCompat.Type.systemBars()
+                )
+                insetsController.systemBarsBehavior =
+                    WindowInsetsControllerCompat
+                        .BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+                @Suppress("DEPRECATION")
+                window.statusBarColor = Color.Transparent.toArgb()
+                @Suppress("DEPRECATION")
+                window.navigationBarColor =
+                    Color.Transparent.toArgb()
+                insetsController.isAppearanceLightStatusBars =
+                    !darkTheme
+            }
+        }
+    }
+}
+
+@Composable
+private fun ShardDialogContentWrapper(
+    onDismissRequest: () -> Unit,
+    modifier: Modifier = Modifier,
+    content: @Composable () -> Unit
+) {
+    ShardDialogWindowSetup()
+
+    var visible by remember { mutableStateOf(false) }
+    LaunchedEffect(Unit) { visible = true }
+    val tween = tween<Float>(durationMillis = 300)
+
+    Box(
+        modifier =
+        Modifier.fillMaxSize()
+            .clickable(
+                indication = null,
+                interactionSource =
+                remember {
+                    MutableInteractionSource()
+                },
+                onClick = onDismissRequest
+            ),
+        contentAlignment = Alignment.Center
+    ) {
+        val bgAlpha by
+        animateFloatAsState(
+            targetValue = if (visible) 0.4f else 0f,
+            animationSpec = tween,
+        )
+        Box(
+            modifier =
+            Modifier.fillMaxSize()
+                .graphicsLayer { alpha = bgAlpha }
+                .background(Color.Black)
+        )
+
+        val progress by
+        animateFloatAsState(
+            targetValue = if (visible) 1f else 0f,
+            animationSpec = tween,
+        )
+        val dialogShape = RoundedCornerShape(16.dp)
+        val (isCardBlurEnabled, _, hazeState) = LocalCardLayoutConfig.current
+
+        Surface(
+            modifier = Modifier
+                .padding(24.dp)
+                .then(modifier)
+                .graphicsLayer {
+                    alpha = progress
+                    translationY =
+                        (1f - progress) *
+                                80.dp.toPx()
+                }
+                .then(
+                    if (isCardBlurEnabled &&
+                        Build.VERSION
+                            .SDK_INT >=
+                        Build.VERSION_CODES
+                            .S
+                    ) {
+                        Modifier.clip(
+                            dialogShape
+                        )
+                            .hazeEffect(
+                                state =
+                                hazeState
+                            )
+                    } else Modifier
+                )
+                .clickable(
+                    indication = null,
+                    interactionSource =
+                    remember {
+                        MutableInteractionSource()
+                    },
+                    onClick = {}
+                ),
+            shape = dialogShape,
+            color = if (isCardBlurEnabled) {
+                MaterialTheme.colorScheme.surface.copy(
+                    alpha = 0.9f
+                )
+            } else {
+                MaterialTheme.colorScheme.surface
+            }
+        ) { Box(contentAlignment = Alignment.Center) { content() } }
+    }
+}
+
 /**
  * 一个符合 ShardTheme 风格的通用提示对话框
  *
@@ -575,39 +696,54 @@ fun ShardAlertDialog(
     onCancel: (() -> Unit)? = null,
     onDismissRequest: () -> Unit = onDismiss
 ) {
-    ShardDialog(
-        visible = true,
+    Dialog(
         onDismissRequest = onDismissRequest,
-        width = 320.dp,
-        height = 240.dp
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(16.dp)
-        ) {
-            Text(
-                text = title,
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold
+        properties =
+            DialogProperties(
+                usePlatformDefaultWidth = false,
+                decorFitsSystemWindows = false
             )
-            Spacer(modifier = Modifier.height(16.dp))
-            Text(text)
-            Spacer(modifier = Modifier.height(16.dp))
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
-                if (onConfirm != null) {
-                    Button(onClick = onConfirm, shape = RoundedCornerShape(12.dp)) {
-                        Text("确定")
+    ) {
+        ShardDialogContentWrapper(
+            onDismissRequest = onDismissRequest,
+            modifier = Modifier.widthIn(min = 280.dp, max = 560.dp)
+        ) {
+            Column(
+                modifier = Modifier
+                    .padding(24.dp)
+            ) {
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.headlineSmall,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                Spacer(modifier = Modifier.height(16.dp))
+                Text(
+                    text = text,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Spacer(modifier = Modifier.height(24.dp))
+                Row(
+                    modifier = Modifier.align(Alignment.End),
+                    horizontalArrangement = Arrangement.End
+                ) {
+                    TextButton(onClick = onCancel ?: onDismiss) {
+                        Text("取消")
                     }
-                    Spacer(modifier = Modifier.width(8.dp))
-                }
-                TextButton(onClick = onCancel ?: onDismiss) {
-                    Text("取消")
+                    if (onConfirm != null) {
+                        Spacer(modifier = Modifier.width(8.dp))
+                        TextButton(onClick = onConfirm) {
+                            Text("确定")
+                        }
+                    }
                 }
             }
         }
     }
 }
+
+
 /**
  * 一个符合 ShardTheme 风格的通用提示对话框
  *
@@ -629,34 +765,43 @@ fun ShardAlertDialog(
     onCancel: (() -> Unit)? = null,
     onDismissRequest: () -> Unit = onDismiss
 ) {
-    ShardDialog(
-        visible = true,
+    Dialog(
         onDismissRequest = onDismissRequest,
-        width = 320.dp,
-        height = 240.dp
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(16.dp)
-        ) {
-            Text(
-                text = title,
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold
+        properties =
+            DialogProperties(
+                usePlatformDefaultWidth = false,
+                decorFitsSystemWindows = false
             )
-            Spacer(modifier = Modifier.height(16.dp))
-            text()
-            Spacer(modifier = Modifier.height(16.dp))
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
-                if (onConfirm != null) {
-                    Button(onClick = onConfirm, shape = RoundedCornerShape(12.dp)) {
-                        Text("确定")
+    ) {
+        ShardDialogContentWrapper(
+            onDismissRequest = onDismissRequest,
+            modifier = Modifier.widthIn(min = 280.dp, max = 560.dp)
+        ) {
+            Column(
+                modifier = Modifier
+                    .padding(24.dp)
+            ) {
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.headlineSmall,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                Spacer(modifier = Modifier.height(16.dp))
+                text()
+                Spacer(modifier = Modifier.height(24.dp))
+                Row(
+                    modifier = Modifier.align(Alignment.End),
+                    horizontalArrangement = Arrangement.End
+                ) {
+                    TextButton(onClick = onCancel ?: onDismiss) {
+                        Text("取消")
                     }
-                    Spacer(modifier = Modifier.width(8.dp))
-                }
-                TextButton(onClick = onCancel ?: onDismiss) {
-                    Text("取消")
+                    if (onConfirm != null) {
+                        Spacer(modifier = Modifier.width(8.dp))
+                        TextButton(onClick = onConfirm) {
+                            Text("确定")
+                        }
+                    }
                 }
             }
         }
@@ -690,43 +835,48 @@ fun ShardEditDialog(
     onDismissRequest: () -> Unit,
     onConfirm: () -> Unit
 ) {
-    ShardDialog(
-        visible = true,
+    Dialog(
         onDismissRequest = onDismissRequest,
-        width = 360.dp,
-        height = 260.dp
+        properties =
+            DialogProperties(
+                usePlatformDefaultWidth = false,
+                decorFitsSystemWindows = false
+            )
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(16.dp)
+        ShardDialogContentWrapper(
+            onDismissRequest = onDismissRequest,
+            modifier = Modifier.widthIn(min = 280.dp, max = 560.dp)
         ) {
-            Text(
-                text = title,
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold
-            )
-            Spacer(modifier = Modifier.height(16.dp))
-            ShardInputField(
-                value = value,
-                onValueChange = onValueChange,
-                label = label,
-                isError = isError,
-                singleLine = singleLine,
-                modifier = Modifier.fillMaxWidth()
-            )
-            Spacer(modifier = Modifier.height(16.dp))
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
-                TextButton(onClick = onDismissRequest) {
-                    Text("取消")
-                }
-                Spacer(modifier = Modifier.width(8.dp))
-                Button(
-                    onClick = onConfirm,
-                    enabled = !isError,
-                    shape = RoundedCornerShape(12.dp)
-                ) {
-                    Text("确定")
+            Column(
+                modifier = Modifier
+                    .padding(24.dp)
+            ) {
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.headlineSmall,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                Spacer(modifier = Modifier.height(16.dp))
+                ShardInputField(
+                    value = value,
+                    onValueChange = onValueChange,
+                    label = label,
+                    isError = isError,
+                    singleLine = singleLine,
+                    modifier = Modifier.fillMaxWidth()
+                )
+                Spacer(modifier = Modifier.height(24.dp))
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+                    TextButton(onClick = onDismissRequest) {
+                        Text("取消")
+                    }
+                    Spacer(modifier = Modifier.width(8.dp))
+                    TextButton(
+                        onClick = onConfirm,
+                        enabled = !isError
+                    ) {
+                        Text("确定")
+                    }
                 }
             }
         }
@@ -765,27 +915,37 @@ fun ShardTaskDialog(
     }
 
     if (isRunning) {
-        ShardDialog(
-            visible = true,
+        Dialog(
             onDismissRequest = { },
-            width = 320.dp,
-            height = 200.dp
-        ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(16.dp)
-            ) {
-                Text(
-                    text = title,
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Bold
+            properties =
+                DialogProperties(
+                    usePlatformDefaultWidth = false,
+                    decorFitsSystemWindows = false
                 )
-                Spacer(modifier = Modifier.height(16.dp))
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    CircularProgressIndicator(modifier = Modifier.size(24.dp))
-                    Spacer(modifier = Modifier.width(16.dp))
-                    Text("正在执行...")
+        ) {
+            ShardDialogContentWrapper(
+                onDismissRequest = { },
+                modifier = Modifier.widthIn(min = 280.dp, max = 560.dp)
+            ) {
+                Column(
+                    modifier = Modifier
+                        .padding(24.dp)
+                ) {
+                    Text(
+                        text = title,
+                        style = MaterialTheme.typography.headlineSmall,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        CircularProgressIndicator(modifier = Modifier.size(24.dp))
+                        Spacer(modifier = Modifier.width(16.dp))
+                        Text(
+                            text = "正在执行...",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
                 }
             }
         }

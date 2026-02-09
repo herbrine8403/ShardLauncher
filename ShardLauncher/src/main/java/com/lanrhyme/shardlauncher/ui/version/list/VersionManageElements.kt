@@ -83,7 +83,6 @@ fun GamePathItemLayout(
                 ShardDropdownMenu(
                     expanded = menuExpanded,
                     shape = MaterialTheme.shapes.large,
-                    shadowElevation = 3.dp,
                     onDismissRequest = { menuExpanded = false }
                 ) {
                     DropdownMenuItem(
@@ -266,7 +265,6 @@ fun VersionItemLayout(
                 ShardDropdownMenu(
                     expanded = menuExpanded,
                     shape = MaterialTheme.shapes.large,
-                    shadowElevation = 3.dp,
                     onDismissRequest = { menuExpanded = false }
                 ) {
                     DropdownMenuItem(

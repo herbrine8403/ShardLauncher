@@ -354,6 +354,13 @@ private fun VersionInfoTile(animationSpeed: Float) {
     val clipboardManager = LocalClipboardManager.current
     val context = LocalContext.current
 
+    // 提前获取所有字符串资源，避免在非 Composable 上下文中调用
+    val versionName = stringResource(id = R.string.version_name)
+    val gitHash = stringResource(id = R.string.git_hash)
+    val gitBranch = stringResource(id = R.string.git_branch)
+    val buildStatus = stringResource(id = R.string.build_status)
+    val lastUpdateTime = stringResource(id = R.string.last_update_time)
+
     Column(
         modifier = Modifier.animatedAppearance(2, animationSpeed)
     ) {
@@ -375,9 +382,9 @@ private fun VersionInfoTile(animationSpeed: Float) {
                 VersionInfoRow(
                     icon = Icons.Default.Info,
                     label = "版本号",
-                    value = stringResource(id = R.string.version_name),
+                    value = versionName,
                     onCopy = {
-                        clipboardManager.setText(AnnotatedString(stringResource(id = R.string.version_name)))
+                        clipboardManager.setText(AnnotatedString(versionName))
                     }
                 )
 
@@ -389,10 +396,10 @@ private fun VersionInfoTile(animationSpeed: Float) {
                 VersionInfoRow(
                     icon = Icons.Default.Code,
                     label = "Git Commit",
-                    value = stringResource(id = R.string.git_hash),
+                    value = gitHash,
                     valueColor = MaterialTheme.colorScheme.primary,
                     onCopy = {
-                        clipboardManager.setText(AnnotatedString(stringResource(id = R.string.git_hash)))
+                        clipboardManager.setText(AnnotatedString(gitHash))
                     }
                 )
 
@@ -404,9 +411,9 @@ private fun VersionInfoTile(animationSpeed: Float) {
                 VersionInfoRow(
                     icon = Icons.Default.HdrWeak,
                     label = "分支",
-                    value = stringResource(id = R.string.git_branch),
+                    value = gitBranch,
                     onCopy = {
-                        clipboardManager.setText(AnnotatedString(stringResource(id = R.string.git_branch)))
+                        clipboardManager.setText(AnnotatedString(gitBranch))
                     }
                 )
 
@@ -418,7 +425,7 @@ private fun VersionInfoTile(animationSpeed: Float) {
                 VersionInfoRow(
                     icon = Icons.Default.Settings,
                     label = "构建状态",
-                    value = stringResource(id = R.string.build_status),
+                    value = buildStatus,
                     onCopy = null
                 )
 
@@ -430,7 +437,7 @@ private fun VersionInfoTile(animationSpeed: Float) {
                 VersionInfoRow(
                     icon = Icons.Default.Schedule,
                     label = "上次更新",
-                    value = stringResource(id = R.string.last_update_time),
+                    value = lastUpdateTime,
                     onCopy = null
                 )
             }

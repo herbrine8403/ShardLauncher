@@ -31,6 +31,8 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
@@ -140,13 +142,12 @@ fun AboutScreen(animationSpeed: Float) {
             // 底部 padding 避免被导航栏遮挡
             .padding(bottom = 80.dp)
     ) {
-        // 左侧区域 - 版本信息、快捷操作等（占比 45%）
+        // 左侧区域 - 应用头部、快捷操作、基础版本信息（占比 35%）
         LeftPanel(
             modifier = Modifier
-                .weight(0.45f)
+                .weight(0.35f)
                 .fillMaxHeight(),
             animationSpeed = animationSpeed,
-            showLicensesDialog = showLicensesDialog,
             onLicensesClick = { showLicensesDialog = true },
             onGithubClick = {
                 context.startActivity(
@@ -157,10 +158,10 @@ fun AboutScreen(animationSpeed: Float) {
 
         Spacer(modifier = Modifier.width(16.dp))
 
-        // 右侧区域 - 贡献者、鸣谢、第三方服务等（占比 55%）
+        // 右侧区域 - Git信息、贡献者、鸣谢、第三方服务等（占比 65%）
         RightPanel(
             modifier = Modifier
-                .weight(0.55f)
+                .weight(0.65f)
                 .fillMaxHeight(),
             animationSpeed = animationSpeed,
             expandedSection = expandedSection,
@@ -177,40 +178,28 @@ fun AboutScreen(animationSpeed: Float) {
 private fun LeftPanel(
     modifier: Modifier = Modifier,
     animationSpeed: Float,
-    showLicensesDialog: Boolean,
     onLicensesClick: () -> Unit,
     onGithubClick: () -> Unit
 ) {
-    val leftListState = rememberLazyListState()
+    val leftScrollState = rememberScrollState()
 
-    LazyColumn(
-        state = leftListState,
-        modifier = modifier,
+    // 左侧使用 Column，添加 verticalScroll 支持滚动
+    Column(
+        modifier = modifier.verticalScroll(leftScrollState),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         // 头部区域 - 应用信息大磁贴
-        item {
-            AppHeaderTile(animationSpeed = animationSpeed)
-        }
+        AppHeaderTile(animationSpeed = animationSpeed)
 
         // 快捷操作区域
-        item {
-            QuickActionsTile(
-                animationSpeed = animationSpeed,
-                onLicensesClick = onLicensesClick,
-                onGithubClick = onGithubClick
-            )
-        }
+        QuickActionsTile(
+            animationSpeed = animationSpeed,
+            onLicensesClick = onLicensesClick,
+            onGithubClick = onGithubClick
+        )
 
-        // 版本信息区域
-        item {
-            VersionInfoTile(animationSpeed = animationSpeed)
-        }
-
-        // 底部留白
-        item {
-            Spacer(modifier = Modifier.height(8.dp))
-        }
+        // 基础版本信息区域（不包含 Git Commit 和分支）
+        BasicVersionInfoTile(animationSpeed = animationSpeed)
     }
 }
 
@@ -230,6 +219,11 @@ private fun RightPanel(
         modifier = modifier,
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
+        // Git 信息区域（Commit 和分支）
+        item {
+            GitInfoTile(animationSpeed = animationSpeed)
+        }
+
         // 贡献者区域
         item {
             CreditsSection(
@@ -409,17 +403,13 @@ private fun QuickActionsTile(
     }
 }
 
-// ==================== 版本信息磁贴 ====================
+// ==================== 基础版本信息磁贴（左侧） ====================
 
 @Composable
-private fun VersionInfoTile(animationSpeed: Float) {
+private fun BasicVersionInfoTile(animationSpeed: Float) {
     val clipboardManager = LocalClipboardManager.current
-    val context = LocalContext.current
 
-    // 提前获取所有字符串资源，避免在非 Composable 上下文中调用
     val versionName = stringResource(id = R.string.version_name)
-    val gitHash = stringResource(id = R.string.git_hash)
-    val gitBranch = stringResource(id = R.string.git_branch)
     val buildStatus = stringResource(id = R.string.build_status)
     val lastUpdateTime = stringResource(id = R.string.last_update_time)
 
@@ -454,6 +444,56 @@ private fun VersionInfoTile(animationSpeed: Float) {
                     color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f)
                 )
 
+                // 构建状态行
+                VersionInfoRow(
+                    icon = Icons.Default.Settings,
+                    label = "构建状态",
+                    value = buildStatus,
+                    onCopy = null
+                )
+
+                HorizontalDivider(
+                    color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f)
+                )
+
+                // 更新时间行
+                VersionInfoRow(
+                    icon = Icons.Default.Schedule,
+                    label = "上次更新",
+                    value = lastUpdateTime,
+                    onCopy = null
+                )
+            }
+        }
+    }
+}
+
+// ==================== Git 信息磁贴（右侧） ====================
+
+@Composable
+private fun GitInfoTile(animationSpeed: Float) {
+    val clipboardManager = LocalClipboardManager.current
+
+    val gitHash = stringResource(id = R.string.git_hash)
+    val gitBranch = stringResource(id = R.string.git_branch)
+
+    Column(
+        modifier = Modifier.animatedAppearance(0, animationSpeed)
+    ) {
+        Text(
+            text = "Git 信息",
+            style = MaterialTheme.typography.titleSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.padding(start = 4.dp, bottom = 8.dp)
+        )
+
+        TileCard(
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
                 // Git Commit行
                 VersionInfoRow(
                     icon = Icons.Default.Code,
@@ -477,30 +517,6 @@ private fun VersionInfoTile(animationSpeed: Float) {
                     onCopy = {
                         clipboardManager.setText(AnnotatedString(gitBranch))
                     }
-                )
-
-                HorizontalDivider(
-                    color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f)
-                )
-
-                // 构建状态行
-                VersionInfoRow(
-                    icon = Icons.Default.Settings,
-                    label = "构建状态",
-                    value = buildStatus,
-                    onCopy = null
-                )
-
-                HorizontalDivider(
-                    color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f)
-                )
-
-                // 更新时间行
-                VersionInfoRow(
-                    icon = Icons.Default.Schedule,
-                    label = "上次更新",
-                    value = lastUpdateTime,
-                    onCopy = null
                 )
             }
         }

@@ -309,7 +309,7 @@ class LaunchArgs(
         verArgMap["launcher_version"] = BuildConfig.VERSION_NAME
         verArgMap["version_type"] = version.getCustomInfo()
             .takeIf { it.isNotEmptyOrBlank() }
-            ?: gameManifest.type
+            ?: (gameManifest.type ?: "release")
     }
 
     private fun splitAndFilterEmpty(arg: String): Array<String> {

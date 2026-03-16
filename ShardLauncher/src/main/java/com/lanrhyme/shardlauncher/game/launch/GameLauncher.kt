@@ -64,9 +64,10 @@ class GameLauncher(
     onExit: (code: Int, isSignal: Boolean) -> Unit
 ) : Launcher(onExit) {
     private lateinit var gameManifest: com.lanrhyme.shardlauncher.game.version.remote.MinecraftVersionJson
+    private val offlineServer = OfflineYggdrasilServer(0)
 
     override fun exit() {
-        OfflineYggdrasilServer.stop()
+        offlineServer.stop()
     }
 
     override suspend fun launch(): Int {

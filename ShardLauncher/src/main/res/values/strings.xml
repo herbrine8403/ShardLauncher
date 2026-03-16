@@ -47,4 +47,5 @@
     <string name="download_game_install_vanilla">安装原版 Minecraft %1$s</string>
     <string name="download_game_install_game_files_progress">安装游戏文件</string>
     <string name="download_game_install_fabric">安装 Fabric %1$s</string>
+    <string name="game_auto_pick_runtime_failed">无法自动选择合适的 Java 运行时</string>
 </resources>

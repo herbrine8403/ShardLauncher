@@ -69,7 +69,7 @@ data class MinecraftVersionJson(
         /**
          * Check if this is a native library
          */
-        fun isNative(): Boolean = natives != null && Rule.checkRules(rules)
+        fun isNative(): Boolean = natives != null && checkRules(rules)
     }
     
     data class AssetIndex(

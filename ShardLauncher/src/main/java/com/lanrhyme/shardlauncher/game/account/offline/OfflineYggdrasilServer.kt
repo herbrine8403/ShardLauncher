@@ -139,7 +139,10 @@ class OfflineYggdrasilServer(
     }
 
     private fun root(): String = buildJsonObject {
-        put("skinDomains", """["127.0.0.1","localhost"]""")
+        put("skinDomains", buildJsonArray {
+            add(JsonPrimitive("127.0.0.1"))
+            add(JsonPrimitive("localhost"))
+        })
         put("meta", buildJsonObject {
             put("serverName", JsonPrimitive(serverName))
             put("implementationName", JsonPrimitive(implementationName))

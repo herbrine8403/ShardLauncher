@@ -24,14 +24,13 @@ import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context.CLIPBOARD_SERVICE
 import androidx.annotation.Keep
-import com.lanrhyme.shardlauncher.game.launch.Launcher
 import com.lanrhyme.shardlauncher.utils.logging.Logger.lInfo
 import java.io.File
 
 @Keep
 object ZLNativeInvoker {
     @JvmStatic
-    var staticLauncher: Launcher? = null
+    var staticLauncher: Any? = null
 
     private var globalContext: Activity? = null
 
@@ -127,8 +126,18 @@ object ZLNativeInvoker {
     @Keep
     @JvmStatic
     fun jvmExit(exitCode: Int, isSignal: Boolean) {
-        staticLauncher?.exit()
-        staticLauncher?.onExit?.invoke(exitCode, isSignal)
+        staticLauncher?.let { launcher ->
+            // Use reflection to call exit() and onExit
+            runCatching {
+                launcher.javaClass.getMethod("exit").invoke(launcher)
+                launcher.javaClass.getDeclaredField("onExit").apply { isAccessible = true }
+                    .get(launcher)?.let { callback ->
+                        (callback as? (Int, Boolean) -> Unit)?.invoke(exitCode, isSignal)
+                    }
+            }.onFailure {
+                lInfo("Failed to call launcher exit: ${it.message}")
+            }
+        }
         staticLauncher = null
         // Kill the process
         try {

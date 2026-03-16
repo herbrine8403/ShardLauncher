@@ -64,10 +64,9 @@ class GameLauncher(
     onExit: (code: Int, isSignal: Boolean) -> Unit
 ) : Launcher(onExit) {
     private lateinit var gameManifest: com.lanrhyme.shardlauncher.game.version.remote.MinecraftVersionJson
-    private val offlineServer = OfflineYggdrasilServer(0)
 
     override fun exit() {
-        offlineServer.stop()
+        OfflineYggdrasilServer.stop()
     }
 
     override suspend fun launch(): Int {
@@ -85,7 +84,7 @@ class GameLauncher(
         val account = if (version.offlineAccountLogin) {
             //使用临时离线账号启动游戏
             currentAccount.copy(
-                accountType = AccountType.LOCAL.tag
+                accountType = AccountType.LOCAL
             )
         } else {
             currentAccount

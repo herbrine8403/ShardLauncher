@@ -119,11 +119,12 @@ class LaunchArgs(
                 //该离线账号拥有本地皮肤，启用离线yggdrasil服务器
                 offlineServer.start()
                 offlineServer.addCharacter(account)
-                offlineServer.getPort()?.let { port ->
+                val port = offlineServer.getPort()
+                if (port != null) {
                     lInfo("Using offline Yggdrasil server on port $port")
                     argsList.add("-javaagent:${LibPath.AUTHLIB_INJECTOR.absolutePath}=http://localhost:$port")
                     argsList.add("-Dauthlibinjector.side=client")
-                } ?: run {
+                } else {
                     //无法获取端口号，说明服务器未成功启动
                     lWarning("Failed to start offline Yggdrasil server!")
                     //本次启动将被忽略，为避免浪费性能，关停服务器
@@ -131,11 +132,12 @@ class LaunchArgs(
                 }
             }
         } else if (account.isAuthServerAccount()) {
-            if (account.otherBaseUrl!!.contains("auth.mc-user.com")) {
-                argsList.add("-javaagent:${LibPath.NIDE_8_AUTH.absolutePath}=${account.otherBaseUrl!!.replace("https://auth.mc-user.com:233/", "")}")
+            val baseUrl = account.otherBaseUrl
+            if (baseUrl != null && baseUrl.contains("auth.mc-user.com")) {
+                argsList.add("-javaagent:${LibPath.NIDE_8_AUTH.absolutePath}=${baseUrl.replace("https://auth.mc-user.com:233/", "")}")
                 argsList.add("-Dnide8auth.client=true")
-            } else {
-                argsList.add("-javaagent:${LibPath.AUTHLIB_INJECTOR.absolutePath}=${account.otherBaseUrl}")
+            } else if (baseUrl != null) {
+                argsList.add("-javaagent:${LibPath.AUTHLIB_INJECTOR.absolutePath}=$baseUrl")
             }
         }
 
@@ -244,7 +246,7 @@ class LaunchArgs(
     private fun generateLibClasspath(gameManifest: MinecraftVersionJson): Array<String> {
         val libDir: MutableList<String> = ArrayList()
         for (libItem in gameManifest.libraries) {
-            if (!(MinecraftVersionJson.Rule.checkRules(libItem.rules) && !libItem.isNative)) continue
+            if (!(MinecraftVersionJson.checkRules(libItem.rules) && !libItem.isNative())) continue
             val libArtifactPath: String = libItem.progressLibrary() ?: continue
             libDir.add(getLibrariesHome() + "/" + libArtifactPath)
         }
@@ -288,9 +290,10 @@ class LaunchArgs(
         setLauncherInfo(varArgMap)
 
         val minecraftArgs: MutableList<String> = ArrayList()
-        gameManifest.arguments?.apply {
-            // Support Minecraft 1.13+
-            game.forEach { if (it is String) minecraftArgs.add(it) }
+        gameManifest.arguments?.game?.forEach { 
+            if (it.isJsonPrimitive && it.asJsonPrimitive.isString) {
+                minecraftArgs.add(it.asString)
+            }
         }
 
         return insertJSONValueList(

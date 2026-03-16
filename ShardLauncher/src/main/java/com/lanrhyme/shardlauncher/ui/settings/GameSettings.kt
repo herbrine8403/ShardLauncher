@@ -144,7 +144,8 @@ fun GameSettingsContent(
             item { Spacer(modifier = Modifier.height(4.dp)) }
 
             item {
-                val renderers = com.lanrhyme.shardlauncher.game.renderer.Renderers.getAllRenderers()
+                val context = LocalContext.current
+                val renderers = remember { com.lanrhyme.shardlauncher.game.renderer.Renderers.getCompatibleRenderers(context).second }
                 val rendererNames = renderers.map { it.getRendererName() }
                 val currentRendererName = renderers.find { it.getUniqueIdentifier() == allSettings.renderer.state }?.getRendererName() 
                     ?: if (allSettings.renderer.state.isEmpty()) "自动选择" else allSettings.renderer.state

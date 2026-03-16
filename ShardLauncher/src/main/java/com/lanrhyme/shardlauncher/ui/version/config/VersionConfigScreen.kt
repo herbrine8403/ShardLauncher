@@ -157,7 +157,7 @@ fun VersionConfigScreen(
         )
 
         // 渲染器选择
-        val renderers = com.lanrhyme.shardlauncher.game.renderer.Renderers.getAllRenderers()
+        val renderers = remember { com.lanrhyme.shardlauncher.game.renderer.Renderers.getCompatibleRenderers(context).second }
         val rendererNames = listOf("跟随全局配置") + renderers.map { it.getRendererName() }
         val selectedRenderer = if (renderer.isEmpty()) {
             "跟随全局配置"

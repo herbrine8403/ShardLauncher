@@ -52,6 +52,7 @@ fun String.extractUntilCharacter(prefix: String, endChar: Char): String? {
     
     return this.substring(contentStart, endIndex)
 }
+
 /**
  * 检查字符串是否不为空且不为空白
  */
@@ -85,3 +86,33 @@ fun String.toUnicodeEscaped(): String {
         }
     }.joinToString("")
 }
+
+/**
+ * 插入JSON值列表到参数数组中
+ * [Modified from PojavLauncher](https://github.com/PojavLauncherTeam/PojavLauncher/blob/98947f2/app_pojavlauncher/src/main/java/net/kdt/pojavlaunch/utils/JREUtils.java#L358-L393)
+ */
+fun insertJSONValueList(args: Array<String>, varArgMap: Map<String, String>): Array<String> {
+    val newArgs = mutableListOf<String>()
+    
+    for (arg in args) {
+        var currentArg = arg
+        var containsArg = true
+        
+        while (containsArg) {
+            containsArg = false
+            for ((key, value) in varArgMap) {
+                val argName = "\${$key}"
+                if (currentArg.contains(argName)) {
+                    currentArg = currentArg.replace(argName, value)
+                    containsArg = true
+                    break
+                }
+            }
+        }
+        
+        newArgs.add(currentArg)
+    }
+    
+    return newArgs.toTypedArray()
+}
+

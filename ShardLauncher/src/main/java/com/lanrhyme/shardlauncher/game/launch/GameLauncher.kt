@@ -1,17 +1,32 @@
 /*
  * Shard Launcher
  * Adapted from Zalith Launcher 2
+ * Copyright (C) 2025 MovTery <movtery228@qq.com> and contributors
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/gpl-3.0.txt>.
  */
 
 package com.lanrhyme.shardlauncher.game.launch
 
 import android.app.Activity
-import android.opengl.EGL14
-import android.opengl.EGLConfig
 import android.os.Build
+import android.widget.Toast
 import androidx.compose.ui.unit.IntSize
 import com.lanrhyme.shardlauncher.BuildConfig
-import com.lanrhyme.shardlauncher.bridge.LoggerBridge
+import com.lanrhyme.shardlauncher.R
+import com.lanrhyme.shardlauncher.bridge.LoggerBridge.append
+import com.lanrhyme.shardlauncher.bridge.LoggerBridge.appendTitle
 import com.lanrhyme.shardlauncher.bridge.ZLBridge
 import com.lanrhyme.shardlauncher.bridge.ZLNativeInvoker
 import com.lanrhyme.shardlauncher.game.account.Account
@@ -25,14 +40,22 @@ import com.lanrhyme.shardlauncher.game.plugin.renderer.RendererPluginManager
 import com.lanrhyme.shardlauncher.game.renderer.Renderers
 import com.lanrhyme.shardlauncher.game.version.installed.Version
 import com.lanrhyme.shardlauncher.game.version.installed.getGameManifest
-import com.lanrhyme.shardlauncher.game.version.remote.MinecraftVersionJson
+import com.lanrhyme.shardlauncher.path.LibPath
 import com.lanrhyme.shardlauncher.path.PathManager
 import com.lanrhyme.shardlauncher.settings.AllSettings
 import com.lanrhyme.shardlauncher.utils.device.Architecture
-import com.lanrhyme.shardlauncher.game.account.isLocalAccount
-import com.lanrhyme.shardlauncher.utils.logging.Logger
-import kotlinx.coroutines.runBlocking
+import com.lanrhyme.shardlauncher.utils.file.child
+import com.lanrhyme.shardlauncher.utils.file.ensureDirectorySilently
+import com.lanrhyme.shardlauncher.utils.logging.Logger.lDebug
+import com.lanrhyme.shardlauncher.utils.logging.Logger.lError
+import com.lanrhyme.shardlauncher.utils.logging.Logger.lInfo
+import com.lanrhyme.shardlauncher.utils.logging.Logger.lWarning
+import com.lanrhyme.shardlauncher.utils.string.isEqualTo
+import org.lwjgl.glfw.CallbackBridge
 import java.io.File
+import javax.microedition.khronos.egl.EGL10
+import javax.microedition.khronos.egl.EGLConfig
+import javax.microedition.khronos.egl.EGLContext
 
 class GameLauncher(
     private val activity: Activity,
@@ -40,88 +63,118 @@ class GameLauncher(
     private val getWindowSize: () -> IntSize,
     onExit: (code: Int, isSignal: Boolean) -> Unit
 ) : Launcher(onExit) {
-    
-    private lateinit var gameManifest: MinecraftVersionJson
-    private var offlinePort: Int = 0
+    private lateinit var gameManifest: com.lanrhyme.shardlauncher.game.version.remote.MinecraftVersionJson
+    private val offlineServer = OfflineYggdrasilServer(0)
+
+    override fun exit() {
+        offlineServer.stop()
+    }
 
     override suspend fun launch(): Int {
-        // Initialize renderer if needed
+        // Set global context for native invoker
+        ZLNativeInvoker.setGlobalContext(activity)
+
         if (!Renderers.isCurrentRendererValid()) {
-            val rendererIdentifier = version.getRenderer()
-            if (rendererIdentifier.isNotEmpty()) {
-                Renderers.setCurrentRenderer(activity, rendererIdentifier)
-            } else {
-                // Auto-select first compatible renderer if none specified
-                val compatibleRenderers = Renderers.getCompatibleRenderers(activity)
-                if (compatibleRenderers.isNotEmpty()) {
-                    Renderers.setCurrentRenderer(activity, compatibleRenderers[0].getUniqueIdentifier())
-                    Logger.lInfo("Auto-selected renderer: ${compatibleRenderers[0].getRendererName()}")
-                } else {
-                    throw IllegalStateException("No compatible renderers available")
-                }
-            }
+            Renderers.setCurrentRenderer(activity, version.getRenderer())
         }
 
-        // Get game manifest
         gameManifest = getGameManifest(version)
-        
-        // Skip input stack queue setup for now to avoid UI thread issues
-        // TODO: Set input stack queue usage after game is fully launched
-        // org.lwjgl.glfw.CallbackBridge.nativeSetUseInputStackQueue(gameManifest.arguments != null)
+        CallbackBridge.nativeSetUseInputStackQueue(gameManifest.arguments != null)
 
-        // Get current account
         val currentAccount = AccountsManager.currentAccountFlow.value!!
         val account = if (version.offlineAccountLogin) {
-            currentAccount.copy(accountType = AccountType.LOCAL.toString())
+            //使用临时离线账号启动游戏
+            currentAccount.copy(
+                accountType = AccountType.LOCAL.tag
+            )
         } else {
             currentAccount
         }
-
         val customArgs = version.getJvmArgs().takeIf { it.isNotBlank() } ?: AllSettings.jvmArgs.getValue()
-        val javaRuntimeName = getRuntimeName()
-        this.runtime = RuntimesManager.loadRuntime(javaRuntimeName)
-
-        // Initialize LoggerBridge (temporarily disabled due to JNI issues)
-        // TODO: Fix LoggerBridge JNI method resolution
-        try {
-            // Skip native logging for now to avoid UnsatisfiedLinkError
-            // val logFile = File(PathManager.DIR_NATIVE_LOGS, "${getLogName()}.log")
-            // LoggerBridge.start(logFile.absolutePath)
-            Logger.lInfo("Native logging skipped - using Java logging only")
-        } catch (e: Exception) {
-            Logger.lWarning("Failed to initialize native logging", e)
-        }
-
-        // Initialize MCOptions and set language (skip for now to avoid potential issues)
-        // TODO: Re-enable after fixing stability issues
-        try {
-            MCOptions.setup(activity, version)
-            MCOptions.loadLanguage(version.getVersionName())
-            MCOptions.save()
-            Logger.lInfo("MCOptions initialized successfully")
-        } catch (e: Exception) {
-            Logger.lWarning("Failed to initialize MCOptions, continuing without it", e)
-        }
-
-        // Start offline Yggdrasil if needed (skip for now to avoid potential issues)
-        // TODO: Re-enable after fixing stability issues
-        try {
-            if (account.isLocalAccount() && account.hasSkinFile) {
-                offlinePort = OfflineYggdrasilServer.start()
-                OfflineYggdrasilServer.addCharacter(account.username, account.profileId)
-                Logger.lInfo("Offline Yggdrasil server started on port $offlinePort")
-            }
-        } catch (e: Exception) {
-            Logger.lWarning("Failed to start offline Yggdrasil server, continuing without it", e)
-        }
+        val javaRuntime = getRuntime()
 
         printLauncherInfo(
             javaArguments = customArgs.takeIf { it.isNotEmpty() } ?: "NONE",
-            javaRuntime = javaRuntimeName,
+            javaRuntime = javaRuntime,
             account = account
         )
 
-        return launchGame(account, javaRuntimeName, customArgs)
+        return launchGame(
+            account = account,
+            javaRuntime = javaRuntime,
+            customArgs = customArgs
+        )
+    }
+
+    override fun MutableMap<String, String>.putJavaArgs() {
+        val versionInfo = version.getVersionInfo()
+        //Fix Forge 1.7.2
+        val is172 = (versionInfo?.minecraftVersion ?: "0.0").isEqualTo("1.7.2")
+        if (is172 && (versionInfo?.loaderInfo?.loader?.name == "forge")) {
+            lDebug("Is Forge 1.7.2, use the patched sorting method.")
+            put("sort.patch", "true")
+        }
+
+        //jna
+        gameManifest.libraries?.find { library ->
+            library.name.startsWith("net.java.dev.jna:jna:")
+        }?.let { library ->
+            val components = library.name.split(":")
+            if (components.size >= 3) {
+                val jnaVersion = components[2]
+                val jnaDir = File(LibPath.JNA, jnaVersion)
+                if (jnaDir.exists()) {
+                    val dirPath = jnaDir.absolutePath
+                    put("java.library.path", "$dirPath:${PathManager.DIR_NATIVE_LIB}")
+                    put("jna.boot.library.path", dirPath) //覆盖父类添加的jna路径
+                }
+            }
+        }
+    }
+
+    override fun chdir(): String {
+        return version.getGameDir().absolutePath
+    }
+
+    override fun getLogName(): String = "game_${version.getVersionName()}_${System.currentTimeMillis()}"
+
+    override fun initEnv(): MutableMap<String, String> {
+        val envMap = super.initEnv()
+
+        DriverPluginManager.setDriverById(version.getDriver())
+        envMap["DRIVER_PATH"] = DriverPluginManager.getDriver().path
+
+        checkAndUsedJSPH(envMap, runtime)
+        version.getVersionInfo()?.loaderInfo?.getLoaderEnvKey()?.let { loaderKey ->
+            envMap[loaderKey] = "1"
+        }
+        if (Renderers.isCurrentRendererValid()) {
+            setRendererEnv(envMap)
+        }
+        envMap["SHARD_VERSION_CODE"] = BuildConfig.VERSION_CODE.toString()
+        return envMap
+    }
+
+    override fun dlopenEngine() {
+        super.dlopenEngine()
+        appendTitle("DLOPEN Renderer")
+
+        //声音引擎加载后，dlopen渲染器的库
+        RendererPluginManager.selectedRendererPlugin?.let { renderer ->
+            renderer.dlopen.forEach { lib -> ZLBridge.dlopen("${renderer.path}/$lib") }
+        }
+
+        val rendererLib = loadGraphicsLibrary() ?: return
+        if (!ZLBridge.dlopen(rendererLib) && !ZLBridge.dlopen(findInLdLibPath(rendererLib))) {
+            lError("Failed to load renderer $rendererLib")
+        }
+    }
+
+    override fun progressFinalUserArgs(args: MutableList<String>, ramAllocation: Int) {
+        super.progressFinalUserArgs(args, version.getRamAllocation(activity))
+        if (Renderers.isCurrentRendererValid()) {
+            args.add("-Dorg.lwjgl.opengl.libname=${loadGraphicsLibrary()}")
+        }
     }
 
     private suspend fun launchGame(
@@ -130,25 +183,35 @@ class GameLauncher(
         customArgs: String
     ): Int {
         val runtime = RuntimesManager.forceReload(javaRuntime)
-        this.runtime = runtime
 
         val gameDirPath = version.getGameDir()
+
         disableSplash(gameDirPath)
 
+        //初始化运行环境
+        this.runtime = runtime
         val runtimeLibraryPath = getRuntimeLibraryPath()
 
         val launchArgs = LaunchArgs(
             runtimeLibraryPath = runtimeLibraryPath,
             account = account,
+            offlineServer = offlineServer,
             gameDirPath = gameDirPath,
             version = version,
             gameManifest = gameManifest,
             runtime = runtime,
-            getCacioJavaArgs = { isJava8 ->
-                val windowSize = getWindowSize()
-                getCacioJavaArgs(windowSize.width, windowSize.height, isJava8)
+            readAssetsFile = { path -> 
+                try {
+                    activity.assets.open(path).bufferedReader().readText()
+                } catch (e: Exception) {
+                    lWarning("Failed to read asset file: $path", e)
+                    ""
+                }
             },
-            offlineServerPort = offlinePort
+            getCacioJavaArgs = { isJava8 ->
+                val size = getWindowSize()
+                getCacioJavaArgs(size.width, size.height, isJava8)
+            }
         ).getAllArgs()
 
         return launchJvm(
@@ -159,251 +222,155 @@ class GameLauncher(
         )
     }
 
-    override fun chdir(): String {
-        return version.getGameDir().absolutePath
-    }
-
-    override fun getLogName(): String = "game_${version.getVersionName()}_${System.currentTimeMillis()}"
-
-    override fun exit() {
-        if (offlinePort != 0) {
-            OfflineYggdrasilServer.stop()
-        }
-    }
-
-    override fun MutableMap<String, String>.putJavaArgs() {
-        val versionInfo = version.getVersionInfo()
-        
-        // Fix Forge 1.7.2
-        val is172 = (versionInfo?.minecraftVersion ?: "0.0") == "1.7.2"
-        if (is172 && (versionInfo?.loaderInfo?.loader?.name == "forge")) {
-            Logger.lDebug("Is Forge 1.7.2, use the patched sorting method.")
-            put("sort.patch", "true")
-        }
-
-        // JNA library path
-        gameManifest.libraries?.find { library ->
-            library.name.startsWith("net.java.dev.jna:jna:")
-        }?.let { library ->
-            val components = library.name.split(":")
-            if (components.size >= 3) {
-                val jnaVersion = components[2]
-                val jnaDir = File(PathManager.DIR_COMPONENTS, "jna/$jnaVersion")
-                if (jnaDir.exists()) {
-                    val dirPath = jnaDir.absolutePath
-                    put("java.library.path", "$dirPath:${PathManager.DIR_NATIVE_LIB}")
-                    put("jna.boot.library.path", dirPath)
-                }
-            }
-        }
-    }
-
-    override fun initEnv(): MutableMap<String, String> {
-        val envMap = super.initEnv()
-
-        // Set driver
-        DriverPluginManager.setDriverById(version.getDriver())
-        envMap["DRIVER_PATH"] = DriverPluginManager.getDriver().path
-
-        // Set loader environment
-        version.getVersionInfo()?.loaderInfo?.getLoaderEnvKey()?.let { loaderKey ->
-            envMap[loaderKey] = "1"
-        }
-
-        // Set renderer environment
-        if (Renderers.isCurrentRendererValid()) {
-            setRendererEnv(envMap)
-        }
-
-        envMap["SHARD_VERSION_CODE"] = BuildConfig.VERSION_CODE.toString()
-        
-        return envMap
-    }
-
-    override fun dlopenEngine() {
-        super.dlopenEngine()
-        
-        try {
-            LoggerBridge.appendTitle("DLOPEN Renderer")
-        } catch (e: Exception) {
-            Logger.lInfo("DLOPEN Renderer")
-        }
-        
-        // Load renderer plugin libraries
-        RendererPluginManager.selectedRendererPlugin?.let { renderer ->
-            renderer.dlopen.forEach { lib ->
-                ZLBridge.dlopen("${renderer.path}/$lib")
-            }
-        }
-
-        // Load graphics library
-        val rendererLib = loadGraphicsLibrary()
-        if (rendererLib != null) {
-            // if (!ZLBridge.dlopen(rendererLib) && !ZLBridge.dlopen(findInLdLibPath(rendererLib))) {
-            //     Logger.lError("Failed to load renderer $rendererLib")
-            // }
-            // Logger.lInfo("Skipping dlopen for renderer due to JNI issues - lib: $rendererLib")
-            
-            // Try to restore renderer library loading - this is critical for graphics
-            try {
-                var success = ZLBridge.dlopen(rendererLib)
-                if (!success) {
-                    // Try to find in LD_LIBRARY_PATH if direct loading fails
-                    val pathLib = findInLdLibPath(rendererLib)
-                    if (pathLib != null) {
-                        success = ZLBridge.dlopen(pathLib)
-                    }
-                }
-                
-                if (success) {
-                    Logger.lInfo("Successfully loaded renderer library: $rendererLib")
-                } else {
-                    Logger.lError("Failed to load renderer library: $rendererLib")
-                }
-            } catch (e: UnsatisfiedLinkError) {
-                Logger.lWarning("JNI error loading renderer library $rendererLib: ${e.message}")
-            }
-        }
-    }
-
     private fun printLauncherInfo(
         javaArguments: String,
         javaRuntime: String,
         account: Account
     ) {
+        var mcInfo = version.getVersionName()
+        version.getVersionInfo()?.let { info -> mcInfo = "${info.minecraftVersion} (${info.loaderInfo?.loader?.name ?: "vanilla"})" }
         val renderer = Renderers.getCurrentRenderer()
-        
-        // Use regular Logger instead of LoggerBridge to avoid native library issues
-        Logger.lInfo("==================== Launch Minecraft ====================")
-        Logger.lInfo("Info: Launcher version: ${BuildConfig.VERSION_NAME}")
-        Logger.lInfo("Info: Architecture: ${Architecture.archAsString(Architecture.getDeviceArchitecture())}")
-        Logger.lInfo("Info: Renderer: ${renderer.getRendererName()}")
-        Logger.lInfo("Info: Selected Minecraft version: ${version.getVersionName()}")
-        Logger.lInfo("Info: Game Path: ${version.getGameDir().absolutePath} (Isolation: ${version.isIsolation()})")
-        Logger.lInfo("Info: Custom Java arguments: $javaArguments")
-        Logger.lInfo("Info: Java Runtime: $javaRuntime")
-        Logger.lInfo("Info: Account: ${account.username} (${account.accountType})")
+
+        appendTitle("Launch Minecraft")
+        append("Info: Launcher version: ${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})")
+        append("Info: Architecture: ${Architecture.archAsString(Architecture.getDeviceArchitecture())}")
+        append("Info: Device model: ${Build.MANUFACTURER}, ${Build.MODEL}")
+        append("Info: API version: ${Build.VERSION.SDK_INT}")
+        append("Info: Renderer: ${renderer.getRendererName()}")
+        renderer.getRendererSummary()?.let { summary ->
+            append("Info: Renderer Summary: $summary")
+        }
+        append("Info: Selected Minecraft version: ${version.getVersionName()}")
+        append("Info: Minecraft Info: $mcInfo")
+        append("Info: Game Path: ${version.getGameDir().absolutePath} (Isolation: ${version.isIsolation()})")
+        append("Info: Custom Java arguments: $javaArguments")
+        append("Info: Java Runtime: $javaRuntime")
+        append("Info: Account: ${account.username} (${account.accountType})")
     }
 
-    private fun getCacioJavaArgs(windowWidth: Int, windowHeight: Int, isJava8: Boolean): List<String> {
-        val args = mutableListOf<String>()
-
-        args.add("-Djava.awt.headless=false")
-        args.add("-Dawt.toolkit=net.java.openjdk.cacio.ctk.CToolkit")
-        args.add("-Djava.awt.graphicsenv=net.java.openjdk.cacio.ctk.CGraphicsEnvironment")
-        args.add("-Dglfwstub.windowWidth=$windowWidth")
-        args.add("-Dglfwstub.windowHeight=$windowHeight")
-        args.add("-Dglfwstub.initEgl=false")
-
-        if (!isJava8) {
-            args.add("--add-exports=java.desktop/sun.awt=ALL-UNNAMED")
-            args.add("--add-exports=java.desktop/sun.awt.image=ALL-UNNAMED")
-            args.add("--add-exports=java.desktop/sun.java2d=ALL-UNNAMED")
-            args.add("--add-exports=java.desktop/java.awt.peer=ALL-UNNAMED")
-
-            if (runtime.javaVersion >= 17) {
-                args.add("-javaagent:${PathManager.DIR_COMPONENTS}/cacio-17/cacio-agent.jar")
-            }
-        }
-
-        val cacioJarDir = if (runtime.javaVersion >= 17) {
-            File(PathManager.DIR_COMPONENTS, "cacio-17")
-        } else {
-            File(PathManager.DIR_COMPONENTS, "cacio-8")
-        }
-        args.add("-Xbootclasspath/a:${File(cacioJarDir, "cacio-ttc.jar").absolutePath}")
-
-        return args
-    }
-
-    private fun getRuntimeName(): String {
+    /**
+     * 获取Java运行环境名称，
+     * 如果版本独立设置了运行环境，则直接选定它；
+     * 如果版本未设置，则根据全局设置或自动选择
+     */
+    private fun getRuntime(): String {
         val versionRuntime = version.getJavaRuntime().takeIf { it.isNotEmpty() } ?: ""
         if (versionRuntime.isNotEmpty()) return versionRuntime
 
-        val defaultRuntime = AllSettings.javaRuntime.getValue()
-        if (AllSettings.autoPickJavaRuntime.getValue()) {
-            val targetJavaVersion = gameManifest.javaVersion?.majorVersion ?: 8
-            val runtimeName = RuntimesManager.getNearestJreName(targetJavaVersion)
-            if (runtimeName != null) return runtimeName
-        }
-        return defaultRuntime
-    }
+        val runtime = AllSettings.javaRuntime.getValue()
+        val pickedRuntime = RuntimesManager.loadRuntime(runtime)
 
-    private fun disableSplash(dir: File) {
-        val configDir = File(dir, "config")
-        if (configDir.exists() || configDir.mkdirs()) {
-            val forgeSplashFile = File(configDir, "splash.properties")
-            runCatching {
-                if (forgeSplashFile.exists()) {
-                    val content = forgeSplashFile.readText()
-                    if (content.contains("enabled=true")) {
-                        forgeSplashFile.writeText(content.replace("enabled=true", "enabled=false"))
-                    }
+        if (AllSettings.autoPickJavaRuntime.getValue()) {
+            //开启了自动选择，根据游戏需求的版本做选择
+            val targetJavaVersion = gameManifest.javaVersion?.majorVersion ?: 8
+            if (pickedRuntime.javaVersion == 0 || pickedRuntime.javaVersion < targetJavaVersion) {
+                val runtime0 = RuntimesManager.getNearestJreName(targetJavaVersion)
+                if (runtime0 != null) {
+                    return runtime0
                 } else {
-                    forgeSplashFile.writeText("enabled=false")
+                    activity.runOnUiThread {
+                        Toast.makeText(activity, activity.getString(R.string.game_auto_pick_runtime_failed), Toast.LENGTH_SHORT).show()
+                    }
                 }
             }
         }
+        return runtime
     }
 
-    private fun setRendererEnv(envMap: MutableMap<String, String>) {
-        val renderer = Renderers.getCurrentRenderer()
-        val rendererId = renderer.getRendererId()
-
-        if (rendererId.startsWith("opengles")) {
-            envMap["LIBGL_ES"] = if (getDetectedVersion() >= 3) "3" else "2"
-        }
-
-        envMap.putAll(renderer.getRendererEnv().value)
-        
-        envMap["POJAV_RENDERER"] = rendererId
-        
-        if (!rendererId.startsWith("opengles")) {
-            envMap["MESA_LOADER_DRIVER_OVERRIDE"] = "zink"
-            envMap["MESA_GLSL_CACHE_DIR"] = PathManager.DIR_CACHE.absolutePath
-        }
-
-        // Apply renderer-specific settings
-        if (AllSettings.dumpShaders.state) {
-            envMap["LIBGL_VGPU_DUMP"] = "1"
-        }
-        
-        if (AllSettings.zinkPreferSystemDriver.state) {
-            envMap["POJAV_ZINK_PREFER_SYSTEM_DRIVER"] = "1"
-        }
-        
-        if (AllSettings.vsyncInZink.state) {
-            envMap["POJAV_VSYNC_IN_ZINK"] = "1"
-        }
-        
-        if (AllSettings.bigCoreAffinity.state) {
-            envMap["POJAV_BIG_CORE_AFFINITY"] = "1"
-        }
-        
-        if (AllSettings.sustainedPerformance.state) {
-            envMap["POJAV_SUSTAINED_PERFORMANCE"] = "1"
+    /**
+     * 禁用Forge的启动屏幕
+     * [Modified from PojavLauncher](https://github.com/PojavLauncherTeam/PojavLauncher/blob/a6f3fc0/app_pojavlauncher/src/main/java/net/kdt/pojavlaunch/Tools.java#L372-L391)
+     */
+    private fun disableSplash(dir: File) {
+        File(dir, "config").let { configDir ->
+            if (configDir.ensureDirectorySilently()) {
+                val forgeSplashFile = configDir.child("splash.properties")
+                runCatching {
+                    var forgeSplashContent = "enabled=true"
+                    if (forgeSplashFile.exists()) {
+                        forgeSplashContent = forgeSplashFile.readText()
+                    }
+                    if (forgeSplashContent.contains("enabled=true")) {
+                        forgeSplashFile.writeText(
+                            forgeSplashContent.replace("enabled=true", "enabled=false")
+                        )
+                    }
+                }.onFailure {
+                    lWarning("Could not disable Forge 1.12.2 and below splash screen!", it)
+                }
+            } else {
+                lWarning("Failed to create the configuration directory")
+            }
         }
     }
+}
 
-    private fun getDetectedVersion(): Int {
-        return runCatching {
-            val display = EGL14.eglGetDisplay(EGL14.EGL_DEFAULT_DISPLAY)
-            val version = IntArray(2)
-            EGL14.eglInitialize(display, version, 0, version, 1)
-            
-            val attribList = intArrayOf(
-                EGL14.EGL_RENDERABLE_TYPE, 0x0040, // EGL_OPENGL_ES3_BIT
-                EGL14.EGL_NONE
-            )
-            val configs = arrayOfNulls<EGLConfig>(1)
-            val numConfig = IntArray(1)
-            EGL14.eglChooseConfig(display, attribList, 0, configs, 0, 1, numConfig, 0)
-            
-            if (numConfig[0] > 0) 3 else 2
-        }.getOrElse { 2 }
+private fun checkAndUsedJSPH(envMap: MutableMap<String, String>, runtime: Runtime) {
+    if (runtime.javaVersion < 11) return //onUseJSPH
+    val dir = File(PathManager.DIR_NATIVE_LIB).takeIf { it.isDirectory } ?: return
+    val jsphHome = if (runtime.javaVersion == 17) "libjsph17" else "libjsph21"
+    dir.listFiles { _, name -> name.startsWith(jsphHome) }?.takeIf { it.isNotEmpty() }?.let {
+        val libName = "${PathManager.DIR_NATIVE_LIB}/$jsphHome.so"
+        envMap["JSP"] = libName
+    }
+}
+
+private fun setRendererEnv(envMap: MutableMap<String, String>) {
+    val renderer = Renderers.getCurrentRenderer()
+    val rendererId = renderer.getRendererId()
+
+    if (rendererId.startsWith("opengles2")) {
+        envMap["LIBGL_ES"] = "2"
+        envMap["LIBGL_MIPMAP"] = "3"
+        envMap["LIBGL_NOERROR"] = "1"
+        envMap["LIBGL_NOINTOVLHACK"] = "1"
+        envMap["LIBGL_NORMALIZE"] = "1"
     }
 
-    private fun loadGraphicsLibrary(): String? {
+    envMap += renderer.getRendererEnv().value
+
+    renderer.getRendererEGL()?.let { eglName ->
+        envMap["POJAVEXEC_EGL"] = eglName
+    }
+
+    envMap["POJAV_RENDERER"] = rendererId
+
+    if (RendererPluginManager.selectedRendererPlugin != null) return
+
+    if (!rendererId.startsWith("opengles")) {
+        envMap["MESA_LOADER_DRIVER_OVERRIDE"] = "zink"
+        envMap["MESA_GLSL_CACHE_DIR"] = PathManager.DIR_CACHE.absolutePath
+        envMap["force_glsl_extensions_warn"] = "true"
+        envMap["allow_higher_compat_version"] = "true"
+        envMap["allow_glsl_extension_directive_midshader"] = "true"
+        envMap["LIB_MESA_NAME"] = loadGraphicsLibrary() ?: "null"
+    }
+
+    if (!envMap.containsKey("LIBGL_ES")) {
+        val glesMajor = getDetectedVersion()
+        lInfo("GLES version detected: $glesMajor")
+
+        envMap["LIBGL_ES"] = if (glesMajor < 3) {
+            //fallback to 2 since it's the minimum for the entire app
+            "2"
+        } else if (rendererId.startsWith("opengles")) {
+            rendererId.replace("opengles", "").replace("_5", "")
+        } else {
+            // TODO if can: other backends such as Vulkan.
+            // Sure, they should provide GLES 3 support.
+            "3"
+        }
+    }
+}
+
+/**
+ * Open the render library in accordance to the settings.
+ * It will fallback if it fails to load the library.
+ * @return The name of the loaded library
+ */
+private fun loadGraphicsLibrary(): String? {
+    if (!Renderers.isCurrentRendererValid()) return null
+    else {
         val rendererPlugin = RendererPluginManager.selectedRendererPlugin
         return if (rendererPlugin != null) {
             "${rendererPlugin.path}/${rendererPlugin.glName}"
@@ -411,11 +378,84 @@ class GameLauncher(
             Renderers.getCurrentRenderer().getRendererLibrary()
         }
     }
+}
 
-    /**
-     * Calculate display-friendly resolution
-     */
-    private fun getDisplayFriendlyRes(pixels: Int, scaleFactor: Float): Int {
-        return (pixels * scaleFactor).toInt().coerceAtLeast(1)
+/**
+ * [Modified from PojavLauncher](https://github.com/PojavLauncherTeam/PojavLauncher/blob/98947f2/app_pojavlauncher/src/main/java/net/kdt/pojavlaunch/utils/JREUtils.java#L505-L516)
+ */
+private fun hasExtension(extensions: String, name: String): Boolean {
+    var start = extensions.indexOf(name)
+    while (start >= 0) {
+        // check that we didn't find a prefix of a longer extension name
+        val end = start + name.length
+        if (end == extensions.length || extensions[end] == ' ') {
+            return true
+        }
+        start = extensions.indexOf(name, end)
+    }
+    return false
+}
+
+private const val EGL_OPENGL_ES_BIT: Int = 0x0001
+private const val EGL_OPENGL_ES2_BIT: Int = 0x0004
+private const val EGL_OPENGL_ES3_BIT_KHR: Int = 0x0040
+
+private fun getDetectedVersion(): Int {
+    val egl = EGLContext.getEGL() as EGL10
+    val display = egl.eglGetDisplay(EGL10.EGL_DEFAULT_DISPLAY)
+    val numConfigs = IntArray(1)
+    if (egl.eglInitialize(display, null)) {
+        try {
+            val checkES3: Boolean = hasExtension(egl.eglQueryString(display, EGL10.EGL_EXTENSIONS), "EGL_KHR_create_context")
+            if (egl.eglGetConfigs(display, null, 0, numConfigs)) {
+                val configs = arrayOfNulls<EGLConfig>(
+                    numConfigs[0]
+                )
+                if (egl.eglGetConfigs(display, configs, numConfigs[0], numConfigs)) {
+                    var highestEsVersion = 0
+                    val value = IntArray(1)
+                    for (i in 0..<numConfigs[0]) {
+                        if (egl.eglGetConfigAttrib(
+                                display, configs[i],
+                                EGL10.EGL_RENDERABLE_TYPE, value
+                            )
+                        ) {
+                            if (checkES3 && ((value[0] and EGL_OPENGL_ES3_BIT_KHR) == EGL_OPENGL_ES3_BIT_KHR)) {
+                                if (highestEsVersion < 3) highestEsVersion = 3
+                            } else if ((value[0] and EGL_OPENGL_ES2_BIT) == EGL_OPENGL_ES2_BIT) {
+                                if (highestEsVersion < 2) highestEsVersion = 2
+                            } else if ((value[0] and EGL_OPENGL_ES_BIT) == EGL_OPENGL_ES_BIT) {
+                                if (highestEsVersion < 1) highestEsVersion = 1
+                            }
+                        } else {
+                            lWarning(
+                                ("Getting config attribute with "
+                                        + "EGL10#eglGetConfigAttrib failed "
+                                        + "(" + i + "/" + numConfigs[0] + "): "
+                                        + egl.eglGetError())
+                            )
+                        }
+                    }
+                    return highestEsVersion
+                } else {
+                    lError(
+                        "Getting configs with EGL10#eglGetConfigs failed: "
+                                + egl.eglGetError()
+                    )
+                    return -1
+                }
+            } else {
+                lError(
+                    "Getting number of configs with EGL10#eglGetConfigs failed: "
+                            + egl.eglGetError()
+                )
+                return -2
+            }
+        } finally {
+            egl.eglTerminate(display)
+        }
+    } else {
+        lError("Couldn't initialize EGL.")
+        return -3
     }
 }

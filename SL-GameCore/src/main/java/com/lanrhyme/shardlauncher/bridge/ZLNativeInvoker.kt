@@ -19,33 +19,103 @@
 
 package com.lanrhyme.shardlauncher.bridge
 
+import android.app.Activity
+import android.content.ClipData
+import android.content.ClipboardManager
+import android.content.Context.CLIPBOARD_SERVICE
 import androidx.annotation.Keep
+import com.lanrhyme.shardlauncher.game.launch.Launcher
+import com.lanrhyme.shardlauncher.utils.logging.Logger.lInfo
+import java.io.File
 
 @Keep
 object ZLNativeInvoker {
     @JvmStatic
-    var staticLauncher: Any? = null
+    var staticLauncher: Launcher? = null
+
+    private var globalContext: Activity? = null
+
+    fun setGlobalContext(context: Activity) {
+        globalContext = context
+    }
 
     @Keep
     @JvmStatic
     fun openLink(link: String) {
-        // TODO: Implement link opening functionality
-        // This will be connected to the game launch activity later
-        println("Open Link: $link")
+        globalContext?.let { activity ->
+            activity.runOnUiThread {
+                var prefix = "file:"
+                if (link.startsWith(prefix)) {
+                    if (link.startsWith("file://")) prefix += "//"
+                    val newLink = link.removePrefix(prefix)
+                    lInfo("open link: $newLink")
+
+                    val file = File(newLink)
+                    // Share file via intent
+                    try {
+                        val intent = android.content.Intent(android.content.Intent.ACTION_VIEW)
+                        val uri = if (android.os.Build.VERSION.SDK_INT >= 24) {
+                            androidx.core.content.FileProvider.getUriForFile(
+                                activity,
+                                "${activity.packageName}.fileprovider",
+                                file
+                            )
+                        } else {
+                            android.net.Uri.fromFile(file)
+                        }
+                        intent.setDataAndType(uri, "*/*")
+                        intent.addFlags(android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                        activity.startActivity(android.content.Intent.createChooser(intent, "Open file"))
+                        lInfo("In-game Share File/Folder: ${file.absolutePath}")
+                    } catch (e: Exception) {
+                        lInfo("Failed to share file: ${e.message}")
+                    }
+                } else {
+                    // Open URL in browser
+                    try {
+                        val intent = android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse(link))
+                        activity.startActivity(intent)
+                    } catch (e: Exception) {
+                        lInfo("Failed to open link: ${e.message}")
+                    }
+                }
+            }
+        }
     }
 
     @Keep
     @JvmStatic
     fun querySystemClipboard() {
-        // TODO: Implement clipboard query
-        ZLBridge.clipboardReceived(null, null)
+        globalContext?.let { activity ->
+            activity.runOnUiThread {
+                val clipData = (activity.getSystemService(CLIPBOARD_SERVICE) as? ClipboardManager)?.primaryClip ?: run {
+                    ZLBridge.clipboardReceived(null, null)
+                    return@runOnUiThread
+                }
+                val clipItemText = clipData.getItemAt(0).text ?: run {
+                    ZLBridge.clipboardReceived(null, null)
+                    return@runOnUiThread
+                }
+                ZLBridge.clipboardReceived(clipItemText.toString(), "plain")
+            }
+        }
     }
 
     @Keep
     @JvmStatic
     fun putClipboardData(data: String, mimeType: String) {
-        // TODO: Implement clipboard data set
-        println("Put Clipboard: $data ($mimeType)")
+        globalContext?.let { activity ->
+            activity.runOnUiThread {
+                val clipData = when (mimeType) {
+                    "text/plain" -> ClipData.newPlainText("ShardLauncher", data)
+                    "text/html" -> ClipData.newHtmlText("ShardLauncher", data, data)
+                    else -> null
+                }
+                clipData?.let {
+                    (activity.getSystemService(CLIPBOARD_SERVICE) as? ClipboardManager)?.setPrimaryClip(it)
+                }
+            }
+        }
     }
 
     @Keep
@@ -57,8 +127,14 @@ object ZLNativeInvoker {
     @Keep
     @JvmStatic
     fun jvmExit(exitCode: Int, isSignal: Boolean) {
-        println("JVM Exit: $exitCode, isSignal: $isSignal")
-        // TODO: Implement proper exit handling
+        staticLauncher?.exit()
+        staticLauncher?.onExit?.invoke(exitCode, isSignal)
         staticLauncher = null
+        // Kill the process
+        try {
+            android.os.Process.killProcess(android.os.Process.myPid())
+        } catch (e: Exception) {
+            lInfo("Failed to kill process: ${e.message}")
+        }
     }
 }

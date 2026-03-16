@@ -17,31 +17,23 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/gpl-3.0.txt>.
  */
 
-package com.lanrhyme.shardlauncher.utils.file
-
-import java.io.File
+package com.lanrhyme.shardlauncher.game.launch
 
 /**
- * 获取子文件
+ * Launcher interface for game launch lifecycle management.
+ * This interface is used by ZLNativeInvoker to handle JVM exit callbacks.
+ * The actual implementation resides in the main app module.
  */
-fun File.child(vararg names: String): File {
-    var result = this
-    for (name in names) {
-        result = File(result, name)
-    }
-    return result
-}
+interface Launcher {
+    /**
+     * Callback invoked when the JVM exits
+     * @param code Exit code
+     * @param isSignal Whether the exit was triggered by a signal
+     */
+    val onExit: (code: Int, isSignal: Boolean) -> Unit
 
-/**
- * 确保目录存在（静默模式）
- */
-fun File.ensureDirectorySilently(): Boolean {
-    return try {
-        if (!exists()) {
-            mkdirs()
-        }
-        true
-    } catch (e: Exception) {
-        false
-    }
+    /**
+     * Called to perform cleanup when the JVM is exiting
+     */
+    fun exit()
 }

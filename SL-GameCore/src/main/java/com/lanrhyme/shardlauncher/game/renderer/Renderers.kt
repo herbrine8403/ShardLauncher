@@ -27,14 +27,6 @@ import com.lanrhyme.shardlauncher.utils.logging.Logger.lInfo
 import com.lanrhyme.shardlauncher.utils.logging.Logger.lWarning
 
 /**
- * 渲染器列表数据类
- */
-data class RenderersList(
-    val rendererIdentifiers: List<String>,
-    val rendererNames: List<String>
-)
-
-/**
  * 启动器所有渲染器总管理者，启动器内置的渲染器与渲染器插件加载的渲染器，都会加载到这里
  */
 object Renderers {

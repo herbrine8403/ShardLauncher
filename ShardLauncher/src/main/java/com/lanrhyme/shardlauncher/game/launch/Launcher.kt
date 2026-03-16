@@ -50,8 +50,8 @@ import java.util.Locale
 import java.util.TimeZone
 
 abstract class Launcher(
-    val onExit: (code: Int, isSignal: Boolean) -> Unit
-) {
+    override val onExit: (code: Int, isSignal: Boolean) -> Unit
+) : com.lanrhyme.shardlauncher.game.launch.Launcher {
     lateinit var runtime: Runtime
         protected set
 

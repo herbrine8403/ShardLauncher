@@ -67,12 +67,9 @@ abstract class AbstractHandler(
     )
 }
 
-/**
- * 文本输入模式
- */
 enum class TextInputMode {
-    DISABLE,  // 禁用
-    ENABLE;   // 启用
+    DISABLE,
+    ENABLE;
 
     fun switch(): TextInputMode {
         return if (this == DISABLE) ENABLE else DISABLE

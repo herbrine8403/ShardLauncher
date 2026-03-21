@@ -90,9 +90,6 @@ object LWJGLCharSender : CharacterSenderStrategy {
         CallbackBridge.setModifiers(keycode, press)
     }
 
-    /**
-     * 获取 LWJGL 鼠标点击事件
-     */
     fun getMouseButton(button: Int): Short? {
         return when (button) {
             MotionEvent.BUTTON_PRIMARY -> LwjglGlfwKeycode.GLFW_MOUSE_BUTTON_LEFT

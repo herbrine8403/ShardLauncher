@@ -33,7 +33,6 @@ import com.lanrhyme.shardlauncher.game.input.LWJGLCharSender
 import com.lanrhyme.shardlauncher.game.keycodes.LwjglGlfwKeycode
 import com.lanrhyme.shardlauncher.game.launch.GameLauncher
 import com.lanrhyme.shardlauncher.game.version.installed.Version
-import com.lanrhyme.shardlauncher.viewmodel.ErrorViewModel
 import com.lanrhyme.shardlauncher.viewmodel.EventViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -116,7 +115,5 @@ class GameHandler(
         textInputMode: TextInputMode
     ) {
         // TODO: Implement GameScreen
-        // For now, just show a placeholder
-        // GameScreen will be implemented in next phase
     }
 }

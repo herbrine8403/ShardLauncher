@@ -77,7 +77,6 @@ import com.lanrhyme.shardlauncher.game.version.installed.Version
 import com.lanrhyme.shardlauncher.path.PathManager
 import com.lanrhyme.shardlauncher.settings.AllSettings
 import com.lanrhyme.shardlauncher.ui.theme.ShardLauncherTheme
-import com.lanrhyme.shardlauncher.utils.getDisplayFriendlyRes
 import com.lanrhyme.shardlauncher.utils.logging.Logger.lError
 import com.lanrhyme.shardlauncher.utils.logging.Logger.lWarning
 import com.lanrhyme.shardlauncher.viewmodel.ErrorViewModel

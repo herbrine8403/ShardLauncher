@@ -25,6 +25,7 @@ import io.ktor.server.routing.get
 import io.ktor.server.routing.routing
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
 import java.io.File
@@ -139,10 +140,7 @@ class OfflineYggdrasilServer(
     }
 
     private fun root(): String = buildJsonObject {
-        put("skinDomains", buildJsonArray {
-            add(JsonPrimitive("127.0.0.1"))
-            add(JsonPrimitive("localhost"))
-        })
+        put("skinDomains", JsonArray(listOf(JsonPrimitive("127.0.0.1"), JsonPrimitive("localhost"))))
         put("meta", buildJsonObject {
             put("serverName", JsonPrimitive(serverName))
             put("implementationName", JsonPrimitive(implementationName))

@@ -197,9 +197,12 @@ class VMActivity : androidx.activity.ComponentActivity(), SurfaceTextureListener
         }
 
         vmViewModel.launcher = if (bundle.getBoolean(INTENT_RUN_GAME, false)) {
-            @Suppress("DEPRECATION")
-            val version: Version = bundle.getParcelableExtra(INTENT_VERSION)
-                ?: throw IllegalStateException("No launch version has been set.")
+            val version: Version = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
+                bundle.getParcelable(INTENT_VERSION, Version::class.java)
+            } else {
+                @Suppress("DEPRECATION")
+                bundle.getParcelable(INTENT_VERSION)
+            } ?: throw IllegalStateException("No launch version has been set.")
             GameLauncher(
                 activity = this,
                 version = version,

@@ -5,11 +5,13 @@
 
 package com.lanrhyme.shardlauncher.utils.logging
 
+import java.io.File
 import java.util.concurrent.CopyOnWriteArrayList
 
 /**
  * 实时日志收集器，用于调试
  * 收集所有日志并在内存中保存，方便实时查看
+ * 同时支持实时写入日志文件，防止崩溃时日志丢失
  */
 object LogCollector {
     private const val MAX_LOGS = 10000 // 最多保存10000条日志
@@ -29,11 +31,23 @@ object LogCollector {
     }
     
     /**
+     * 初始化日志收集器
+     * 启动实时日志文件写入功能
+     * @param logDir 日志文件目录
+     */
+    fun init(logDir: File) {
+        FileLogWriter.init(logDir)
+    }
+    
+    /**
      * 添加日志
      */
     fun add(level: LogLevel, tag: String, message: String, throwable: Throwable? = null) {
         val entry = LogEntry(level, tag, message, throwable = throwable)
         logs.add(entry)
+        
+        // 实时写入日志文件
+        FileLogWriter.write(entry)
         
         // 限制日志数量，避免内存溢出
         if (logs.size > MAX_LOGS) {
@@ -90,10 +104,32 @@ object LogCollector {
             }
         }
     }
+    
+    /**
+     * 保存崩溃日志到文件
+     * 在应用崩溃时调用，确保崩溃信息被持久化
+     */
+    fun saveCrashLog(crashLog: String) {
+        FileLogWriter.writeCrashLog(crashLog)
+        FileLogWriter.flush()
+    }
+    
+    /**
+     * 获取当前日志文件
+     */
+    fun getCurrentLogFile(): File? = FileLogWriter.getCurrentLogFile()
+    
+    /**
+     * 关闭日志收集器
+     */
+    fun close() {
+        FileLogWriter.close()
+    }
 }
 
 /**
  * 包装 Logger，自动将日志发送到 LogCollector
+ * 注意：Logger 已经内置了 LogCollector 调用，此工具类主要用于兼容旧代码
  */
 object LoggerWithCollector {
     fun d(tag: String, message: String) {

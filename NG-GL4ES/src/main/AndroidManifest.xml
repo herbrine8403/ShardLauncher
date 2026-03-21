@@ -1,4 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
-    <!-- NG-GL4ES is a native library module, no Java/Kotlin code needed -->
-</manifest>

@@ -141,7 +141,7 @@ dependencies {
     implementation(libs.androidx.ui.graphics)
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
-    implementation("com.google.android.material:material:1.12.0") // Add this for M3 themes
+    implementation("com.google.android.material:material:1.12.0") // Add this for M3 themes and MaterialAlertDialogBuilder
     implementation("androidx.navigation:navigation-compose:2.9.4")
     implementation("androidx.compose.material:material-icons-core:1.7.8")
     implementation("androidx.compose.material:material-icons-extended:1.7.8")

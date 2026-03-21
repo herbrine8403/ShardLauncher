@@ -29,9 +29,6 @@ interface CharacterSenderStrategy {
     /** Called when there is a character to delete, may be called multiple times in a row  */
     fun sendBackspace()
 
-    /** Called when we want to send the Delete key (forward delete) */
-    fun sendDelete()
-
     /** Called when we want to send enter specifically  */
     fun sendEnter()
 
@@ -60,34 +57,32 @@ interface CharacterSenderStrategy {
     fun sendOther(key: KeyEvent)
 
     /**
-     * Called when the "Copy" action needs to be triggered, typically copies the selected content to the clipboard
+     * Called when the "Copy" action needs to be triggered
      */
     fun sendCopy()
 
     /**
-     * Called when the "Cut" action needs to be triggered, typically removes the selected content and copies it to the clipboard
+     * Called when the "Cut" action needs to be triggered
      */
     fun sendCut()
 
     /**
-     * Called when the "Paste" action needs to be triggered, typically pastes the content from the clipboard
+     * Called when the "Paste" action needs to be triggered
      */
     fun sendPaste()
 
     /**
-     * Called when the "Select All" action needs to be triggered, typically selects all available text or content
+     * Called when the "Select All" action needs to be triggered
      */
     fun sendSelectAll()
 
     /**
      * Called when the Shift modifier key needs to be sent or toggled
-     * Typically used to modify the behavior of subsequent key or character inputs
      */
     fun sendModifierShift(press: Boolean)
 
     /**
      * Called when the Control (Ctrl) modifier key needs to be sent or toggled
-     * Typically used for shortcut combinations such as copy, paste, or other control commands
      */
     fun sendModifierCtrl(press: Boolean)
 }

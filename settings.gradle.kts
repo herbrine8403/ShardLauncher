@@ -21,4 +21,7 @@ dependencyResolutionManagement {
 
 rootProject.name = "ShardLauncher"
 include(":ShardLauncher", ":SL-GameCore")
+// LayerController 模块 (从 ZalithLauncher2 引入)
+include(":LayerController")
+project(":LayerController").projectDir = file("third_party/ZalithLauncher2/LayerController")
  

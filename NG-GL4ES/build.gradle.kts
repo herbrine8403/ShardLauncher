@@ -1,5 +1,5 @@
 plugins {
-    id("com.android.library")
+    alias(libs.plugins.android.library)
 }
 
 android {
@@ -21,10 +21,6 @@ android {
                     getDefaultProguardFile("proguard-android-optimize.txt"),
                     "proguard-rules.pro"
             )
-        }
-
-        create("fordebug") {
-            initWith(getByName("debug"))
         }
     }
 

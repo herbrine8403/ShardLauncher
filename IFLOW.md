@@ -9,11 +9,12 @@ ShardLauncher Legacy 是一款专为 Android 设备设计的现代化 Minecraft 
 - **游戏管理**: 自动下载和管理 Minecraft 游戏文件，包括客户端、资源和库
 - **高度可定制的 UI**: 深色模式、多种主题颜色、自定义背景、动画速度、侧边栏位置等
 - **集成资源系统**: Java 运行时和渲染器库文件集成在 APK 中，支持零网络依赖
-- **版本管理**: 支持多个 Minecraft 版本的管理和切换
+- **版本管理**: 支持多个 Minecraft 版本的管理和切换，含版本配置、Mod 管理、资源包管理等
 - **音乐播放器**: 内置音乐播放功能，支持本地音乐文件管理和播放
 - **开发者选项**: 提供日志查看、组件演示等开发调试工具
 - **崩溃处理**: 完善的崩溃报告和恢复机制
 - **XAML 组件系统**: 支持 XAML 解析和自定义组件渲染
+- **游戏视图**: 专用 VMActivity 用于游戏画面渲染和输入处理
 
 ### 技术栈
 - **语言**: Kotlin
@@ -34,12 +35,13 @@ ShardLauncher Legacy 是一款专为 Android 设备设计的现代化 Minecraft 
 - `androidx.media3:media3-exoplayer` - 视频背景播放
 - `androidx.media3:media3-ui` - 媒体 UI
 - `androidx.media3:media3-session` - 媒体会话管理
+- `com.google.android.material:material` - Material Design 组件
 - `com.bytedance:bytehook` - JNI Hook
 - `dev.chrisbanes.haze:haze` - 模糊效果
 - `dev.chrisbanes.haze:haze-materials` - 模糊效果 Material 组件
 - `androidx.room:room-*` - 本地数据库
 - `org.apache.maven:maven-artifact` - 版本比较
-- `io.ktor:ktor-*` - Ktor Server (本地皮肤服务器)
+- `io.ktor:ktor-*` - Ktor Server (本地皮肤服务器) & Client
 - `org.jetbrains.kotlinx:kotlinx-serialization-json` - JSON 序列化
 
 ## 构建与运行
@@ -113,6 +115,8 @@ ShardLauncher Legacy 是一款专为 Android 设备设计的现代化 Minecraft 
 项目分为以下主要模块：
 - **`ShardLauncher`**: UI 层模块，包含所有界面和应用逻辑
 - **`SL-GameCore`**: 游戏核心模块，包含 JNI 代码、游戏启动逻辑和基础工具类
+- **`NG-GL4ES`**: 渲染器模块 (libng_gl4es.so)
+- **`LayerController`**: 图层控制器模块 (从 ZalithLauncher2 引入)
 - **`third_party`**: 第三方参考项目和库
   - `ZalithLauncher2`: 启动核心 (子模块)
   - `FoldCraftLauncher`: 参考项目
@@ -130,6 +134,7 @@ ShardLauncher Legacy 是一款专为 Android 设备设计的现代化 Minecraft 
     - `layout/`: 布局组件
     - `tiles/`: 瓦片组件
   - 界面特定组件位于各自的 `ui/<screen>/` 目录
+- **Activity**: 游戏视图使用独立的 `VMActivity` 进行渲染
 - **主题系统**: 使用 Material Design 3 主题系统，支持深色模式和多种主题颜色
 - **动画**: 使用 Compose 动画 API，支持全局动画速度自定义
 - **XAML 系统**: 支持 XAML 解析和自定义组件渲染 (`ui/xaml/`)
@@ -141,7 +146,8 @@ ShardLauncher Legacy 是一款专为 Android 设备设计的现代化 Minecraft 
 - **Flow**: 使用 Kotlin Flow 进行数据流管理
 
 ### 导航
-- **单 Activity 架构**: 所有页面都是 Composable
+- **单 Activity 架构**: 所有页面都是 Composable (主界面)
+- **双 Activity**: 主界面 + VMActivity (游戏视图)
 - **导航定义**: 导航路由和逻辑定义在 `ShardLauncher/ui/navigation/Navigation.kt`
 - **深链接支持**: 支持 `shardlauncher://auth/microsoft` 用于微软登录回调
 
@@ -289,6 +295,20 @@ ShardLauncher/
 │   │   │   │   └── SettingsRepository.kt # 设置数据仓库
 │   │   │   ├── database/             # Room 数据库
 │   │   │   ├── game/                 # 游戏相关逻辑
+│   │   │   │   ├── account/          # 账户管理
+│   │   │   │   ├── addons/           # 附加组件
+│   │   │   │   ├── auth_server/      # 认证服务器
+│   │   │   │   ├── download/         # 下载管理
+│   │   │   │   ├── input/            # 输入处理
+│   │   │   │   ├── launch/           # 游戏启动核心
+│   │   │   │   ├── microsoft/        # 微软登录
+│   │   │   │   ├── mod/              # Mod 管理
+│   │   │   │   ├── offline/          # 离线模式
+│   │   │   │   ├── path/             # 路径管理
+│   │   │   │   ├── resource/         # 资源管理
+│   │   │   │   ├── version/         # 版本管理
+│   │   │   │   ├── versioninfo/      # 版本信息
+│   │   │   │   └── wardrobe/         # 皮肤管理
 │   │   │   ├── info/                 # 信息常量
 │   │   │   ├── model/                # 数据模型
 │   │   │   ├── service/              # 服务
@@ -297,6 +317,8 @@ ShardLauncher/
 │   │   │   ├── tasks/                # 后台任务
 │   │   │   ├── ui/                   # UI 层 (Screen, ViewModel, Component)
 │   │   │   │   ├── account/          # 账户管理界面
+│   │   │   │   ├── activities/       # Activity
+│   │   │   │   │   └── VMActivity.kt # 游戏视图 Activity
 │   │   │   │   ├── common/           # 通用 UI 工具
 │   │   │   │   ├── components/       # 通用 UI 组件
 │   │   │   │   │   ├── basic/        # 基础组件
@@ -313,23 +335,38 @@ ShardLauncher/
 │   │   │   │   │   ├── DeveloperOptionsScreen.kt
 │   │   │   │   │   └── LogViewerScreen.kt
 │   │   │   │   ├── downloads/        # 下载管理界面
+│   │   │   │   │   ├── DownloadScreen.kt
+│   │   │   │   │   └── VersionDetailScreen.kt
 │   │   │   │   ├── home/             # 主页
-│   │   │   │   │   ├── HomeAccountCard.kt
 │   │   │   │   │   ├── HomeScreen.kt
 │   │   │   │   │   └── VersionSelector.kt
 │   │   │   │   ├── music/            # 音乐播放器界面
-│   │   │   │   │   └── MusicPlayerViewModel.kt
 │   │   │   │   ├── navigation/       # 导航逻辑
 │   │   │   │   ├── notification/     # 通知系统
 │   │   │   │   ├── settings/         # 设置界面
+│   │   │   │   │   ├── SettingsScreen.kt
+│   │   │   │   │   ├── AboutScreen.kt
+│   │   │   │   │   ├── RendererManageScreen.kt
+│   │   │   │   │   └── RuntimeManageScreen.kt
 │   │   │   │   ├── splash/           # 启动画面
 │   │   │   │   ├── theme/            # 主题定义
 │   │   │   │   ├── version/          # 游戏版本管理界面
+│   │   │   │   │   ├── list/          # 版本列表
+│   │   │   │   │   ├── detail/        # 版本详情
+│   │   │   │   │   ├── config/        # 版本配置
+│   │   │   │   │   └── management/    # 版本管理
+│   │   │   │   │       ├── ModsManagementScreen.kt
+│   │   │   │   │       ├── ResourcePacksManagementScreen.kt
+│   │   │   │   │       ├── SavesManagementScreen.kt
+│   │   │   │   │       └── ShaderPacksManagementScreen.kt
 │   │   │   │   └── xaml/             # XAML 解析器
 │   │   │   │       ├── XamlParser.kt
 │   │   │   │       ├── XamlComponents.kt
 │   │   │   │       └── XamlEvents.kt
-│   │   │   └── utils/                # UI 工具类
+│   │   │   ├── utils/                # UI 工具类
+│   │   │   └── viewmodel/            # 通用 ViewModel
+│   │   │       ├── EventViewModel.kt
+│   │   │       └── ErrorViewModel.kt
 │   │   ├── assets/                   # 资源 (JRE, 外部组件, XAML)
 │   │   │   ├── components/           # 自定义组件
 │   │   │   ├── home.xaml            # 主页 XAML 布局
@@ -346,6 +383,12 @@ ShardLauncher/
 │   │   ├── java/com/lanrhyme/shardlauncher/
 │   │   │   ├── bridge/               # Kotlin/Native 桥接
 │   │   │   ├── game/                 # 游戏启动与管理核心
+│   │   │   │   ├── input/            # 输入处理
+│   │   │   │   ├── keycodes/          # 键码映射
+│   │   │   │   ├── launch/           # 启动逻辑
+│   │   │   │   ├── multirt/          # 多运行时
+│   │   │   │   ├── plugin/           # 插件支持
+│   │   │   │   └── renderer/         # 渲染器管理
 │   │   │   ├── path/                 # 路径管理
 │   │   │   └── utils/                # 核心工具类 (Logger, File, Network)
 │   │   └── jni/                      # C/C++ 本地代码
@@ -369,6 +412,7 @@ ShardLauncher/
 │   │       ├── linkerhook/           # 链接器钩子
 │   │       └── logger/               # 日志记录
 │   └── build.gradle.kts
+├── NG-GL4ES/                         # 渲染器模块 (libng_gl4es.so)
 ├── third_party/                      # 第三方依赖/参考
 │   ├── ZalithLauncher2/              # ZalithLauncher2 启动核心 (子模块)
 │   │   ├── ColorPicker/              # 颜色选择器模块
@@ -393,6 +437,13 @@ ShardLauncher/
 5. 通过 JNI 启动 Java 进程
 6. 桥接输入、图形和系统调用
 
+### 游戏视图 (VMActivity)
+- 独立的 Activity 用于游戏画面渲染
+- 支持 TextureView 进行视频渲染
+- 完整的输入事件处理（键盘、鼠标、触摸）
+- 屏幕旋转和配置变化处理
+- 与主应用分离的渲染生命周期
+
 ### 资源集成系统
 - Java 运行时（JRE 8, 17, 21）集成在 APK assets 中
 - 使用 `AssetExtractor` 从 APK 提取资源到应用数据目录
@@ -403,6 +454,7 @@ ShardLauncher/
 - **VirGL**: 虚拟化 OpenGL，用于大多数设备
 - **OSMesa**: 软件渲染，用于兼容性
 - **Zink**: OpenGL over Vulkan（实验性）
+- **NG-GL4ES**: 独立的渲染器模块
 
 ### 输入桥接
 - 触摸事件转换为鼠标/键盘事件
@@ -415,6 +467,15 @@ ShardLauncher/
 - 离线模式支持
 - 账户信息本地存储
 - 深链接支持登录回调
+
+### 版本管理
+- 版本列表展示和选择
+- 版本详情查看
+- 版本配置文件编辑
+- Mod 管理
+- 资源包管理
+- 存档管理
+- Shader 包管理
 
 ### 主题系统
 - 支持深色/浅色模式切换

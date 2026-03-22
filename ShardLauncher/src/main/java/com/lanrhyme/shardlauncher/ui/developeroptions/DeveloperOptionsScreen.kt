@@ -1,5 +1,6 @@
 package com.lanrhyme.shardlauncher.ui.developeroptions
 
+import android.app.Activity
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -16,6 +17,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -24,10 +26,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import com.lanrhyme.shardlauncher.game.launch.launchJvmExample
 import com.lanrhyme.shardlauncher.ui.components.layout.LocalCardLayoutConfig
 import com.lanrhyme.shardlauncher.ui.components.basic.ButtonType
+import com.lanrhyme.shardlauncher.ui.components.basic.ShardAlertDialog
 import com.lanrhyme.shardlauncher.ui.components.basic.ShardButtonWithIcon
 import com.lanrhyme.shardlauncher.ui.components.layout.SliderLayoutCard
 import com.lanrhyme.shardlauncher.ui.components.basic.SubPageNavigationBar
@@ -100,6 +105,86 @@ fun DeveloperOptionsScreen(navController: NavController) {
                     )
                 }
             }
+        }
+        item {
+            CustomJarExecutor()
+        }
+    }
+}
+
+@Composable
+private fun CustomJarExecutor() {
+    val context = LocalContext.current
+    var showDialog by remember { mutableStateOf(false) }
+    var jarPath by remember { mutableStateOf("") }
+    var jarArgs by remember { mutableStateOf("") }
+
+    Card(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(22.dp)) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            TitleAndSummary(title = "执行自定义 JAR", summary = "运行自定义 Java JAR 应用")
+            Spacer(modifier = Modifier.height(16.dp))
+            ShardButtonWithIcon(
+                onClick = { showDialog = true },
+                modifier = Modifier.fillMaxWidth(),
+                text = "选择 JAR 文件",
+                icon = Icons.Default.Code,
+                type = ButtonType.GRADIENT
+            )
+        }
+    }
+
+    if (showDialog) {
+        ShardAlertDialog(
+            visible = showDialog,
+            title = "执行自定义 JAR",
+            onDismiss = { showDialog = false },
+            onConfirm = {
+                if (jarPath.isNotBlank()) {
+                    val jvmArgs = buildString {
+                        append("-jar ")
+                        append(jarPath.trim())
+                        if (jarArgs.isNotBlank()) {
+                            append(" ")
+                            append(jarArgs.trim())
+                        }
+                    }
+                    launchJvmExample(
+                        activity = context as Activity,
+                        jvmArgs = jvmArgs,
+                        onExit = { code, isSignal ->
+                            NotificationManager.show(
+                                Notification(
+                                    title = "JAR 执行完成",
+                                    message = "退出码: $code${if (isSignal) " (信号)" else ""}",
+                                    type = NotificationType.Normal
+                                )
+                            )
+                        }
+                    )
+                    showDialog = false
+                }
+            },
+            confirmText = "执行",
+            cancelText = "取消",
+            size = com.lanrhyme.shardlauncher.ui.components.basic.DialogSize.LARGE
+        ) {
+            OutlinedTextField(
+                value = jarPath,
+                onValueChange = { jarPath = it },
+                label = { Text("JAR 路径") },
+                placeholder = { Text("例如: /sdcard/Download/app.jar") },
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true
+            )
+            Spacer(modifier = Modifier.height(12.dp))
+            OutlinedTextField(
+                value = jarArgs,
+                onValueChange = { jarArgs = it },
+                label = { Text("命令行参数 (可选)") },
+                placeholder = { Text("例如: arg1 arg2") },
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true
+            )
         }
     }
 }

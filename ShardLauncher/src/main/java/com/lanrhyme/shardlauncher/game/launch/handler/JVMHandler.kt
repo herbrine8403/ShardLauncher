@@ -1,12 +1,11 @@
 /*
  * Shard Launcher
  * Adapted from Zalith Launcher 2
+ * JVM Handler - 用于执行 JAR 文件
  */
 
 package com.lanrhyme.shardlauncher.game.launch.handler
 
-import com.lanrhyme.shardlauncher.game.input.LWJGLCharSender
-import com.lanrhyme.shardlauncher.game.input.AWTInputEvent
 import android.view.KeyEvent
 import android.view.Surface
 import androidx.compose.runtime.Composable
@@ -14,6 +13,9 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.unit.IntSize
+import com.lanrhyme.shardlauncher.bridge.ZLBridge
+import com.lanrhyme.shardlauncher.game.input.CharacterSenderStrategy
+import com.lanrhyme.shardlauncher.game.input.LWJGLCharSender
 import com.lanrhyme.shardlauncher.game.launch.JvmLauncher
 import com.lanrhyme.shardlauncher.ui.control.input.TextInputMode
 import com.lanrhyme.shardlauncher.ui.screens.game.JVMScreen
@@ -27,7 +29,7 @@ class JVMHandler(
 ) : AbstractHandler(
     type = HandlerType.JVM,
     getWindowSize = { IntSize(1280, 720) },
-    sender = AWTInputEvent,
+    sender = LWJGLCharSender,
     launcher = jvmLauncher,
     onExit = onExit
 ) {
@@ -50,6 +52,10 @@ class JVMHandler(
 
     override fun shouldIgnoreKeyEvent(event: KeyEvent): Boolean {
         return true
+    }
+
+    override fun sendMouseRight(isPressed: Boolean) {
+        ZLBridge.sendMousePress(0x4, isPressed) // Right mouse button
     }
 
     @Composable

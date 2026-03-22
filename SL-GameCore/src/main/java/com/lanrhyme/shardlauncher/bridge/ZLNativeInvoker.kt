@@ -127,15 +127,20 @@ object ZLNativeInvoker {
     @JvmStatic
     fun jvmExit(exitCode: Int, isSignal: Boolean) {
         staticLauncher?.let { launcher ->
-            // Use reflection to call exit() and onExit
-            runCatching {
-                launcher.javaClass.getMethod("exit").invoke(launcher)
-                launcher.javaClass.getDeclaredField("onExit").apply { isAccessible = true }
-                    .get(launcher)?.let { callback ->
-                        (callback as? (Int, Boolean) -> Unit)?.invoke(exitCode, isSignal)
-                    }
-            }.onFailure {
-                lInfo("Failed to call launcher exit: ${it.message}")
+            // 直接调用 exit() 和 onExit
+            try {
+                val exitMethod = launcher.javaClass.getMethod("exit")
+                exitMethod.invoke(launcher)
+                
+                val onExitField = launcher.javaClass.getDeclaredField("onExit")
+                onExitField.isAccessible = true
+                val onExitCallback = onExitField.get(launcher)
+                if (onExitCallback != null) {
+                    @Suppress("UNCHECKED_CAST")
+                    (onExitCallback as (Int, Boolean) -> Unit).invoke(exitCode, isSignal)
+                }
+            } catch (e: Exception) {
+                lInfo("Failed to call launcher exit: ${e.message}")
             }
         }
         staticLauncher = null

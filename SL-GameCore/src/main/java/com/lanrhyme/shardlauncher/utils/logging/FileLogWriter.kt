@@ -44,8 +44,8 @@ object FileLogWriter {
     // 配置参数
     private const val MAX_FILE_SIZE = 2 * 1024 * 1024L // 单个日志文件最大2MB
     private const val MAX_LOG_FILES = 5 // 最多保留5个日志文件
-    private const val FLUSH_INTERVAL_MS = 1000L // 每秒刷新一次
-    private const val BUFFER_THRESHOLD = 50 // 缓冲区达到50条立即写入
+    private const val FLUSH_INTERVAL_MS = 1000L // 定时刷新间隔（保留作为备份）
+    private const val BUFFER_THRESHOLD = 1 // 缓冲区达到1条立即写入（实时保存）
     
     // 状态标志
     private val isInitialized = AtomicBoolean(false)
@@ -122,10 +122,13 @@ object FileLogWriter {
         
         logQueue.offer(logLine)
         
-        // 缓冲区达到阈值时立即写入
+        // 缓冲区达到阈值时立即写入（现在阈值为1，实现实时保存）
         if (logQueue.size >= BUFFER_THRESHOLD) {
             scheduler?.execute { flush() }
         }
+        
+        // 立即刷新到磁盘，确保日志实时保存
+        flush()
     }
     
     /**

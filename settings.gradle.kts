@@ -21,8 +21,8 @@ dependencyResolutionManagement {
 
 rootProject.name = "ShardLauncher"
 include(":ShardLauncher", ":SL-GameCore")
-// LayerController 模块 (从 ZalithLauncher2 引入)
+// LayerController 模块 (从 ZalithLauncher2 复制)
 include(":LayerController")
-project(":LayerController").projectDir = file("third_party/ZalithLauncher2/LayerController")
+project(":LayerController").projectDir = file("LayerController")
 // NG-GL4ES 已移除，使用预构建静态库
  

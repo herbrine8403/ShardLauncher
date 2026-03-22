@@ -148,7 +148,7 @@ private fun CustomJarExecutor() {
                 showHiddenFiles = true,
                 allowCreateDirectory = false,
                 fileFilter = { file ->
-                    file.isFile && file.extension.lowercase() == "jar"
+                    file.isFile && file.name.lowercase().endsWith(".jar")
                 }
             ),
             onDismissRequest = { showFileSelector = false },

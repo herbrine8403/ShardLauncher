@@ -23,8 +23,6 @@ data class JvmLaunchInfo(
     val userHome: String? = null,
     val jreName: String? = null
 ) : Parcelable
-    val jreName: String? = null
-)
 
 open class JvmLauncher(
     private val context: Context,

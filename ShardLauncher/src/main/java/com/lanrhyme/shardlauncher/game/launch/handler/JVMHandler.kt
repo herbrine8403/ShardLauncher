@@ -17,7 +17,7 @@ import com.lanrhyme.shardlauncher.bridge.ZLBridge
 import com.lanrhyme.shardlauncher.game.input.CharacterSenderStrategy
 import com.lanrhyme.shardlauncher.game.input.LWJGLCharSender
 import com.lanrhyme.shardlauncher.game.launch.JvmLauncher
-import com.lanrhyme.shardlauncher.ui.control.input.TextInputMode
+import com.lanrhyme.shardlauncher.game.launch.handler.TextInputMode
 import com.lanrhyme.shardlauncher.ui.screens.game.JVMScreen
 import com.lanrhyme.shardlauncher.ui.screens.game.LogState
 import com.lanrhyme.shardlauncher.viewmodel.EventViewModel

@@ -268,10 +268,21 @@ abstract class Launcher(
     }
 
     protected fun getJavaLibDir(): String {
+        // 如果 runtime.arch 为 null，使用设备默认架构
         val architecture = runtime.arch?.let { arch ->
             if (Architecture.archAsInt(arch) == ARCH_X86) "i386/i486/i586"
             else arch
-        } ?: throw IOException("Unsupported architecture!")
+        } ?: run {
+            // 尝试从运行时目录检测架构
+            val libDir = File(runtimeHome, "lib")
+            libDir.listFiles()?.firstOrNull { it.isDirectory }?.name ?: run {
+                // 回退到设备架构
+                when {
+                    Architecture.is64BitsDevice -> "arm64-v8a"
+                    else -> "armeabi-v7a"
+                }
+            }
+        }
 
         var libDir = "/lib"
         architecture.split("/").forEach { arch ->

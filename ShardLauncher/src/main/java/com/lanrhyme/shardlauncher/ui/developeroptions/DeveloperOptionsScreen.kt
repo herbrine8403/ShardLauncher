@@ -30,6 +30,10 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.lanrhyme.shardlauncher.game.launch.launchJvmExample
+import com.lanrhyme.shardlauncher.ui.components.filemanager.FileSelectorConfig
+import com.lanrhyme.shardlauncher.ui.components.filemanager.FileSelectorMode
+import com.lanrhyme.shardlauncher.ui.components.filemanager.FileSelectorResult
+import com.lanrhyme.shardlauncher.ui.components.filemanager.FileSelectorScreen
 import com.lanrhyme.shardlauncher.ui.components.layout.LocalCardLayoutConfig
 import com.lanrhyme.shardlauncher.ui.components.basic.ButtonType
 import com.lanrhyme.shardlauncher.ui.components.basic.ShardAlertDialog
@@ -115,8 +119,9 @@ fun DeveloperOptionsScreen(navController: NavController) {
 @Composable
 private fun CustomJarExecutor() {
     val context = LocalContext.current
-    var showDialog by remember { mutableStateOf(false) }
-    var jarPath by remember { mutableStateOf("") }
+    var showFileSelector by remember { mutableStateOf(false) }
+    var showArgsDialog by remember { mutableStateOf(false) }
+    var selectedJarPath by remember { mutableStateOf("") }
     var jarArgs by remember { mutableStateOf("") }
 
     Card(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(22.dp)) {
@@ -124,7 +129,7 @@ private fun CustomJarExecutor() {
             TitleAndSummary(title = "执行自定义 JAR", summary = "运行自定义 Java JAR 应用")
             Spacer(modifier = Modifier.height(16.dp))
             ShardButtonWithIcon(
-                onClick = { showDialog = true },
+                onClick = { showFileSelector = true },
                 modifier = Modifier.fillMaxWidth(),
                 text = "选择 JAR 文件",
                 icon = Icons.Default.Code,
@@ -133,16 +138,45 @@ private fun CustomJarExecutor() {
         }
     }
 
-    if (showDialog) {
+    // 文件选择器
+    if (showFileSelector) {
+        FileSelectorScreen(
+            visible = showFileSelector,
+            config = FileSelectorConfig(
+                initialPath = android.os.Environment.getExternalStorageDirectory(),
+                mode = FileSelectorMode.FILE_ONLY,
+                showHiddenFiles = true,
+                allowCreateDirectory = false,
+                fileFilter = { file ->
+                    file.isFile && file.extension.lowercase() == "jar"
+                }
+            ),
+            onDismissRequest = { showFileSelector = false },
+            onSelection = { result ->
+                when (result) {
+                    is FileSelectorResult.Selected -> {
+                        selectedJarPath = result.path.absolutePath
+                        showArgsDialog = true
+                    }
+                    FileSelectorResult.Cancelled -> { /* 用户取消 */ }
+                    is FileSelectorResult.MultipleSelected -> { /* 不支持多选 */ }
+                }
+                showFileSelector = false
+            }
+        )
+    }
+
+    // 参数输入对话框
+    if (showArgsDialog) {
         ShardAlertDialog(
-            visible = showDialog,
+            visible = showArgsDialog,
             title = "执行自定义 JAR",
-            onDismiss = { showDialog = false },
+            onDismiss = { showArgsDialog = false },
             onConfirm = {
-                if (jarPath.isNotBlank()) {
+                if (selectedJarPath.isNotBlank()) {
                     val jvmArgs = buildString {
                         append("-jar ")
-                        append(jarPath.trim())
+                        append(selectedJarPath.trim())
                         if (jarArgs.isNotBlank()) {
                             append(" ")
                             append(jarArgs.trim())
@@ -161,7 +195,8 @@ private fun CustomJarExecutor() {
                             )
                         }
                     )
-                    showDialog = false
+                    showArgsDialog = false
+                    jarArgs = ""
                 }
             },
             confirmText = "执行",
@@ -169,11 +204,11 @@ private fun CustomJarExecutor() {
             size = com.lanrhyme.shardlauncher.ui.components.basic.DialogSize.LARGE
         ) {
             OutlinedTextField(
-                value = jarPath,
-                onValueChange = { jarPath = it },
-                label = { Text("JAR 路径") },
-                placeholder = { Text("例如: /sdcard/Download/app.jar") },
+                value = selectedJarPath,
+                onValueChange = { },
+                label = { Text("已选择 JAR") },
                 modifier = Modifier.fillMaxWidth(),
+                readOnly = true,
                 singleLine = true
             )
             Spacer(modifier = Modifier.height(12.dp))

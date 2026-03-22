@@ -1,6 +1,10 @@
 package com.lanrhyme.shardlauncher.ui.developeroptions
 
 import android.app.Activity
+import android.content.Intent
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -23,6 +27,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -30,10 +35,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.lanrhyme.shardlauncher.game.launch.launchJvmExample
-import com.lanrhyme.shardlauncher.ui.components.filemanager.FileSelectorConfig
-import com.lanrhyme.shardlauncher.ui.components.filemanager.FileSelectorMode
-import com.lanrhyme.shardlauncher.ui.components.filemanager.FileSelectorResult
-import com.lanrhyme.shardlauncher.ui.components.filemanager.FileSelectorScreen
 import com.lanrhyme.shardlauncher.ui.components.layout.LocalCardLayoutConfig
 import com.lanrhyme.shardlauncher.ui.components.basic.ButtonType
 import com.lanrhyme.shardlauncher.ui.components.basic.ShardAlertDialog
@@ -44,6 +45,9 @@ import com.lanrhyme.shardlauncher.ui.components.basic.TitleAndSummary
 import com.lanrhyme.shardlauncher.ui.notification.Notification
 import com.lanrhyme.shardlauncher.ui.notification.NotificationManager
 import com.lanrhyme.shardlauncher.ui.notification.NotificationType
+import kotlinx.coroutines.launch
+import java.io.File
+import java.io.FileOutputStream
 
 @Composable
 fun DeveloperOptionsScreen(navController: NavController) {
@@ -119,51 +123,60 @@ fun DeveloperOptionsScreen(navController: NavController) {
 @Composable
 private fun CustomJarExecutor() {
     val context = LocalContext.current
-    var showFileSelector by remember { mutableStateOf(false) }
+    val scope = rememberCoroutineScope()
     var showArgsDialog by remember { mutableStateOf(false) }
     var selectedJarPath by remember { mutableStateOf("") }
+    var selectedJarUri by remember { mutableStateOf<Uri?>(null) }
     var jarArgs by remember { mutableStateOf("") }
+    var isLoading by remember { mutableStateOf(false) }
+
+    // 系统文件选择器
+    val jarFilePicker = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.OpenDocument()
+    ) { uri ->
+        uri?.let {
+            selectedJarUri = it
+            isLoading = true
+            // 复制文件到应用内部存储
+            scope.launch {
+                try {
+                    val inputStream = context.contentResolver.openInputStream(uri)
+                    val cacheFile = File(context.cacheDir, "temp_jar_${System.currentTimeMillis()}.jar")
+                    inputStream?.use { input ->
+                        FileOutputStream(cacheFile).use { output ->
+                            input.copyTo(output)
+                        }
+                    }
+                    selectedJarPath = cacheFile.absolutePath
+                    isLoading = false
+                    showArgsDialog = true
+                } catch (e: Exception) {
+                    isLoading = false
+                    NotificationManager.show(
+                        Notification(
+                            title = "错误",
+                            message = "无法读取文件: ${e.message}",
+                            type = NotificationType.Error
+                        )
+                    )
+                }
+            }
+        }
+    }
 
     Card(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(22.dp)) {
         Column(modifier = Modifier.padding(16.dp)) {
             TitleAndSummary(title = "执行自定义 JAR", summary = "运行自定义 Java JAR 应用")
             Spacer(modifier = Modifier.height(16.dp))
             ShardButtonWithIcon(
-                onClick = { showFileSelector = true },
+                onClick = { jarFilePicker.launch(arrayOf("application/java-archive", "application/x-jar", "*/*")) },
                 modifier = Modifier.fillMaxWidth(),
-                text = "选择 JAR 文件",
+                text = if (isLoading) "正在加载..." else "选择 JAR 文件",
                 icon = Icons.Default.Code,
-                type = ButtonType.GRADIENT
+                type = ButtonType.GRADIENT,
+                enabled = !isLoading
             )
         }
-    }
-
-    // 文件选择器
-    if (showFileSelector) {
-        FileSelectorScreen(
-            visible = showFileSelector,
-            config = FileSelectorConfig(
-                initialPath = android.os.Environment.getExternalStorageDirectory(),
-                mode = FileSelectorMode.FILE_ONLY,
-                showHiddenFiles = true,
-                allowCreateDirectory = false,
-                fileFilter = { file ->
-                    file.isFile && file.name.lowercase().endsWith(".jar")
-                }
-            ),
-            onDismissRequest = { showFileSelector = false },
-            onSelection = { result ->
-                when (result) {
-                    is FileSelectorResult.Selected -> {
-                        selectedJarPath = result.path.absolutePath
-                        showArgsDialog = true
-                    }
-                    FileSelectorResult.Cancelled -> { /* 用户取消 */ }
-                    is FileSelectorResult.MultipleSelected -> { /* 不支持多选 */ }
-                }
-                showFileSelector = false
-            }
-        )
     }
 
     // 参数输入对话框

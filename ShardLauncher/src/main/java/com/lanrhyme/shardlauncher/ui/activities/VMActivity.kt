@@ -69,9 +69,12 @@ import com.lanrhyme.shardlauncher.game.input.GameInputProxy
 import com.lanrhyme.shardlauncher.game.input.LWJGLCharSender
 import com.lanrhyme.shardlauncher.game.keycodes.LwjglGlfwKeycode
 import com.lanrhyme.shardlauncher.game.launch.GameLauncher
+import com.lanrhyme.shardlauncher.game.launch.JvmLaunchInfo
+import com.lanrhyme.shardlauncher.game.launch.JvmLauncher
 import com.lanrhyme.shardlauncher.game.launch.handler.AbstractHandler
 import com.lanrhyme.shardlauncher.game.launch.handler.GameHandler
 import com.lanrhyme.shardlauncher.game.launch.handler.HandlerType
+import com.lanrhyme.shardlauncher.game.launch.handler.JVMHandler
 import com.lanrhyme.shardlauncher.game.launch.handler.TextInputMode
 import com.lanrhyme.shardlauncher.game.version.installed.Version
 import com.lanrhyme.shardlauncher.path.PathManager
@@ -95,6 +98,8 @@ import java.io.IOException
 import android.graphics.Color as NativeColor
 
 private const val INTENT_RUN_GAME = "BUNDLE_RUN_GAME"
+private const val INTENT_RUN_JAR = "INTENT_RUN_JAR"
+private const val INTENT_JAR_INFO = "INTENT_JAR_INFO"
 private const val INTENT_VERSION = "INTENT_VERSION"
 private var isRunning = false
 
@@ -196,31 +201,55 @@ class VMActivity : androidx.activity.ComponentActivity(), SurfaceTextureListener
             IntSize(displayMetrics.widthPixels, displayMetrics.heightPixels)
         }
 
-        vmViewModel.launcher = if (bundle.getBoolean(INTENT_RUN_GAME, false)) {
-            val version: Version = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
-                bundle.getParcelable(INTENT_VERSION, Version::class.java)
-            } else {
-                @Suppress("DEPRECATION")
-                bundle.getParcelable(INTENT_VERSION)
-            } ?: throw IllegalStateException("No launch version has been set.")
-            GameLauncher(
-                activity = this,
-                version = version,
-                getWindowSize = getWindowSize,
-                onExit = exitListener
-            ).also { launcher ->
-                vmViewModel.handler = GameHandler(
+        vmViewModel.launcher = when {
+            bundle.getBoolean(INTENT_RUN_GAME, false) -> {
+                val version: Version = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
+                    bundle.getParcelable(INTENT_VERSION, Version::class.java)
+                } else {
+                    @Suppress("DEPRECATION")
+                    bundle.getParcelable(INTENT_VERSION)
+                } ?: throw IllegalStateException("No launch version has been set.")
+                GameLauncher(
                     activity = this,
                     version = version,
-                    eventViewModel = eventViewModel,
                     getWindowSize = getWindowSize,
-                    gameLauncher = launcher,
+                    onExit = exitListener
+                ).also { launcher ->
+                    vmViewModel.handler = GameHandler(
+                        activity = this,
+                        version = version,
+                        eventViewModel = eventViewModel,
+                        getWindowSize = getWindowSize,
+                        gameLauncher = launcher,
+                        onExit = { code -> exitListener(code, false) }
+                    )
+                    vmViewModel.inputProxy.sender = LWJGLCharSender
+                }
+            }
+            bundle.getBoolean(INTENT_RUN_JAR, false) -> {
+                val jvmLaunchInfo: JvmLaunchInfo = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
+                    bundle.getParcelable(INTENT_JAR_INFO, JvmLaunchInfo::class.java)
+                } else {
+                    @Suppress("DEPRECATION")
+                    bundle.getParcelable(INTENT_JAR_INFO)
+                } ?: throw IllegalStateException("No launch jar info has been set.")
+                
+                val launcher = JvmLauncher(
+                    context = this,
+                    getWindowSize = getWindowSize,
+                    jvmLaunchInfo = jvmLaunchInfo,
+                    onExit = exitListener
+                )
+                
+                vmViewModel.handler = JVMHandler(
+                    jvmLauncher = launcher,
+                    eventViewModel = eventViewModel,
                     onExit = { code -> exitListener(code, false) }
                 )
-                vmViewModel.inputProxy.sender = LWJGLCharSender
+                
+                launcher
             }
-        } else {
-            throw IllegalStateException("Unknown VM launch mode!")
+            else -> throw IllegalStateException("Unknown VM launch mode!")
         }
 
         refreshWindowSize()
@@ -512,6 +541,34 @@ fun runGame(context: Context, version: Version) {
     val intent = Intent(context, VMActivity::class.java).apply {
         putExtra(INTENT_RUN_GAME, true)
         putExtra(INTENT_VERSION, version)
+    }
+    context.startActivity(intent)
+}
+
+/**
+ * 运行 JAR 文件
+ * @param context 上下文
+ * @param jarFile JAR 文件
+ * @param jreName 指定使用的 Java 环境，null 则为自动选择
+ * @param customArgs 指定 jvm 参数
+ */
+fun runJar(
+    context: Context,
+    jarFile: File,
+    jreName: String? = null,
+    customArgs: String? = null
+) {
+    val jvmArgsPrefix = customArgs?.let { "$it " } ?: ""
+    val jvmArgs = "$jvmArgsPrefix-jar ${jarFile.absolutePath}"
+
+    val jvmLaunchInfo = JvmLaunchInfo(
+        jvmArgs = jvmArgs,
+        jreName = jreName
+    )
+
+    val intent = Intent(context, VMActivity::class.java).apply {
+        putExtra(INTENT_RUN_JAR, true)
+        putExtra(INTENT_JAR_INFO, jvmLaunchInfo)
     }
     context.startActivity(intent)
 }

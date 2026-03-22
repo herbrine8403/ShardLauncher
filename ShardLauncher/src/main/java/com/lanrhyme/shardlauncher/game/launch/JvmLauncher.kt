@@ -6,6 +6,7 @@
 package com.lanrhyme.shardlauncher.game.launch
 
 import android.content.Context
+import android.os.Parcelable
 import androidx.compose.ui.unit.IntSize
 import com.lanrhyme.shardlauncher.bridge.LoggerBridge
 import com.lanrhyme.shardlauncher.game.multirt.RuntimesManager
@@ -13,11 +14,15 @@ import com.lanrhyme.shardlauncher.path.PathManager
 import com.lanrhyme.shardlauncher.settings.AllSettings
 import com.lanrhyme.shardlauncher.utils.logging.Logger
 import com.lanrhyme.shardlauncher.utils.string.splitPreservingQuotes
+import kotlinx.parcelize.Parcelize
 import java.io.File
 
+@Parcelize
 data class JvmLaunchInfo(
     val jvmArgs: String,
     val userHome: String? = null,
+    val jreName: String? = null
+) : Parcelable
     val jreName: String? = null
 )
 

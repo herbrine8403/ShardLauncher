@@ -30,7 +30,15 @@ object NGGL4ESRenderer : RendererInterface {
 
     override fun getRendererSummary(): String = "新一代 GL4ES 包装器，提供更好的 OpenGL ES 3.0+ 兼容性"
 
-    override fun getRendererEnv(): Lazy<Map<String, String>> = lazy { emptyMap() }
+    override fun getRendererEnv(): Lazy<Map<String, String>> = lazy {
+        buildMap {
+            put("LIBGL_USE_MC_COLOR", "1")
+            put("LIBGL_GL", "31")
+            put("LIBGL_ES", "3")
+            put("LIBGL_NORMALIZE", "1")
+            put("LIBGL_NOERROR", "1")
+        }
+    }
 
     override fun getDlopenLibrary(): Lazy<List<String>> = lazy { emptyList() }
 

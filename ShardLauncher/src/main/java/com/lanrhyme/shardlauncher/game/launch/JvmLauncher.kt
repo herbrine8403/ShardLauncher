@@ -33,9 +33,16 @@ open class JvmLauncher(
 
     override suspend fun launch(): Int {
         generateLauncherProfiles(jvmLaunchInfo.userHome ?: PathManager.DIR_FILES_PRIVATE.absolutePath)
-        val (runtime, argList) = getStartupNeeded()
-
+        
+        // 先初始化 runtime，确保 getCacioJavaArgs 能访问
+        val runtime = jvmLaunchInfo.jreName?.let { jreName ->
+            RuntimesManager.forceReload(jreName)
+        } ?: run {
+            RuntimesManager.forceReload(AllSettings.javaRuntime.getValue())
+        }
         this.runtime = runtime
+        
+        val argList = getStartupNeeded(runtime)
 
         return launchJvm(
             context = context,
@@ -55,14 +62,8 @@ open class JvmLauncher(
         // JVM launcher specific cleanup
     }
 
-    private fun getStartupNeeded(): Pair<com.lanrhyme.shardlauncher.game.multirt.Runtime, List<String>> {
+    private fun getStartupNeeded(runtime: com.lanrhyme.shardlauncher.game.multirt.Runtime): List<String> {
         val args = jvmLaunchInfo.jvmArgs.splitPreservingQuotes()
-
-        val runtime = jvmLaunchInfo.jreName?.let { jreName ->
-            RuntimesManager.forceReload(jreName)
-        } ?: run {
-            RuntimesManager.forceReload(AllSettings.javaRuntime.getValue())
-        }
 
         val windowSize = getWindowSize()
         val argList: MutableList<String> = ArrayList(
@@ -74,7 +75,7 @@ open class JvmLauncher(
         Logger.lInfo("==================== Launch JVM ====================")
         Logger.lInfo("Info: Java arguments: \r\n${argList.joinToString("\r\n")}")
 
-        return Pair(runtime, argList)
+        return argList
     }
 
     private fun getCacioJavaArgs(windowWidth: Int, windowHeight: Int, isJava8: Boolean): List<String> {

@@ -146,17 +146,32 @@ abstract class Launcher(
         if (BuildConfig.DEBUG) {
             Logger.lInfo("[Launcher] About to call setupExitMethod...")
         }
-        ZLBridge.setupExitMethod(context.applicationContext)
+        try {
+            ZLBridge.setupExitMethod(context.applicationContext)
+        } catch (e: Throwable) {
+            Logger.lError("[Launcher] setupExitMethod failed: ${e.message}", e)
+            throw e
+        }
         
         if (BuildConfig.DEBUG) {
             Logger.lInfo("[Launcher] About to call initializeGameExitHook...")
         }
-        ZLBridge.initializeGameExitHook()
+        try {
+            ZLBridge.initializeGameExitHook()
+        } catch (e: Throwable) {
+            Logger.lError("[Launcher] initializeGameExitHook failed: ${e.message}", e)
+            throw e
+        }
         
         if (BuildConfig.DEBUG) {
             Logger.lInfo("[Launcher] About to call chdir: ${chdir()}...")
         }
-        ZLBridge.chdir(chdir())
+        try {
+            ZLBridge.chdir(chdir())
+        } catch (e: Throwable) {
+            Logger.lError("[Launcher] chdir failed: ${e.message}", e)
+            throw e
+        }
 
         if (BuildConfig.DEBUG) {
             Logger.lInfo("[Launcher] Final JVM args: ${args.take(10).joinToString(" ")}...")

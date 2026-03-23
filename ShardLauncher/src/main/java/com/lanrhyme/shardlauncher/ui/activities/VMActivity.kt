@@ -494,15 +494,16 @@ class VMActivity : androidx.activity.ComponentActivity(), SurfaceTextureListener
         return resultSize
     }
 
-    private fun refreshSize() {
-        refreshWindowSize()
+    private fun refreshSize(): IntSize {
+        val size = refreshWindowSize()
         mTextureView?.surfaceTexture?.apply {
             setDefaultBufferSize(CallbackBridge.windowWidth, CallbackBridge.windowHeight)
         } ?: run {
             lWarning("Attempt to refresh size on null surface")
-            return
+            return size
         }
         CallbackBridge.sendUpdateWindowSize(CallbackBridge.windowWidth, CallbackBridge.windowHeight)
+        return size
     }
 }
 

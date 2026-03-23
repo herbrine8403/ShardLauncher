@@ -58,9 +58,9 @@ class GameHandler(
 
     private var isGameRendering by mutableStateOf(false)
 
-    override suspend fun execute(surface: Surface?, scope: CoroutineScope) {
+    override suspend fun execute(surface: Surface?, screenSize: IntSize, scope: CoroutineScope) {
         ZLBridge.setupBridgeWindow(surface)
-        super.execute(surface, scope)
+        super.execute(surface, screenSize, scope)
     }
 
     override fun onPause() {

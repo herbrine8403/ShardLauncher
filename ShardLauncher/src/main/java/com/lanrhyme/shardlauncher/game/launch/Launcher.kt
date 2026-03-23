@@ -39,6 +39,7 @@ import com.lanrhyme.shardlauncher.utils.device.Architecture.ARCH_X86
 import com.lanrhyme.shardlauncher.utils.device.Architecture.is64BitsDevice
 import com.lanrhyme.shardlauncher.utils.platform.getDisplayFriendlyRes
 import com.lanrhyme.shardlauncher.BuildConfig
+import com.lanrhyme.shardlauncher.utils.logging.Logger
 import com.lanrhyme.shardlauncher.utils.logging.Logger.lError
 import com.lanrhyme.shardlauncher.utils.logging.Logger.lInfo
 import com.lanrhyme.shardlauncher.utils.logging.Logger.lWarning

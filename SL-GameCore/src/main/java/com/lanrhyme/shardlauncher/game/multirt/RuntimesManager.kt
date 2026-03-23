@@ -337,6 +337,16 @@ object RuntimesManager {
     }
 
     fun isJDK8(runtimeDir: String): Boolean {
-        return File(runtimeDir, "jre").exists() && File(runtimeDir, "bin/javac").exists()
+        // 检查是否为 JDK 8：优先检查 jre 目录是否存在
+        // 或者检查版本字符串
+        val releaseFile = File(runtimeDir, "release")
+        if (releaseFile.exists()) {
+            val content = releaseFile.readText()
+            if (content.contains("JAVA_VERSION=\"1.8") || content.contains("JAVA_VERSION=\"8")) {
+                return true
+            }
+        }
+        // 备用检查：jre 目录存在
+        return File(runtimeDir, "jre").exists()
     }
 }

@@ -34,12 +34,14 @@ open class JvmLauncher(
     override suspend fun launch(): Int {
         generateLauncherProfiles(jvmLaunchInfo.userHome ?: PathManager.DIR_FILES_PRIVATE.absolutePath)
         
-        // 先初始化 runtime，确保 getCacioJavaArgs 能访问
-        val runtime = jvmLaunchInfo.jreName?.let { jreName ->
-            RuntimesManager.forceReload(jreName)
-        } ?: run {
-            RuntimesManager.forceReload(AllSettings.javaRuntime.getValue())
-        }
+        // 获取运行时：如果用户指定了 jreName 则使用它，否则从设置中获取
+        // 如果设置中没有有效的运行时，则自动选择第一个可用的
+        val runtimeName = jvmLaunchInfo.jreName?.takeIf { it.isNotBlank() } 
+            ?: AllSettings.javaRuntime.getValue().takeIf { it.isNotBlank() }
+            ?: RuntimesManager.getRuntimes().firstOrNull()?.name
+            ?: throw RuntimeException("No available Java runtime found!")
+        
+        val runtime = RuntimesManager.forceReload(runtimeName)
         this.runtime = runtime
         
         val argList = getStartupNeeded(runtime)

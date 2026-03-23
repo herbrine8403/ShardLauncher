@@ -61,7 +61,15 @@ abstract class Launcher(
         RuntimesManager.getRuntimeHome(runtime.name).absolutePath
     }
 
-    private fun getJavaHome() = if (runtime.isJDK8) "$runtimeHome/jre" else runtimeHome
+    private fun getJavaHome(): String {
+        // Check if jre directory actually exists
+        val jrePath = "$runtimeHome/jre"
+        return if (runtime.isJDK8 && File(jrePath).exists()) {
+            jrePath
+        } else {
+            runtimeHome
+        }
+    }
 
     abstract suspend fun launch(): Int
     abstract fun chdir(): String

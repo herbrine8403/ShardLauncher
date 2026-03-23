@@ -401,10 +401,14 @@ class VMActivity : androidx.activity.ComponentActivity(), SurfaceTextureListener
         isRunning = true
 
         vmViewModel.runIfHandlerInitialized { it.mIsSurfaceDestroyed = false }
-        refreshSize()
+        val currentSize = refreshSize()
         vmViewModel.runIfHandlerInitialized { handler ->
             lifecycleScope.launch(Dispatchers.Default) {
-                handler.execute(Surface(surface), lifecycleScope)
+                handler.execute(
+                    surface = Surface(surface),
+                    screenSize = currentSize,
+                    scope = lifecycleScope
+                )
             }
         }
     }
@@ -466,7 +470,8 @@ class VMActivity : androidx.activity.ComponentActivity(), SurfaceTextureListener
         CallbackBridge.physicalHeight = displayMetrics.heightPixels
     }
 
-    private fun refreshWindowSize() {
+    private fun refreshWindowSize(): IntSize {
+        var resultSize = IntSize.Zero
         vmViewModel.runIfHandlerInitialized { handler ->
             val displayMetrics = getDisplayMetrics()
             fun getDisplayPixels(pixels: Int): Int {
@@ -484,7 +489,9 @@ class VMActivity : androidx.activity.ComponentActivity(), SurfaceTextureListener
             CallbackBridge.windowWidth = width
             CallbackBridge.windowHeight = height
             ZLBridgeStates.onWindowChange()
+            resultSize = IntSize(width, height)
         }
+        return resultSize
     }
 
     private fun refreshSize() {

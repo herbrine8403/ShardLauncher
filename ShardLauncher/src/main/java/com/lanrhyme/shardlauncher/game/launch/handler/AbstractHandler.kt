@@ -46,6 +46,7 @@ abstract class AbstractHandler(
     @CallSuper
     open suspend fun execute(
         surface: Surface?,
+        screenSize: IntSize,
         scope: CoroutineScope
     ) {
         scope.launch(Dispatchers.Default) {

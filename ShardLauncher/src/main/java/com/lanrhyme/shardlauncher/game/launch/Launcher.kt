@@ -326,9 +326,21 @@ abstract class Launcher(
 
     private fun getJvmLibDir(): String {
         val jvmLibDir: String
-        val path = (if (RuntimesManager.isJDK8(runtimeHome)) "/jre" else "") + getJavaLibDir()
-        val jvmFile = File("$runtimeHome$path/server/libjvm.so")
-        jvmLibDir = if (jvmFile.exists()) "/server" else "/client"
+        // 首先检查 /server 路径
+        val javaLibDir = getJavaLibDir()
+        val serverFile = File("$runtimeHome$javaLibDir/server/libjvm.so")
+        val clientFile = File("$runtimeHome$javaLibDir/client/libjvm.so")
+        
+        jvmLibDir = when {
+            serverFile.exists() -> "/server"
+            clientFile.exists() -> "/client"
+            else -> "/server" // 默认使用 server
+        }
+        
+        if (BuildConfig.DEBUG) {
+            Logger.lInfo("[DLOPEN] getJvmLibDir: serverFile=$serverFile exists=${serverFile.exists()}, clientFile=$clientFile exists=${clientFile.exists()}, result=$jvmLibDir")
+        }
+        
         return jvmLibDir
     }
 

@@ -325,20 +325,35 @@ abstract class Launcher(
     }
 
     private fun getJvmLibDir(): String {
-        val jvmLibDir: String
         // 首先检查 /server 路径
         val javaLibDir = getJavaLibDir()
-        val serverFile = File("$runtimeHome$javaLibDir/server/libjvm.so")
-        val clientFile = File("$runtimeHome$javaLibDir/client/libjvm.so")
+        val basePath = "$runtimeHome$javaLibDir"
         
-        jvmLibDir = when {
+        // 列出所有子目录
+        val libDir = File(basePath)
+        if (BuildConfig.DEBUG) {
+            Logger.lInfo("[DLOPEN] getJvmLibDir basePath: $basePath")
+            Logger.lInfo("[DLOPEN] getJvmLibDir listing: ${libDir.listFiles()?.map { it.name }?.joinToString()}")
+        }
+        
+        val serverFile = File(basePath, "server/libjvm.so")
+        val clientFile = File(basePath, "client/libjvm.so")
+        
+        val jvmLibDir = when {
             serverFile.exists() -> "/server"
             clientFile.exists() -> "/client"
-            else -> "/server" // 默认使用 server
+            else -> {
+                // 列出 libjvm.so 的位置
+                val jvmFiles = libDir.walkTopDown().maxDepth(3).filter { it.name == "libjvm.so" }.toList()
+                if (BuildConfig.DEBUG) {
+                    Logger.lWarning("[DLOPEN] getJvmLibDir: libjvm.so not found in server or client, found at: $jvmFiles")
+                }
+                "/server" // 默认使用 server
+            }
         }
         
         if (BuildConfig.DEBUG) {
-            Logger.lInfo("[DLOPEN] getJvmLibDir: serverFile=$serverFile exists=${serverFile.exists()}, clientFile=$clientFile exists=${clientFile.exists()}, result=$jvmLibDir")
+            Logger.lInfo("[DLOPEN] getJvmLibDir result: $jvmLibDir")
         }
         
         return jvmLibDir

@@ -32,6 +32,11 @@ open class JvmLauncher(
 ) : Launcher(onExit) {
 
     override suspend fun launch(): Int {
+        // Debug logging - only show in debug builds
+        if (com.lanrhyme.shardlauncher.BuildConfig.DEBUG) {
+            Logger.lInfo("[JVM] Starting JVM launch...")
+        }
+        
         generateLauncherProfiles(jvmLaunchInfo.userHome ?: PathManager.DIR_FILES_PRIVATE.absolutePath)
         
         // 获取运行时：如果用户指定了 jreName 则使用它，否则从设置中获取
@@ -44,6 +49,12 @@ open class JvmLauncher(
         val runtime = RuntimesManager.forceReload(runtimeName)
         this.runtime = runtime
         
+        if (com.lanrhyme.shardlauncher.BuildConfig.DEBUG) {
+            Logger.lInfo("[JVM] Selected runtime: $runtimeName")
+            Logger.lInfo("[JVM] Runtime loaded: name=${runtime.name}, version=${runtime.versionString}, arch=${runtime.arch}, javaVersion=${runtime.javaVersion}, isJDK8=${runtime.isJDK8}")
+            Logger.lInfo("[JVM] Calling launchJvm...")
+        }
+
         val argList = getStartupNeeded(runtime)
 
         return launchJvm(

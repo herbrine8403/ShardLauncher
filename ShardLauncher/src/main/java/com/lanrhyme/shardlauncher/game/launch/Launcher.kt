@@ -38,6 +38,7 @@ import com.lanrhyme.shardlauncher.utils.device.Architecture
 import com.lanrhyme.shardlauncher.utils.device.Architecture.ARCH_X86
 import com.lanrhyme.shardlauncher.utils.device.Architecture.is64BitsDevice
 import com.lanrhyme.shardlauncher.utils.platform.getDisplayFriendlyRes
+import com.lanrhyme.shardlauncher.BuildConfig
 import com.lanrhyme.shardlauncher.utils.logging.Logger.lError
 import com.lanrhyme.shardlauncher.utils.logging.Logger.lInfo
 import com.lanrhyme.shardlauncher.utils.logging.Logger.lWarning
@@ -73,18 +74,37 @@ abstract class Launcher(
         userArgs: String,
         getWindowSize: () -> IntSize
     ): Int {
+        if (BuildConfig.DEBUG) {
+            Logger.lInfo("[Launcher] Setting staticLauncher...")
+        }
         ZLNativeInvoker.staticLauncher = this
 
-        ZLBridge.setLdLibraryPath(getRuntimeLibraryPath())
+        val runtimeLibraryPath = getRuntimeLibraryPath()
+        if (BuildConfig.DEBUG) {
+            Logger.lInfo("[Launcher] Setting LD_LIBRARY_PATH: $runtimeLibraryPath")
+        }
+        ZLBridge.setLdLibraryPath(runtimeLibraryPath)
 
         LoggerBridge.appendTitle("Env Map")
+        if (BuildConfig.DEBUG) {
+            Logger.lInfo("[Launcher] Setting environment variables...")
+        }
         setEnv()
 
         LoggerBridge.appendTitle("DLOPEN Java Runtime")
+        if (BuildConfig.DEBUG) {
+            Logger.lInfo("[Launcher] Loading Java runtime libraries...")
+        }
         dlopenJavaRuntime()
-
+        
+        if (BuildConfig.DEBUG) {
+            Logger.lInfo("[Launcher] Loading engine libraries...")
+        }
         dlopenEngine()
 
+        if (BuildConfig.DEBUG) {
+            Logger.lInfo("[Launcher] Starting JVM...")
+        }
         return launchJavaVM(
             context = context,
             jvmArgs = jvmArgs,
@@ -126,7 +146,16 @@ abstract class Launcher(
         ZLBridge.initializeGameExitHook()
         ZLBridge.chdir(chdir())
 
+        if (BuildConfig.DEBUG) {
+            Logger.lInfo("[Launcher] Final JVM args: ${args.take(10).joinToString(" ")}...")
+            Logger.lInfo("[Launcher] Calling VMLauncher.launchJVM with ${args.size} arguments...")
+        }
+        
         val exitCode = VMLauncher.launchJVM(args.toTypedArray())
+        
+        if (BuildConfig.DEBUG) {
+            Logger.lInfo("[Launcher] JVM exited with code: $exitCode")
+        }
         LoggerBridge.append("Java Exit code: $exitCode")
         return exitCode
     }
@@ -400,24 +429,68 @@ abstract class Launcher(
 
     private fun dlopenJavaRuntime() {
         var javaLibDir = "$runtimeHome${getJavaLibDir()}"
+        if (BuildConfig.DEBUG) {
+            Logger.lInfo("[DLOPEN] javaLibDir: $javaLibDir")
+        }
+        
         val jliLibDir = if (File("$javaLibDir/jli/libjli.so").exists()) "$javaLibDir/jli" else javaLibDir
+        if (BuildConfig.DEBUG) {
+            Logger.lInfo("[DLOPEN] jliLibDir: $jliLibDir")
+        }
 
         if (runtime.isJDK8) {
             javaLibDir = "$runtimeHome/jre${getJavaLibDir()}"
+            if (BuildConfig.DEBUG) {
+                Logger.lInfo("[DLOPEN] JDK8 detected, using: $javaLibDir")
+            }
         }
+        
         val jvmLibDir = "$javaLibDir${getJvmLibDir()}"
-        ZLBridge.dlopen("$jliLibDir/libjli.so")
-        ZLBridge.dlopen("$jvmLibDir/libjvm.so")
-        ZLBridge.dlopen("$javaLibDir/libfreetype.so")
-        ZLBridge.dlopen("$javaLibDir/libverify.so")
-        ZLBridge.dlopen("$javaLibDir/libjava.so")
-        ZLBridge.dlopen("$javaLibDir/libnet.so")
-        ZLBridge.dlopen("$javaLibDir/libnio.so")
-        ZLBridge.dlopen("$javaLibDir/libawt.so")
-        ZLBridge.dlopen("$javaLibDir/libawt_headless.so")
-        ZLBridge.dlopen("$javaLibDir/libfontmanager.so")
+        if (BuildConfig.DEBUG) {
+            Logger.lInfo("[DLOPEN] jvmLibDir: $jvmLibDir")
+        }
+        
+        // Load libraries with detailed logging
+        val libs = listOf(
+            "$jliLibDir/libjli.so" to "libjli",
+            "$jvmLibDir/libjvm.so" to "libjvm",
+            "$javaLibDir/libfreetype.so" to "libfreetype",
+            "$javaLibDir/libverify.so" to "libverify",
+            "$javaLibDir/libjava.so" to "libjava",
+            "$javaLibDir/libnet.so" to "libnet",
+            "$javaLibDir/libnio.so" to "libnio",
+            "$javaLibDir/libawt.so" to "libawt",
+            "$javaLibDir/libawt_headless.so" to "libawt_headless",
+            "$javaLibDir/libfontmanager.so" to "libfontmanager"
+        )
+        
+        libs.forEach { (path, name) ->
+            val file = File(path)
+            if (file.exists()) {
+                if (BuildConfig.DEBUG) {
+                    Logger.lInfo("[DLOPEN] Loading $name from: $path")
+                }
+                ZLBridge.dlopen(path)
+            } else {
+                if (BuildConfig.DEBUG) {
+                    Logger.lWarning("[DLOPEN] File not found: $path")
+                }
+            }
+        }
+        
+        // Load additional libs from runtime home
+        if (BuildConfig.DEBUG) {
+            Logger.lInfo("[DLOPEN] Loading additional libs from runtime home: $runtimeHome")
+        }
         locateLibs(File(runtimeHome)).forEach { file ->
+            if (BuildConfig.DEBUG) {
+                Logger.lInfo("[DLOPEN] Loading: ${file.absolutePath}")
+            }
             ZLBridge.dlopen(file.absolutePath)
+        }
+        
+        if (BuildConfig.DEBUG) {
+            Logger.lInfo("[DLOPEN] Java runtime loading complete!")
         }
     }
 

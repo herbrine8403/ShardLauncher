@@ -81,13 +81,7 @@ android {
         buildConfigField("String", "CLIENT_ID", "\"$clientId\"")
 
     }
-
-    buildFeatures {
-        buildConfig = true
-        compose = true
-        prefab = true
-    }
-
+    
     buildTypes {
         release {
             isMinifyEnabled = false
@@ -95,10 +89,19 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+            // 在 release 构建中设置 DEBUG 为 false
+            buildConfigField("boolean", "DEBUG", "false")
         }
         debug {
             applicationIdSuffix = ".debug"
+            buildConfigField("boolean", "DEBUG", "true")
         }
+    }
+
+    buildFeatures {
+        buildConfig = true
+        compose = true
+        prefab = true
     }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11

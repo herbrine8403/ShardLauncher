@@ -150,15 +150,26 @@ abstract class Launcher(
         if (BuildConfig.DEBUG) {
             Logger.lInfo("[Launcher] Final JVM args: ${args.take(10).joinToString(" ")}...")
             Logger.lInfo("[Launcher] Calling VMLauncher.launchJVM with ${args.size} arguments...")
+            Logger.lInfo("[Launcher] runtimeHome: $runtimeHome")
+            Logger.lInfo("[Launcher] chdir: ${chdir()}")
         }
         
-        val exitCode = VMLauncher.launchJVM(args.toTypedArray())
-        
-        if (BuildConfig.DEBUG) {
+        try {
+            if (BuildConfig.DEBUG) {
+                Logger.lInfo("[Launcher] Starting VMLauncher.launchJVM...")
+            }
+            val exitCode = VMLauncher.launchJVM(args.toTypedArray())
+            if (BuildConfig.DEBUG) {
+                Logger.lInfo("[Launcher] VMLauncher.launchJVM returned: $exitCode")
+            }
             Logger.lInfo("[Launcher] JVM exited with code: $exitCode")
+            LoggerBridge.append("Java Exit code: $exitCode")
+            return exitCode
+        } catch (e: Exception) {
+            Logger.lError("[Launcher] Exception during JVM launch: ${e.message}", e)
+            LoggerBridge.append("Java Launch Exception: ${e.message}")
+            return -1
         }
-        LoggerBridge.append("Java Exit code: $exitCode")
-        return exitCode
     }
 
     /**

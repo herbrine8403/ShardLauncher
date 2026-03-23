@@ -429,6 +429,7 @@ abstract class Launcher(
     }
 
     private fun dlopenJavaRuntime() {
+        // 首先获取基础路径
         var javaLibDir = "$runtimeHome${getJavaLibDir()}"
         if (BuildConfig.DEBUG) {
             Logger.lInfo("[DLOPEN] javaLibDir: $javaLibDir")
@@ -439,10 +440,18 @@ abstract class Launcher(
             Logger.lInfo("[DLOPEN] jliLibDir: $jliLibDir")
         }
 
+        // 对于 JDK8，如果 /jre 路径不存在则回退到 /lib 路径
         if (runtime.isJDK8) {
-            javaLibDir = "$runtimeHome/jre${getJavaLibDir()}"
-            if (BuildConfig.DEBUG) {
-                Logger.lInfo("[DLOPEN] JDK8 detected, using: $javaLibDir")
+            val jreLibDir = "$runtimeHome/jre${getJavaLibDir()}"
+            if (File(jreLibDir, "libjvm.so").exists()) {
+                javaLibDir = jreLibDir
+                if (BuildConfig.DEBUG) {
+                    Logger.lInfo("[DLOPEN] JDK8 detected, using jre path: $javaLibDir")
+                }
+            } else {
+                if (BuildConfig.DEBUG) {
+                    Logger.lInfo("[DLOPEN] JDK8 detected but jre path not found, using lib path: $javaLibDir")
+                }
             }
         }
         

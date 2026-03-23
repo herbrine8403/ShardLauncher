@@ -151,15 +151,16 @@ abstract class Launcher(
             LoggerBridge.append("JVMArgs: $arg")
         }
 
+        // 临时跳过 setupExitMethod 以调试问题
         if (BuildConfig.DEBUG) {
-            Logger.lInfo("[Launcher] About to call setupExitMethod...")
+            Logger.lInfo("[Launcher] Skipping setupExitMethod for debugging...")
         }
-        try {
-            ZLBridge.setupExitMethod(context.applicationContext)
-        } catch (e: Throwable) {
-            Logger.lError("[Launcher] setupExitMethod failed: ${e.message}", e)
-            throw e
-        }
+        // try {
+        //     ZLBridge.setupExitMethod(context.applicationContext)
+        // } catch (e: Throwable) {
+        //     Logger.lError("[Launcher] setupExitMethod failed: ${e.message}", e)
+        //     throw e
+        // }
         
         if (BuildConfig.DEBUG) {
             Logger.lInfo("[Launcher] About to call initializeGameExitHook...")

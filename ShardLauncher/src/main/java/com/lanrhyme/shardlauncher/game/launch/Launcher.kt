@@ -143,15 +143,25 @@ abstract class Launcher(
             LoggerBridge.append("JVMArgs: $arg")
         }
 
+        if (BuildConfig.DEBUG) {
+            Logger.lInfo("[Launcher] About to call setupExitMethod...")
+        }
         ZLBridge.setupExitMethod(context.applicationContext)
+        
+        if (BuildConfig.DEBUG) {
+            Logger.lInfo("[Launcher] About to call initializeGameExitHook...")
+        }
         ZLBridge.initializeGameExitHook()
+        
+        if (BuildConfig.DEBUG) {
+            Logger.lInfo("[Launcher] About to call chdir: ${chdir()}...")
+        }
         ZLBridge.chdir(chdir())
 
         if (BuildConfig.DEBUG) {
             Logger.lInfo("[Launcher] Final JVM args: ${args.take(10).joinToString(" ")}...")
             Logger.lInfo("[Launcher] Calling VMLauncher.launchJVM with ${args.size} arguments...")
             Logger.lInfo("[Launcher] runtimeHome: $runtimeHome")
-            Logger.lInfo("[Launcher] chdir: ${chdir()}")
         }
         
         try {

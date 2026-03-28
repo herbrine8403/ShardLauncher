@@ -108,16 +108,23 @@ open class JvmLauncher(
             args.add("--add-exports=java.desktop/java.awt.peer=ALL-UNNAMED")
             
             if (runtime.javaVersion >= 17) {
-                args.add("-javaagent:${PathManager.DIR_COMPONENTS}/cacio-17/cacio-agent.jar")
+                args.add("-javaagent:${PathManager.DIR_COMPONENTS}/caciocavallo17/cacio-agent.jar")
             }
         }
         
+        // Build cacio classpath from all jar files in the directory
         val cacioJarDir = if (runtime.javaVersion >= 17) {
-            File(PathManager.DIR_COMPONENTS, "cacio-17")
+            File(PathManager.DIR_COMPONENTS, "caciocavallo17")
         } else {
-            File(PathManager.DIR_COMPONENTS, "cacio-8")
+            File(PathManager.DIR_COMPONENTS, "caciocavallo")
         }
-        args.add("-Xbootclasspath/a:${File(cacioJarDir, "cacio-ttc.jar").absolutePath}")
+        
+        val cacioClassPath = StringBuilder("-Xbootclasspath/")
+            .append(if (isJava8) "p" else "a")
+        cacioJarDir.listFiles()?.onEach {
+            if (it.name.endsWith(".jar")) cacioClassPath.append(":").append(it.absolutePath)
+        }
+        args.add(cacioClassPath.toString())
         
         return args
     }
